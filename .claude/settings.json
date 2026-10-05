@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "ask": [
+      "Edit(/gdd/goal.md)",
+      "Edit(/gdd/subgoals.md)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr merge *)",
+      "mcp__github__create_pull_request",
+      "mcp__github__merge_pull_request",
+      "mcp__github__push_files",
+      "mcp__github__create_or_update_file",
+      "mcp__*__slack_send_message",
+      "mcp__*__slack_schedule_message",
+      "mcp__*__createJiraIssue",
+      "mcp__*__editJiraIssue",
+      "mcp__*__transitionJiraIssue",
+      "mcp__*__addCommentToJiraIssue"
+    ]
+  }
+}
