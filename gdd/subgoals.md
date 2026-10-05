@@ -2,7 +2,7 @@
 
 > goal.md の GOAL を分解したサブゴールの一覧。AI が案を出し、人間が承認して確定する（`.claude/settings.json` の ask で強制）。
 
-## 完了：M0 構成と配布方法を決める
+## 完了：SG0 構成と配布方法を決める
 
 | 項目 | 内容 |
 |---|---|
@@ -10,7 +10,7 @@
 | 種類と完了条件 | 決める系。構成に人間が合意したら完了 |
 | 結果 | エンジン（`.claude/`）と状態（`gdd/`）を分ける。新規リポジトリは Template から作り、既存リポジトリには plugin と `gdd-init` で導入する。設計は `docs/design.md` に置く |
 
-## 完了：M1 状態ファイルの雛形と gdd-init を作る
+## 完了：SG1 状態ファイルの雛形と gdd-init を作る
 
 | 項目 | 内容 |
 |---|---|
@@ -18,7 +18,7 @@
 | 種類と完了条件 | 作る系。空のディレクトリで `gdd-init` を実行すると、雛形一式と settings の ask ルールが揃う |
 | 結果 | `.claude/skills/gdd-init/` に skill と雛形（goal.md / subgoals.md / state.md）を作った。予算と constraints.md は廃止し、前提は goal.md と CLAUDE.md に置く。`archive/` は初めてゴールが完了したときに作る |
 
-## 次：M2 Loop を1周回す skill を作る
+## 次：SG2 Loop を1周回す skill を作る
 
 | 項目 | 内容 |
 |---|---|
@@ -30,6 +30,6 @@
 
 | # | ゴール | 種類 |
 |---|---|---|
-| M3 | 小さな新規アプリで 0→1 を回す（題材決めを含む） | 作る |
-| M4 | 既存のリポジトリに導入して 1→100 を試す | 作る |
-| M5 | git と GitHub を設定し、Template Repository にする | 作る |
+| SG3 | 小さな新規アプリで 0→1 を回す（題材決めを含む） | 作る |
+| SG4 | 既存のリポジトリに導入して 1→100 を試す | 作る |
+| SG5 | git と GitHub を設定し、Template Repository にする | 作る |

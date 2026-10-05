@@ -18,7 +18,7 @@ description: Goal Driven Development の Loop を1周回す。gdd/subgoals.md �
 
 | 判断 | 動き |
 |---|---|
-| 空 | 進めずに止まる。「M<N> の報告の判断欄を埋めてください」と伝える |
+| 空 | 進めずに止まる。「SG<N> の報告の判断欄を埋めてください」と伝える |
 | 次へ進む | 判断を `state.md` の判断ログに転記する。報告の「次のサブゴールの提案」で `subgoals.md` を更新し（前のサブゴールを「完了：」に移して結果を書く）、3 に進む |
 | 方向転換 | 判断とコメントを `state.md` の判断ログに転記する。コメントを反映した `subgoals.md` の修正案を書いて止まる |
 | やめる | 判断を `state.md` の判断ログに転記して止まる |
@@ -40,7 +40,7 @@ description: Goal Driven Development の Loop を1周回す。gdd/subgoals.md �
 
 ## 5. サブゴール完了報告を書いて止まる
 
-- `templates/report.md` の形で `gdd/reports/M<N>.md` に書く（`<N>` は今回のサブゴールの番号）。
+- `templates/report.md` の形で `gdd/reports/SG<N>.md` に書く（`<N>` は今回のサブゴールの番号）。
 - 振り返りの「変えること」は、1項目ごとに反映先（subgoals.md / goal.md / state.md の学び / ハーネス）を書く。反映先がない項目は書かない。
 - 「判断」欄は空のままにする（人間が書く）。
 - 同じ内容をチャットにも出して止まる。
