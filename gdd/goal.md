@@ -17,3 +17,7 @@ Goal Driven Development の基盤を作り、Template Repository として提供
 3. 各ゲートで、人間がコードを読まずに、報告1枚とデモだけで「次へ進む / 方向転換 / やめる」を判断できる。
 4. 振り返りの「変えること」が実際に次のループに反映され、同じ手戻りが再発しない。
 5. GitHub 上で Template Repository として公開されている。
+
+## 前提
+
+- なし
