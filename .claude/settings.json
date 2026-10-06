@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Edit(/gdd/state.md)"
+      "Edit(**/gdd/state.md)"
     ],
     "ask": [
       "Edit(/gdd/goal.md)",
