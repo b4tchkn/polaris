@@ -6,6 +6,8 @@
     "ask": [
       "Edit(/gdd/goal.md)",
       "Edit(/gdd/subgoals.md)",
+      "Edit(/simulations/**/gdd/goal.md)",
+      "Edit(/simulations/**/gdd/subgoals.md)",
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(gh pr create *)",
@@ -20,6 +22,19 @@
       "mcp__*__editJiraIssue",
       "mcp__*__transitionJiraIssue",
       "mcp__*__addCommentToJiraIssue"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-gdd-writes.sh"
+          }
+        ]
+      }
     ]
   }
 }

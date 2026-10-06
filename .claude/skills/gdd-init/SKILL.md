@@ -5,6 +5,10 @@ description: Goal Driven Development の状態ファイル（gdd/goal.md, gdd/su
 
 # gdd-init
 
+## 対象ディレクトリ
+
+引数でディレクトリ（例：`simulations/morning-review`）を渡されたら、以下の `gdd/` はすべて `<ディレクトリ>/gdd/` と読み替える。`.claude/settings.json` はリポジトリのルートのものを使い、ルールのパスにも `/<ディレクトリ>` を前に付ける（例：`Edit(/simulations/morning-review/gdd/goal.md)`）。`Edit(/simulations/**/gdd/goal.md)` のように、そのディレクトリを含むルールがすでにあれば追加しない。引数がなければリポジトリのルートを対象にする。
+
 ## 手順
 
 1. `gdd/` に `goal.md` / `subgoals.md` / `state.md` のどれかがすでにあれば、上書きする前に人間に確認する。断られたら止める。
