@@ -4,14 +4,15 @@
 
 ## 現状
 
-- SG5（シミュレーションを回せるようにする）を終え、`gdd/reports/SG5.md` の判断待ち。
+- SG6（シミュレーション1：朝の振り返り skill）に取り組み中。`simulations/morning-review/` でゴールを決めるところから始める。
 
 ## 出来たもの
 
 - `gdd-init` / `gdd-loop` skill と雛形。どちらも対象ディレクトリを引数で受け取れる（例：`simulations/morning-review`）
 - `gdd-loop`：改善の提案（4種類、番号付き、採用したものだけ反映）、学びは消さない、判断は AskUserQuestion で選んでもらう（6）
 - `.claude/hooks/guard-gdd-writes.sh`：Bash から `gdd/goal.md` / `gdd/subgoals.md` への書き込みを止める
-- `.claude/settings.json`：`gdd/state.md` を allow。`gdd/` と `simulations/**/gdd/` の goal.md / subgoals.md を ask
+- `.claude/settings.json`：どこの `gdd/state.md` も allow。`gdd/` と `simulations/**/gdd/` の goal.md / subgoals.md を ask
+- `gdd-loop`：ゴールが雛形のままなら、質問してゴールと SG0 を一緒に決める
 - `simulations/morning-review/gdd/`：雛形一式（commit しない）
 - design.md：セクション5 を改善ループに書き直した。「ゲート」を使わない言い方に統一した
 - CLAUDE.md（前提、コミットメッセージ）、CLAUDE.local.md（commit しない。固有名詞のルール）
@@ -28,6 +29,7 @@
 - 判断欄は毎回 AskUserQuestion で選択肢を出して人間に選んでもらい、答えを AI が書く。
 - SG4 → 次へ進む。改善の提案 1, 3, 4 を採用（2 は不採用）。
 - シミュレーションの ask ルールは個別ではなく `simulations/**` でまとめて効かせる。
+- SG5 → 次へ進む。改善の提案 1, 2 を採用（3 は不採用）。state.md の allow は `Edit(**/gdd/state.md)` でどこでも効かせる（人間の指示）。
 - 公開リポジトリから勤務先の固有名詞を消し、履歴も書き換えた。作者メールは GitHub の noreply。
 
 ## 却下された案
@@ -41,6 +43,7 @@
 - 複数のシミュレーションを一度に回す（人間の判断が追いつかない）
 - 判断ログに転記済みなら 2 を飛ばす（SG4 の提案2）
 - シミュレーションごとに ask ルールを足す
+- 「権限はまとめて効かせる」を学びに足す（SG5 の提案3）
 
 ## 学び
 

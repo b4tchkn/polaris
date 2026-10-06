@@ -42,19 +42,26 @@
 | 種類と完了条件 | 作る系。学びを消さない、改善の提案欄がある、採用したものだけ反映する、design.md 5 がこの流れになっている、の4つ |
 | 結果 | `gdd-loop` に改善の提案（4種類、番号付き）と「学びは消さない」を入れ、design.md 5 を改善ループに書き直した。判断は毎回 AskUserQuestion で選んでもらう形にした（6）。採用した提案で、Bash から goal.md / subgoals.md への書き込みを止める hook を入れた |
 
-## 次：SG5 シミュレーションを回せるようにする
+## 完了：SG5 シミュレーションを回せるようにする
 
 | 項目 | 内容 |
 |---|---|
 | ゴール | `simulations/<名前>/` の中で `gdd-init` と `gdd-loop` を使えるようにし、1つ目のシミュレーションの状態ファイルを作る |
-| 種類と完了条件 | 作る系。`simulations/` が commit されず、`gdd-init` / `gdd-loop` に対象ディレクトリを渡すと、そのディレクトリの `gdd/` を読み書きする。`simulations/morning-review/gdd/` に雛形一式が揃う |
-| 見せるもの | `simulations/morning-review/gdd/` の中身と、`/gdd-loop simulations/morning-review` の使い方 |
+| 種類と完了条件 | 作る系。`simulations/` が commit されず、対象ディレクトリを渡すとそこの `gdd/` を読み書きする。`simulations/morning-review/gdd/` に雛形一式が揃う |
+| 結果 | `gdd-init` / `gdd-loop` が対象ディレクトリを受け取れる。`simulations/` は commit しない。`simulations/**` の goal.md / subgoals.md は ask、どこの state.md も allow。`simulations/morning-review/gdd/` を作った。ゴールが雛形のままなら、`gdd-loop` がゴールと SG0 を一緒に決める |
+
+## 次：SG6 シミュレーション1（朝の振り返り skill）を動くところまで回す
+
+| 項目 | 内容 |
+|---|---|
+| ゴール | `/gdd-loop simulations/morning-review` をくり返し、朝の振り返り skill を動くところまで作る |
+| 種類と完了条件 | 作る系。朝に実行すると、昨日の出来事の振り返りと今日まずやることが出る skill が動く。シミュレーションの中の判断はすべて人間が選ぶ |
+| 見せるもの | シミュレーションの報告一式と、skill を実行した結果 |
 
 ## その先（粗い見通し）
 
 | # | ゴール | 種類 |
 |---|---|---|
-| SG6 | シミュレーション1（朝の振り返り skill）を動くところまで回す | 作る |
 | SG7 | シミュレーション1の振り返りを GDD 本体に反映する | 作る |
 | SG8 | 既存のリポジトリに導入して 1→100 を試す | 作る |
 | SG9 | git と GitHub を設定し、Template Repository にする | 作る |
