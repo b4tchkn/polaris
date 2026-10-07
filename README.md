@@ -1,5 +1,13 @@
 # polaris
 
+```text
+    ____        __            _          .
+   / __ \____  / /___ ______(_)____    --*--
+  / /_/ / __ \/ / __ `/ ___/ / ___/      '
+ / ____/ /_/ / / /_/ / /  / (__  )
+/_/    \____/_/\__,_/_/  /_/____/
+```
+
 Goal Driven Development (GDD) for Claude Code.
 
 You set a goal. The AI breaks it into sub-goals and advances one at a time. After each sub-goal it stops with a short review and a few options, and you steer by choosing. You decide the direction; you do not have to read the code or approve every step.
