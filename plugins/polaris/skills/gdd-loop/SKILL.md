@@ -76,8 +76,8 @@ Do not just ask the human to fill in the Decision section. Always offer choices 
 
 - Phrase questions so that someone who does not know the code or the jargon understands them. Say in the question what it is about.
   - Question 1 (single choice): "Is SG<N> good as it is?" Options: "OK, proceed", "Change it (change direction)", "Stop". For a Decide sub-goal, split "OK" into the three options (e.g. "Proceed with option A").
-  - Question (single choice): "Which sub-goal next?" Offer the three options with descriptions that show their trade-offs.
-  - Question 2 (multiple choice): "Which improvement proposals should be applied?" For each, describe in one line what changes and its trade-off. Skip this question if there are no proposals.
+  - Question 2 (single choice): "Which sub-goal next?" Offer the three options with descriptions that show their trade-offs.
+  - Question 3 (multiple choice): "Which improvement proposals should be applied?" For each, describe in one line what changes and its trade-off. Skip this question if there are no proposals.
 - Put the recommended option first and add "(Recommended)".
 - Write the answers into the Decision section (e.g. `Proceed. Adopt 1, 2 (chosen with AskUserQuestion)`). If they chose "Change it" or Other, copy what they wrote as a comment.
 - When the human chose among options (three options for what to show, three next sub-goal options, a decision you stopped to ask in step 3), follow up with AskUserQuestion asking why they chose it. Offer two or three reasons drawn from the options' trade-offs, and let them write freely through Other.
