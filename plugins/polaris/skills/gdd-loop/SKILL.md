@@ -81,5 +81,5 @@ Do not just ask the human to fill in the Decision section. Always offer choices 
 - Put the recommended option first and add "(Recommended)".
 - Write the answers into the Decision section (e.g. `Proceed. Adopt 1, 2 (chosen with AskUserQuestion)`). If they chose "Change it" or Other, copy what they wrote as a comment.
 - When the human chose among options (three options for what to show, three next sub-goal options, a decision you stopped to ask in step 3), follow up with AskUserQuestion asking why they chose it. Offer two or three reasons drawn from the options' trade-offs, and let them write freely through Other.
-- Append one entry to `gdd/adr.md` (create it if missing; never rewrite it): date and sub-goal / what was decided / options offered (with trade-offs) / option chosen / reason (the human's answer, copied as is).
+- Append one entry to `gdd/adr.md` in the entry format written at the top of that file (never rewrite earlier entries): date and sub-goal / what was decided / options offered (with trade-offs) / option chosen / reason (the human's answer, copied as is).
 - Then stop. Applying the decision and starting the next sub-goal happen from step 2 on the next run.
