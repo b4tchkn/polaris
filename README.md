@@ -4,6 +4,8 @@ Goal Driven Development (GDD) for Claude Code.
 
 You set a goal. The AI breaks it into sub-goals and advances one at a time. After each sub-goal it stops with a short review and a few options, and you steer by choosing. You decide the direction; you do not have to read the code or approve every step.
 
+Human-on-the-loop, as polaris means it: the AI proceeds by default. You are called in when a sub-goal is done and when a mechanical stop condition fires (a decision that is hard to reverse), and you can stop or overturn it at any time. This matches the "Approver" level (L4) in [Levels of Autonomy for AI Agents](https://arxiv.org/abs/2506.12469) by Feng, McDonald, and Zhang (2025), where the user is involved only when the agent hits a blocker it cannot resolve on its own. Today every sub-goal still stops for you; the automatic continuation is on the roadmap.
+
 ## Install
 
 In Claude Code:

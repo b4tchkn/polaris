@@ -67,17 +67,28 @@
 | 評価基準 | 定量：人間が選んだ学び（評価基準の追加を含む4つ）がすべて手順か雛形に入っている。定性：別のリポジトリで `gdd-init` から始めても、その学びが効く形になっていると人間が判断できる |
 | 結果 | 4つを手順と雛形に入れた（定量は達成）。別のリポジトリではまだ動かしていない（定性は一部）。配り方を plugin だけに決めた |
 
-## 次：SG8 polaris を plugin にする
+## 完了：SG8 polaris を plugin にする
 
 | 項目 | 内容 |
 |---|---|
 | ゴール | polaris のリポジトリを、`/plugin install` で入れられる plugin とマーケットプレイスの形にする |
 | 種類と完了条件 | 作る系。polaris 以外のディレクトリで plugin として読み込み、`/polaris:gdd-init` → `/polaris:gdd-loop` が通る。Bash から goal.md / subgoals.md への書き込みを止める hook も plugin と一緒に効く |
 | 評価基準 | 定量：別のディレクトリで `/polaris:gdd-init` と `/polaris:gdd-loop` の両方が起動できる。定性：README だけで、初めての人が入れ方と始め方をわかると人間が判断できる |
-| 見せるもの | plugin として読み込んだ別のディレクトリでの動作と、README |
+| 結果 | エンジンを `plugins/polaris/` に移し英語の plugin にした。マーケットプレイスと MIT ライセンスを付けた。`claude plugin validate` は通過、別ディレクトリで `gdd-init` が起動し hook も効いた。書き込み完了と `gdd-loop` の起動は sandbox の制約で AI 側では未確認のまま、人間の判断で完了 |
+
+## 次：SG9 機械的な停止条件を実装する
+
+| 項目 | 内容 |
+|---|---|
+| ゴール | 戻せない行為と状態ファイルの不変条件を、AI の判断を通さずに hook と ask ルールで止める |
+| 種類と完了条件 | 作る系。gdd-init が書く ask ルールに戻せない行為（依存の追加、マイグレーション、公開・送信、`.claude/settings.json`、design.md）が入る。goal.md / subgoals.md への Bash 書き込みは差分で検知して巻き戻す。`state.md` の学びの削除、`adr.md` の書き換え、テストの skip 追加を hook が止める |
+| 評価基準 | 定量：敵対的レビューで通った 25 パターンのうち、goal.md / subgoals.md 書き込みの全経路が止まる。定性：止まった理由の文を見て、人間が何をすべきかわかる |
+| 見せるもの | hook に意図的に書き込みを流して止まる様子と、ask ダイアログ |
 
 ## その先（粗い見通し）
 
 | # | ゴール | 種類 |
 |---|---|---|
-| SG9 | GitHub で公開し、既存のリポジトリに `/plugin install` で入れて 1→100 を試す | 作る |
+| SG10 | GitHub で公開し、既存のリポジトリに `/plugin install` で入れて 1→100 を試す | 作る |
+| SG11 | 評価を独立させる（作業した AI とは別の evaluator が評価基準を採点する） | 作る |
+| SG12 | 続く既定にする（作る系で評価が通り、停止条件に当たらなければ人間を待たずに次へ進む）。このとき Human-on-the-loop の定義を `gdd-loop` の SKILL.md にも入れる | 作る |

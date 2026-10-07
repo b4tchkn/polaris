@@ -4,35 +4,31 @@
 
 ## 現状
 
-- SG7（シミュレーション1の学びを本体に反映する）を終え、`gdd/reviews/SG7.md` の判断待ち。
+- SG8（polaris を plugin にする）を人間の判断で完了。判断は `gdd/reviews/SG8.md` と `gdd/adr.md`。次は SG9 機械的な停止条件を実装する。Human-on-the-loop の定義を README と design.md 0 に書いた（SKILL.md には SG12 で）。
+- 2026-10-07 に Human-on-the-loop の多視点レビューと4シナリオのシミュレーションを行い、「その先」を機械的な停止条件 → 公開 → 評価の独立 → 続く既定の順に並べ直した。
 
 ## 出来たもの
 
-- `gdd-init` / `gdd-loop` skill と雛形。どちらも対象ディレクトリを引数で受け取れる（例：`simulations/morning-review`）
-- `gdd-loop`：改善の提案（4種類、番号付き、採用したものだけ反映）、学びは消さない、判断は AskUserQuestion で選んでもらう、ゴールが雛形のままなら一緒に決める、案はいつも3つ（トレードオフ付き。改善の提案や途中の判断も）、選ぶたびに理由を聞いて `gdd/adr.md` に残す、外のデータは決める前に実データで試す、作ったものは本来の起動方法で確かめる、サブゴールに評価基準（定量 / 定性）を置いて報告で振り返る
-- `.claude/hooks/guard-gdd-writes.sh`：Bash から `gdd/goal.md` / `gdd/subgoals.md` への書き込みを止める
+- `plugins/polaris/`：英語の plugin（`gdd-init` / `gdd-loop` skill、雛形、hook）。`.claude-plugin/marketplace.json` でこのリポジトリ自体がマーケットプレイス。`claude plugin validate` は manifest / skills / marketplace とも通過。MIT ライセンス
+- `gdd-init` / `gdd-loop`：対象ディレクトリを引数で受け取れる。改善の提案（4種類）、学びは消さない、判断は AskUserQuestion、ゴールが雛形のままなら一緒に決める、案はいつも3つ（トレードオフ付き）、選ぶたびに理由を `gdd/adr.md`、外のデータは先に実データで試す、本来の起動方法で確かめる、評価基準（定量 / 定性）で振り返る
+- `plugins/polaris/hooks/guard-gdd-writes.sh`：Bash から `gdd/goal.md` / `gdd/subgoals.md` への書き込みを止める。別ディレクトリで plugin として読み込んだときも効くことを確認（AI の `cp` を止めた）
 - `.claude/settings.json`：どこの `gdd/state.md` も allow。`gdd/` と `simulations/**/gdd/` の goal.md / subgoals.md を ask
-- design.md：改善ループ（セクション5）、3案と adr.md（セクション3）。CLAUDE.md：最小限の変更と YAGNI
-- シミュレーション1 `simulations/morning-review/`（commit しない）：SG0〜SG3 を回し、6つの集める先から Slack に届く skill が `/morning-review` で動いた
+- design.md：改善ループ（5）、3案と adr.md（3）、アーカイブ前に学びを雛形へ移す（6）。README：入れ方と始め方
+- シミュレーション1 `simulations/morning-review/`（commit しない）：SG0〜SG3 を回し、`/morning-review` で動いた
 
 ## 判断ログ
 
-- 予算の概念と constraints.md は廃止。前提は goal.md（ゴール固有）と CLAUDE.md（リポジトリ全体）に置く。
+- 予算の概念と constraints.md は廃止。前提は goal.md と CLAUDE.md に置く。
 - 大ゴールの切り替え時も `gdd-init` で状態ファイルを作り直す。
-- 用語は「サブゴール」「サブゴール完了報告」「サブゴール完了時の判断」。番号は SG。
-- サブゴールレビューは `gdd/reviews/SG<N>.md`。Loop / レビュー / 振り返りは `gdd-loop` 1本。
+- 用語は「サブゴール」「サブゴールレビュー」「サブゴール完了時の判断」。番号は SG。
 - state.md は承認なしで書ける。reviews/ は対象にしない。
-- SG3 → 方向転換：`simulations/` で題材を1つずつ GDD で回し、振り返りを GDD 本体の改善に使う。判断は人間。`simulations/` は commit しない。
-- 学びは将来のハーネスの元なので消さない。振り返りを改善ループにする（SG4）。
-- 判断欄は毎回 AskUserQuestion で選択肢を出して人間に選んでもらい、答えを AI が書く。
-- SG4 → 次へ進む。改善の提案 1, 3, 4 を採用（2 は不採用）。
-- SG5 → 次へ進む。改善の提案 1, 2 を採用（3 は不採用）。state.md の allow は `Edit(**/gdd/state.md)`。
-- シミュレーション中の人間の指示で、案は3つ（トレードオフが違うもの）、選んだ理由は adr.md、CLAUDE.md に最小限・YAGNI を入れた。
-- シミュレーション1は SG3 のあと人間の判断で終えた（実際の朝に使って直す前に、学びを本体に反映する方を選んだ）。
-- SG6 → 次へ進む。次は A（SG7）。提案1を修正して採用：案を選んだら毎回「なぜそれにしたか」を聞き、人間の言葉で adr.md に残す。AI が出す案にはいつもトレードオフを書き、人間に選ばせる（人間の追加指示）。提案2, 3 は不採用。
-- SG7 → 次へ進む。改善の提案 1, 2 を採用。配り方は plugin だけにする（Template は作らない）。次は SG8 polaris を plugin にする（どちらも `gdd/adr.md`）。
-- SG7：学びのうち4つ（本来の起動方法で確かめる、外のデータを先に試す、解釈を先に確かめる、評価基準＝人間の追加指示）を手順と雛形に入れた。評価基準は独立した行にする（`gdd/adr.md`）。
+- SG3 → 方向転換：`simulations/` で題材を1つずつ回す。`simulations/` は commit しない。
+- 学びは消さない。振り返りを改善ループにする（SG4）。判断欄は毎回 AskUserQuestion。
+- SG4 → 提案 1, 3, 4 採用。SG5 → 提案 1, 2 採用。SG6 → 次は SG7、提案1を修正して採用（毎回理由を聞く、案にはいつもトレードオフ）。SG7 → 提案 1, 2 採用、配り方は plugin だけ、次は SG8。
+- SG8：エンジンは `plugins/polaris/` に置く（B）。配るものは全部英語、返す言葉は使う人に合わせる（C）。言語は環境から推測する（B）。ライセンスは MIT（すべて `gdd/adr.md`）。
 - 公開リポジトリから勤務先の固有名詞を消し、履歴も書き換えた。作者メールは GitHub の noreply。
+- 2026-10-07：Human-on-the-loop の評価の結果、「その先」を SG9 機械的な停止条件 → SG10 公開 → SG11 評価の独立 → SG12 続く既定に並べ直した（人間の指示で即反映）。介入タイミングの設定（goal.md の1行、policy.md）は見送り。
+- SG8 → 人間の判断で完了（本来の起動方法での最終確認は人間側で行う）。
 
 ## 却下された案
 
@@ -50,17 +46,24 @@
 - settings.json の allow 変更が効くタイミングを学びに足す（SG6 の提案2）
 - シミュレーションの回し方を design.md に書く（SG6 の提案3）
 - 「報告の数字は一覧から数える」「採用された範囲だけ反映する」を手順に入れる（SG7 で選ばれなかった）
+- Template Repository を作る（plugin だけにした）
+- 介入タイミングを goal.md の1行（ゴール達成時 / サブゴール達成時 / 判断時 / 編集時）や policy.md で設定する（聞かれすぎた実績がない、停止条件が未実装、`ゴール達成時` は design.md 4 条件1と矛盾、却下ゼロで自律度を上げる提案は Goodhart）
 
 ## 学び
 
 - 用語は「サブゴール」を使う。「マイルストーン」「Sub-goal」「ゲート」「ゲート報告」は使わない（「サブゴール完了時の判断」と言う）。
-- goal.md / subgoals.md は Edit ツールで書く（Bash で書くと ask の承認を通らない）。→ ハーネス化済み：`.claude/hooks/guard-gdd-writes.sh`
+- goal.md / subgoals.md は Edit ツールで書く（Bash で書くと ask の承認を通らない）。→ ハーネス化済み：`plugins/polaris/hooks/guard-gdd-writes.sh`
 - push は sandbox から通らないので、人間に `! git push origin main` を頼む。
 - 権限や設定の変更は、頼まれた範囲だけにする。
-- 人間に伝わりにくい言葉（「ゲート」など）は使わず、何が起きるかで言う。
+- 人間に伝わりにくい言葉（「ゲート」「床」など）は使わず、何が起きるかで言う。design.md 7 のものは「機械的な停止条件」と呼ぶ。
 - 人間の指示を仕組みに落とすとき、解釈が分かれる点（数、範囲、どこに書くか）は書く前に確かめる。→ 反映済み：`gdd-loop` の 2
 - 作る系の完了は、作ったものを本来の起動方法（skill なら `/<名前>`）で動かして確かめる。AI が会話の中で手順をなぞっただけでは完了にしない。→ 反映済み：`gdd-loop` の 3
 - 完了条件に使うデータ（期限など）は、サブゴールを決める前に実データで存在を確かめる。→ 反映済み：`gdd-loop` の 3
-- サブゴールには評価基準（定量 / 定性）を決め、完了報告でその基準で振り返る。→ 反映済み：`gdd-loop` の 5、雛形（subgoals.md、report.md）、design.md 3
+- サブゴールには評価基準（定量 / 定性）を決め、完了報告でその基準で振り返る。→ 反映済み：`gdd-loop` の 5、雛形、design.md 3
 - `state.md` の学びはそのリポジトリでしか効かない。どの題材でも効く学びは、手順か雛形に移すまで「仕組みになった」とは言わない。
 - ファイルを読む Bash は、入力待ちで止まらないように `</dev/null` を付け、ファイル名が空でないか確かめる。
+- design.md 7 の「機械的に判定する」は SKILL.md の指示文のままで、hook も ask ルールも無い。これが無い限り、人間に聞く回数を減らすことは AI の自己申告を信じることと同じになる。順序は停止条件 → 評価の独立 → 続く既定。
+- 介入頻度の設定は、人間が「聞かれすぎた」と記録に残すまで作らない。介入頻度のノブは design.md 3 のサブゴールの粒度に既にある。
+- この sandbox から headless（`-p`）で起動した Claude Code は Write ツールが一律に拒否される。本来の起動方法の確認は人間に頼む。
+- plugin の雛形は作業ディレクトリの外にあるので、設定によっては gdd-init が雛形を読むときに確認が出る。
+- サブゴールの途中で長い別作業（評価、調査）が入ると `state.md` の「現状」が古いまま残る。手順3の開始時に「現状」を書く方が安全。
