@@ -8,7 +8,7 @@
     {
       "name": "polaris",
       "source": "./plugins/polaris",
-      "description": "Goal Driven Development: the AI advances one sub-goal at a time toward your goal, and you steer by choosing from its reports."
+      "description": "Goal Driven Development: the AI advances one sub-goal at a time toward your goal, and you steer by choosing from its reviews."
     }
   ]
 }

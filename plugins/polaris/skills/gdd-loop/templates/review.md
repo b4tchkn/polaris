@@ -1,4 +1,4 @@
-# Sub-goal report: SG<N> <goal>
+# Sub-goal review: SG<N> <goal>
 
 ## What was built and how to try it
 

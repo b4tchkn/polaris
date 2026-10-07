@@ -4,7 +4,7 @@
 
 ## 現状
 
-- SG7（シミュレーション1の学びを本体に反映する）を終え、`gdd/reports/SG7.md` の判断待ち。
+- SG7（シミュレーション1の学びを本体に反映する）を終え、`gdd/reviews/SG7.md` の判断待ち。
 
 ## 出来たもの
 
@@ -20,8 +20,8 @@
 - 予算の概念と constraints.md は廃止。前提は goal.md（ゴール固有）と CLAUDE.md（リポジトリ全体）に置く。
 - 大ゴールの切り替え時も `gdd-init` で状態ファイルを作り直す。
 - 用語は「サブゴール」「サブゴール完了報告」「サブゴール完了時の判断」。番号は SG。
-- サブゴール完了報告は `gdd/reports/SG<N>.md`。Loop / 報告 / 振り返りは `gdd-loop` 1本。
-- state.md は承認なしで書ける。reports/ は対象にしない。
+- サブゴールレビューは `gdd/reviews/SG<N>.md`。Loop / レビュー / 振り返りは `gdd-loop` 1本。
+- state.md は承認なしで書ける。reviews/ は対象にしない。
 - SG3 → 方向転換：`simulations/` で題材を1つずつ GDD で回し、振り返りを GDD 本体の改善に使う。判断は人間。`simulations/` は commit しない。
 - 学びは将来のハーネスの元なので消さない。振り返りを改善ループにする（SG4）。
 - 判断欄は毎回 AskUserQuestion で選択肢を出して人間に選んでもらい、答えを AI が書く。
