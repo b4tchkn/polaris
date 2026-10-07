@@ -14,7 +14,7 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 ## 1. Read the situation
 
 - Read `gdd/goal.md`, `gdd/subgoals.md`, and `gdd/state.md`.
-- If `gdd/reports/` has reports, read the latest one. Also skim the "Retrospective" and "Improvement proposals" of earlier reports (used in step 5).
+- If `gdd/reports/` has reports, read the latest one.
 
 ## 2. Check the previous decision
 
@@ -59,7 +59,7 @@ Rewrite the whole file within one page (do not append): Now / Built so far / Dec
 
 - Write `gdd/reports/SG<N>.md` in the shape of `templates/report.md` (`<N>` is this sub-goal's number).
 - In "Evaluation against the criteria", write the result for each evaluation criterion of the sub-goal (quantitative / qualitative) and whether it was met.
-- Base the retrospective not only on this loop but also on all learnings in `state.md` and earlier reports.
+- Base the retrospective on this loop and on all learnings in `state.md`.
 - Number the improvement proposals. For each, write where it goes and its trade-off (what gets better, what it costs). Leave out items with nowhere to go. There are four kinds:
   - Add learning: something the AI should follow in later loops → learnings in `state.md`
   - Fix the process: change how GDD runs in this repository → `CLAUDE.md` or `.claude/` in this repository
