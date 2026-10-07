@@ -35,11 +35,13 @@ GOAL ◀── サブゴール ◀── サブゴール ◀── サブゴー�
 エンジン（全プロジェクト共通）と状態（プロジェクトごと）を分ける。
 
 ```
-.claude/                  エンジン
-  skills/gdd-*/           init、Loop を1周回す、サブゴール完了報告、振り返り
-                          1回の起動で1サブゴール進め、報告して止まる
-  settings.json           環境全体の制約（permissions でハーネスとして強制する）
-gdd/                      状態
+plugins/polaris/          エンジン（Claude Code の plugin として配る。英語で書き、返す言葉は使う人に合わせる）
+  skills/gdd-init/        状態ファイルと承認ルールを作る
+  skills/gdd-loop/        1回の起動で1サブゴール進め、報告して止まる（振り返り、改善の提案を含む）
+  hooks/                  Bash から goal.md / subgoals.md への書き込みを止める
+.claude-plugin/           マーケットプレイス（/plugin marketplace add b4tchkn/polaris）
+.claude/settings.json     使う側のリポジトリの制約（gdd-init が承認ルールを書く）
+gdd/                      状態（使う側のリポジトリに gdd-init が作る）
   goal.md                 GOAL だけを書く：北極星のゴール、受け入れシナリオ、前提
   subgoals.md             サブゴールの一覧（次の1つは詳細、それ以降は粗く）
                           ※ goal.md / subgoals.md は AI が案を書けるが、書き込みには
@@ -55,12 +57,13 @@ docs/design.md            この設計
 
 ### 配布方法
 
-| 使い方 | 導入方法 |
-|---|---|
-| 新規リポジトリ（0→1：サービス開発、事業の立ち上げ） | Template Repository から作り、`gdd-init` で状態を空にする |
-| 既存リポジトリ（1→100：既存の OSS など） | エンジンを Claude Code の plugin として入れ、`gdd-init` で `gdd/` を生成する |
+新規リポジトリ（0→1）も既存リポジトリ（1→100）も同じ手順にする（Template Repository は作らない。`gdd/adr.md`）。
 
-このリポジトリ自身も `gdd/` に「基盤を作る」GOAL を入れ、ドッグフーディングで進める。
+1. `/plugin marketplace add b4tchkn/polaris` → `/plugin install polaris@polaris`
+2. やりたいことのリポジトリで `/polaris:gdd-init`
+3. `/polaris:gdd-loop` をくり返す
+
+このリポジトリ自身も `gdd/` に「基盤を作る」GOAL を入れ、`claude --plugin-dir plugins/polaris` で起動してドッグフーディングで進める。
 
 ## 3. サブゴールの定義
 
@@ -168,7 +171,9 @@ AI が案を出し、人間が承認または修正する。
    やり残し、次のゴール候補 2〜3案
    人間が判断する：完了 / 追加のサブゴールで続ける / 終了
    ▼
-② アーカイブ：gdd/archive/NN-<slug>/ に goal.md / subgoals.md / state.md / 完了報告を移し、
+② アーカイブ：state.md の学びのうち、どの題材でも効くものを gdd-loop / 雛形に移すか、
+   人間に3案で選んでもらう（state.md の学びはそのリポジトリでしか効かないため）。
+   そのあと gdd/archive/NN-<slug>/ に goal.md / subgoals.md / state.md / 完了報告を移し、
    gdd-init で空の状態ファイルを作り直す
    ▼
 ③ 新しい大ゴールの設定（人間）

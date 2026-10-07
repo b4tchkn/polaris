@@ -5,6 +5,7 @@
 - 設計は docs/design.md に従う。
 - 骨格は既存手法（Spec Kit、Anthropic の long-running harness など）から借り、自作するのは「理解・介在」の層に絞る。
 - GDD の仕組み（skill、雛形、設定、design.md）を変えるときは、必要最低限の変更にとどめ、複雑にしすぎない。
+- エンジン（skill、雛形、hook）は `plugins/polaris/` に置き、英語で書く。このリポジトリで開発するときは `claude --plugin-dir plugins/polaris` で起動する（skill は `/polaris:gdd-loop` などで呼ぶ）。
 - YAGNI：今の問題を解くのに要らないもの（将来に備えた拡張、使われていない設定、1か所でしか使わない抽象化）は作らない。必要になったときに足す。
 
 ## Git

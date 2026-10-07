@@ -1,0 +1,14 @@
+{
+  "name": "polaris",
+  "description": "Goal Driven Development for Claude Code.",
+  "owner": {
+    "name": "b4tchkn"
+  },
+  "plugins": [
+    {
+      "name": "polaris",
+      "source": "./plugins/polaris",
+      "description": "Goal Driven Development: the AI advances one sub-goal at a time toward your goal, and you steer by choosing from its reports."
+    }
+  ]
+}
