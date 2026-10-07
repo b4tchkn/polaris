@@ -20,6 +20,6 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
    - `permissions.ask`: `Edit(/gdd/goal.md)`, `Edit(/gdd/subgoals.md)`
    - `permissions.allow`: `Edit(/gdd/state.md)`
    - Create the file if missing. Merge without removing existing keys or rules, and skip rules that already exist.
-   - Tell the human that changed `allow` rules in a project's `.claude/settings.json` take effect only after they restart Claude Code and accept the trust prompt.
+   - Tell the human that the new rules in `.claude/settings.json` take effect once they accept the trust prompt for the project settings (restart Claude Code if it does not appear).
 4. Report the files you created or changed, then stop. Do not commit.
 5. Tell the human the next step: run `/polaris:gdd-loop` to decide the goal together.

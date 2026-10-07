@@ -18,7 +18,7 @@ In Claude Code:
 In the repository where you want to get something done (new or existing):
 
 1. `/polaris:gdd-init` — creates `gdd/` and the approval rules in `.claude/settings.json`.
-2. Restart Claude Code and accept the trust prompt so the new rules take effect.
+2. Accept the trust prompt for the new rules (restart Claude Code if it does not appear).
 3. `/polaris:gdd-loop` — the AI asks a few questions and writes your goal and first sub-goal.
 4. `/polaris:gdd-loop` again, each time you want to advance. Every run ends with a report and choices.
 
@@ -34,6 +34,11 @@ gdd/
 ```
 
 The AI can propose changes to `goal.md` and `subgoals.md`, but every write needs your approval.
+
+## What the plugin adds to Claude Code
+
+- Two skills: `/polaris:gdd-init` and `/polaris:gdd-loop`.
+- One PreToolUse hook on Bash. It blocks plain shell writes to `gdd/goal.md` and `gdd/subgoals.md` (redirects, `sed -i`, `cp`, `mv`, `tee`, and so on) so that those files are only changed through the Edit tool, where your approval rule applies. It runs on every Bash command in every repository where the plugin is installed, needs only `bash` and `grep`, and is a coarse pattern check, not a sandbox.
 
 ## How a loop works
 
