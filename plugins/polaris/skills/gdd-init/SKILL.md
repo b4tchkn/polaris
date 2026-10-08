@@ -14,7 +14,7 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 ## Steps
 
 1. If `gdd/` already has `goal.md`, `subgoals.md`, `state.md`, or `adr.md`, ask the human before overwriting. Stop if they decline.
-2. Write `goal.md`, `subgoals.md`, `state.md`, and `adr.md` from this skill's `templates/` into `gdd/` as they are.
+2. Write `goal.md`, `subgoals.md`, `state.md`, and `adr.md` from this skill's `templates/` into `gdd/` as they are, using the Write tool (a Bash copy of `goal.md` / `subgoals.md` is reverted by the hook).
    - Do not touch `gdd/archive/`. Do not create it (archiving a finished goal is not implemented yet; `gdd-loop` only writes a goal completion report).
 3. Add these rules to `.claude/settings.json`:
    - `permissions.ask`: `Edit(/gdd/goal.md)`, `Edit(/gdd/subgoals.md)`

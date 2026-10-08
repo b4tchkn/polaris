@@ -28,7 +28,7 @@ If there is no previous review, go to step 3. Otherwise, read the "Decision" sec
 | Decision | Action |
 |---|---|
 | Empty | Have the human choose as in step 7, write it into the Decision section, then go through this table again |
-| Proceed | Copy the decision into the decision log in `state.md`. Apply the improvement proposals adopted in the Decision section (do not apply the others). Update `subgoals.md` from the chosen next sub-goal option (move the previous sub-goal to "Done:" and write its result), then go to step 3 |
+| Proceed | Copy the decision into the decision log in `state.md`. Apply the improvement proposals adopted in the Decision section (do not apply the others). Update `subgoals.md` from the chosen next sub-goal option: rename the previous sub-goal's heading from "Next:" to "Done:" (e.g. `## Done: SG0 <goal>`), keep its table, and add a "Result" row; then write the chosen option as the new "Next:" section. Then go to step 3 |
 | Change direction | Copy the decision and comment into the decision log in `state.md`. Write a revision of `subgoals.md` that reflects the comment, then stop |
 | Stop | Copy the decision into the decision log in `state.md`, then stop |
 
