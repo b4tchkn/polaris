@@ -4,7 +4,7 @@
 
 ## 現状
 
-- SG9（機械的な停止条件を実装する）を終え、`gdd/reviews/SG9.md` の判断待ち。Claude Code が hook を読み込んだ状態での確認は人間に依頼中。
+- SG13（GOAL 完了の分岐）を終え、`gdd/reviews/SG13.md` の判断待ち。`simulations/goal-done` での起動確認は人間に依頼中。
 - 2026-10-07 に Human-on-the-loop の多視点レビューと4シナリオのシミュレーションを行い、「その先」を機械的な停止条件 → 公開 → 評価の独立 → 続く既定の順に並べ直した。定義は README と design.md 0（SKILL.md には SG12 で）。
 
 ## 出来たもの
@@ -13,6 +13,7 @@
 - `gdd-init` / `gdd-loop`：対象ディレクトリを引数で受け取れる。改善の提案（4種類）、学びは消さない、判断は AskUserQuestion、ゴールが雛形のままなら一緒に決める、案はいつも3つ（トレードオフ付き）、選ぶたびに理由を `gdd/adr.md`、外のデータは先に実データで試す、本来の起動方法で確かめる、評価基準（定量 / 定性）で振り返る
 - `plugins/polaris/hooks/guard-gdd-writes.sh`（SG9）：Bash / Edit / Write の前に `gdd/` の状態ファイルを控え、後に結果を比べる。goal.md / subgoals.md の Bash 書き込み、学びの削除、adr.md の書き換えは元に戻して exit 2、テストへの skip 追加は exit 2。`tests/guard-gdd-writes.sh` で 20 ケース
 - `gdd-init`（SG9）：戻せない行為（依存の追加、マイグレーション、push / PR マージ / release、履歴の書き換え、settings の変更）の ask ルールを使う側の settings.json に書く
+- `gdd-loop` 手順5・7（SG13）：「その先」が空なら受け入れシナリオごとの結果を書き、GOAL 達成に見えると伝えて「サブゴールを足す / 完了報告（`gdd/reviews/GOAL.md`）を書く」を聞く。試験用 `simulations/goal-done/gdd/`（commit しない）
 - `.claude/settings.json`：どこの `gdd/state.md` も allow。`gdd/` と `simulations/**/gdd/` の goal.md / subgoals.md を ask
 - design.md：改善ループ（5）、3案と adr.md（3）、アーカイブ前に学びを雛形へ移す（6）。README：入れ方と始め方
 - シミュレーション1 `simulations/morning-review/`（commit しない）：SG0〜SG3 を回し、`/morning-review` で動いた
@@ -31,6 +32,7 @@
 - 2026-10-07：Human-on-the-loop の評価の結果、「その先」を SG9 機械的な停止条件 → SG10 公開 → SG11 評価の独立 → SG12 続く既定に並べ直した（人間の指示で即反映）。介入タイミングの設定（goal.md の1行、policy.md）は見送り。
 - SG8 → 人間の判断で完了（本来の起動方法での最終確認は人間側で行う）。次は SG9。改善の提案1（定義を1行）を採用、README と design.md に書き SKILL.md は SG12 で。2, 3 は不採用。
 - SG9：ask ルールの広さは標準（design.md 7 の項目をファイルとコマンドに対応させる）。理由「design.md 7 に書いた項目は全部機械的に止めたい」（`gdd/adr.md`）。
+- SG9 → 次へ進む。次は SG13（GOAL 完了の流れ）。理由「公開前にユーザーが見る動きを揃えたい」。改善の提案 1, 2 は見送り（人間の指示。以後聞かない）。
 
 ## 却下された案
 
@@ -67,6 +69,9 @@
 - design.md 7 の「機械的に判定する」は SKILL.md の指示文のままで、hook も ask ルールも無い。これが無い限り、人間に聞く回数を減らすことは AI の自己申告を信じることと同じになる。順序は停止条件 → 評価の独立 → 続く既定。→ 一部ハーネス化済み：SG9（`gdd-init` の ask ルール、`guard-gdd-writes.sh`）。残りは design.md 7 の末尾に列挙
 - Bash コマンドの文字列を見るブロックリストは負ける（25 経路中 6 しか止まらなかった）。止めたいのは結果なので、実行前に控えて実行後に比べて戻す。
 - hook は本物と同じ形の JSON を流すテストを先に通してから報告する（`tests/guard-gdd-writes.sh`）。この sandbox からは Claude Code に hook を読み込ませた確認ができないので、そこは人間に頼む。
+- 判断を「未判断・持ち越し」で記録しない。人間が答えなかった、または対応不要と言ったら「見送り」として確定し、同じことを二度と聞かない。
+- design.md の流れを plugin に入れるときは、全段階を一度に入れず、今の GOAL で実際に通る段階だけ入れる（SG13 は design.md 6 の①だけ）。
+- アーカイブを実装するときは hook と衝突する：state.md の雛形上書きは「学びの削除」、adr.md の雛形書きは「書き換え」として戻される。学びの削除判定を `gdd/archive/*/state.md` にある行は除く形に直し、adr.md は GOAL をまたいで1本にする（harness-engineering-reviewer の指摘）。
 - 介入頻度の設定は、人間が「聞かれすぎた」と記録に残すまで作らない。介入頻度のノブは design.md 3 のサブゴールの粒度に既にある。
 - この sandbox から headless（`-p`）で起動した Claude Code は Write ツールが一律に拒否される。本来の起動方法の確認は人間に頼む。
 - plugin の雛形は作業ディレクトリの外にあるので、設定によっては gdd-init が雛形を読むときに確認が出る。

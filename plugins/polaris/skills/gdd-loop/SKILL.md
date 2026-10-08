@@ -68,6 +68,7 @@ Gather the material for the review before writing it.
   - Revise sub-goals: add, remove, or reorder "Later" → `subgoals.md` / `goal.md`
 - Only propose. Apply them only after the human adopts them in the Decision section (step 2).
 - Draft three next sub-goal options (following step 3) that reflect the retrospective. Give each option evaluation criteria, marked quantitative (measured by numbers) or qualitative (judged by the human).
+- If "Later" in `subgoals.md` is empty, the goal may be reached. Instead of the next sub-goal options, write for each acceptance scenario in `goal.md` the result and whether it was met.
 
 ## 6. Write the sub-goal review
 
@@ -82,6 +83,7 @@ Do not just ask the human to fill in the Decision section. Always offer choices 
 - Phrase questions so that someone who does not know the code or the jargon understands them. Say in the question what it is about.
   - Question 1 (single choice): "Is SG<N> good as it is?" Options: "OK, proceed", "Change it (change direction)", "Stop". For a Decide sub-goal, split "OK" into the three options (e.g. "Proceed with option A").
   - Question 2 (single choice): "Which sub-goal next?" Offer the three options with descriptions that show their trade-offs.
+    - If "Later" is empty, first say that the goal looks reached, and make Question 2: "Add sub-goals and continue" / "Write the goal completion report". If they choose the report, write `gdd/reviews/GOAL.md` with the acceptance scenarios and their results (from step 5), what was left undone, and two or three candidates for the next goal, then stop.
   - Question 3 (multiple choice): "Which improvement proposals should be applied?" For each, describe in one line what changes and its trade-off. Skip this question if there are no proposals.
 - Put the recommended option first and add "(Recommended)".
 - Write the answers into the Decision section (e.g. `Proceed. Adopt 1, 2 (chosen with AskUserQuestion)`). If they chose "Change it" or Other, copy what they wrote as a comment.
