@@ -19,6 +19,12 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 3. Add these rules to `.claude/settings.json`:
    - `permissions.ask`: `Edit(/gdd/goal.md)`, `Edit(/gdd/subgoals.md)`
    - `permissions.allow`: `Edit(/gdd/state.md)`
+   - `permissions.ask`, hard-to-reverse actions, so the human approves them whatever the AI thinks:
+     - Adding a dependency: `Bash(npm install *)`, `Bash(npm i *)`, `Bash(yarn add *)`, `Bash(pnpm add *)`, `Bash(pip install *)`, `Bash(pip3 install *)`, `Bash(uv add *)`, `Bash(poetry add *)`, `Bash(go get *)`, `Bash(cargo add *)`, `Bash(gem install *)`, `Bash(bundle add *)`, `Edit(/package.json)`, `Edit(**/build.gradle)`, `Edit(**/build.gradle.kts)`, `Edit(**/libs.versions.toml)`, `Edit(/requirements*.txt)`, `Edit(/pyproject.toml)`, `Edit(/go.mod)`, `Edit(/Cargo.toml)`, `Edit(/Gemfile)`
+     - Changing the data model: `Edit(**/migrations/**)`, `Edit(**/migration/**)`, `Edit(**/*.sql)`
+     - Leaving the repository: `Bash(git push *)`, `Bash(gh pr merge *)`, `Bash(gh release *)`
+     - Rewriting history: `Bash(git rebase *)`, `Bash(git reset --hard *)`, `Bash(git filter-branch *)`, `Bash(git filter-repo *)`
+     - The rules themselves: `Edit(/.claude/settings.json)`
    - Create the file if missing. Merge without removing existing keys or rules, and skip rules that already exist.
    - Tell the human that the new rules in `.claude/settings.json` take effect once they accept the trust prompt for the project settings (restart Claude Code if it does not appear).
 4. Report the files you created or changed, then stop. Do not commit.

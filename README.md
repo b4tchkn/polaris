@@ -48,7 +48,8 @@ The AI can propose changes to `goal.md` and `subgoals.md`, but every write needs
 ## What the plugin adds to Claude Code
 
 - Two skills: `/polaris:gdd-init` and `/polaris:gdd-loop`.
-- One PreToolUse hook on Bash. It blocks plain shell writes to `gdd/goal.md` and `gdd/subgoals.md` (redirects, `sed -i`, `cp`, `mv`, `tee`, and so on) so that those files are only changed through the Edit tool, where your approval rule applies. It runs on every Bash command in every repository where the plugin is installed, needs only `bash` and `grep`, and is a coarse pattern check, not a sandbox.
+- Approval rules for hard-to-reverse actions, written by `gdd-init` into `.claude/settings.json`: adding a dependency, changing migrations, `git push`, merging a PR, rewriting history, and editing the rules themselves. They prompt you whatever the AI thinks.
+- One hook on Bash, Edit, and Write (PreToolUse and PostToolUse). It snapshots the `gdd/` state files before a tool runs and checks them after: a `gdd/goal.md` or `gdd/subgoals.md` changed or created by a shell command is restored, a learning removed from `gdd/state.md` is restored, a rewritten `gdd/adr.md` is restored, and an edit that adds a skip or ignore to a test file is refused with an instruction to ask you first. It runs in every repository where the plugin is installed, needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
 
 ## How a loop works
 
