@@ -59,7 +59,7 @@ Rewrite the whole file within one page (do not append): Now / Built so far / Dec
 
 Gather the material for the review before writing it.
 
-- For each evaluation criterion of the sub-goal (quantitative / qualitative), write the result and whether it was met.
+- Have the evaluation scored in a separate context: run the Agent tool with `subagent_type: "polaris:evaluator"`, giving it only the sub-goal's goal, type and done condition, evaluation criteria, the paths of the deliverables, and how to run them. Do not pass your own view of the result. Paste the table it returns into the review unchanged; if you disagree with a verdict, say so under "Least confident decision" instead of editing the table.
 - From this loop and all learnings in `state.md`, list what to keep and the problems (rework, where the human stepped in, why something was rejected).
 - From those, derive numbered improvement proposals. For each, write where it goes and its trade-off (what gets better, what it costs). Leave out items with nowhere to go. There are four kinds:
   - Add learning: something the AI should follow in later loops → learnings in `state.md`

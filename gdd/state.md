@@ -4,7 +4,7 @@
 
 ## 現状
 
-- SG13 完了（人間が `simulations/goal-done` で分岐を確認）。次は SG11（evaluator）。
+- SG11 完了（人間が `simulations/eval-test` で evaluator の採点が表に入るのを確認）。次は SG12（続く既定にする）。
 - 2026-10-07 に Human-on-the-loop の多視点レビューと4シナリオのシミュレーションを行い、「その先」を機械的な停止条件 → 公開 → 評価の独立 → 続く既定の順に並べ直した。定義は README と design.md 0（SKILL.md には SG12 で）。
 
 ## 出来たもの
@@ -14,6 +14,7 @@
 - `plugins/polaris/hooks/guard-gdd-writes.sh`（SG9）：Bash / Edit / Write の前に `gdd/` の状態ファイルを控え、後に結果を比べる。goal.md / subgoals.md の Bash 書き込み、学びの削除、adr.md の書き換えは元に戻して exit 2、テストへの skip 追加は exit 2。`tests/guard-gdd-writes.sh` で 20 ケース
 - `gdd-init`（SG9）：戻せない行為（依存の追加、マイグレーション、push / PR マージ / release、履歴の書き換え、settings の変更）の ask ルールを使う側の settings.json に書く
 - `gdd-loop` 手順5・7（SG13）：「その先」が空なら受け入れシナリオごとの結果を書き、GOAL 達成に見えると伝えて「サブゴールを足す / 完了報告（`gdd/reviews/GOAL.md`）を書く」を聞く。試験用 `simulations/goal-done/gdd/`（commit しない）
+- `plugins/polaris/agents/evaluator.md`（SG11）：評価基準と成果物の場所だけを受け取り、自分で測って基準ごとの表を返す。`gdd-loop` 5 が `polaris:evaluator` を呼び、表をそのまま貼る。試験用 `simulations/eval-test/gdd/`（commit しない）
 - design.md と plugin の対応表（SG14）：`gdd/reviews/SG14.md`。入っている 14、一部 6、無い 6（予定無しはアーカイブ一式、大きさの指針、典型的な並び、N 周無変化）
 - `.claude/settings.json`：どこの `gdd/state.md` も allow。`gdd/` と `simulations/**/gdd/` の goal.md / subgoals.md を ask
 - design.md：改善ループ（5）、3案と adr.md（3）、アーカイブ前に学びを雛形へ移す（6）。README：入れ方と始め方
@@ -36,6 +37,7 @@
 - SG9 → 次へ進む。次は SG13（GOAL 完了の流れ）。理由「公開前にユーザーが見る動きを揃えたい」。改善の提案 1, 2 は見送り（人間の指示。以後聞かない）。
 - SG13 → 次へ進む（起動確認は人間が後で行う）。次は SG14（design.md と plugin の差の洗い出し）。理由「公開前に仕様の抜けを見ておきたい」。改善の提案 1（答えなかった判断は見送りと書く → `gdd-loop` 7）、2（SG14 に hook の論点）を採用。
 - SG14 → 次へ進む。アーカイブ一式を SG15 として追加（典型的な並び、N 周無変化は足さない）。SG10 の公開は人間が行い、AI は公開までの plugin 整備だけ。次は順番どおり SG11。理由「サブゴールを順番にやりたい」。提案 2（大きさの指針 → `gdd-loop` 5）を採用、1（design.md の文言）は見送り。
+- SG11 → 次へ進む（起動確認済み）。次は順番どおり SG12。提案 1（評価基準の書き方）を採用。
 
 ## 却下された案
 
@@ -74,6 +76,7 @@
 - hook は本物と同じ形の JSON を流すテストを先に通してから報告する（`tests/guard-gdd-writes.sh`）。この sandbox からは Claude Code に hook を読み込ませた確認ができないので、そこは人間に頼む。
 - 判断を「未判断・持ち越し」で記録しない。人間が答えなかった、または対応不要と言ったら「見送り」として確定し、同じことを二度と聞かない。→ 反映済み：`gdd-loop` の 7
 - design.md の流れを plugin に入れるときは、全段階を一度に入れず、今の GOAL で実際に通る段階だけ入れる（SG13 は design.md 6 の①だけ）。
+- 評価基準は、evaluator が成果物だけを見て測れる形で短く書く（レビュー自身や採点者を参照しない。確かめ方は結果欄に）。SG11 で採点者が自分の出力を採点する循環になった。
 - アーカイブを実装するときは hook と衝突する：state.md の雛形上書きは「学びの削除」、adr.md の雛形書きは「書き換え」として戻される。学びの削除判定を `gdd/archive/*/state.md` にある行は除く形に直し、adr.md は GOAL をまたいで1本にする（harness-engineering-reviewer の指摘）。
 - 介入頻度の設定は、人間が「聞かれすぎた」と記録に残すまで作らない。介入頻度のノブは design.md 3 のサブゴールの粒度に既にある。
 - この sandbox から headless（`-p`）で起動した Claude Code は Write ツールが一律に拒否される。本来の起動方法の確認は人間に頼む。
