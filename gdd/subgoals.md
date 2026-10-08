@@ -92,3 +92,5 @@
 | SG10 | GitHub で公開し、既存のリポジトリに `/plugin install` で入れて 1→100 を試す | 作る |
 | SG11 | 評価を独立させる（作業した AI とは別の evaluator が評価基準を採点する） | 作る |
 | SG12 | 続く既定にする（作る系で評価が通り、停止条件に当たらなければ人間を待たずに次へ進む）。このとき Human-on-the-loop の定義を `gdd-loop` の SKILL.md にも入れる | 作る |
+| SG13 | GOAL 完了の流れ（design.md 6：完了報告、アーカイブ、次の GOAL への引き継ぎ）を `gdd-loop` / `gdd-init` と README に入れる | 作る |
+| SG14 | design.md にあって plugin に入っていない仕様を洗い出し、サブゴールに足すものを決める | 決める |
