@@ -126,4 +126,5 @@
 | # | ゴール | 種類 |
 |---|---|---|
 | SG10 | GitHub で公開し、既存のリポジトリに `/plugin install` で入れて 1→100 を試す（人間が行う。AI は公開までの plugin 整備だけ） | 作る |
+| SG17 | skill の挙動を `claude plugin eval` で確かめる（試験用 `gdd/` を渡して gdd-loop を起動し、できるファイルとレビューの判断欄を assert する。SG12 の自動続行と SG13 の完了分岐を最初のケースにする） | 作る |
 | SG15 | アーカイブと次 GOAL への引き継ぎ（design.md 6 ②〜④、大ゴールの振り返り、hook の学び判定を `archive/` 込みに直す、README の節）を入れる | 作る |
