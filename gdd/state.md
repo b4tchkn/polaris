@@ -4,7 +4,7 @@
 
 ## 現状
 
-- SG12 完了（人間が `simulations/auto-test` で SG0・SG1 が自動で進み SG2 で止まるのを確認）。次は SG17（`claude plugin eval`）。
+- SG17（`claude plugin eval`）のケースを書き、`gdd/reviews/SG17.md` の判断待ち。人間が eval を走らせて2ケースが通るまで完了にしない。
 - 2026-10-07 に Human-on-the-loop の多視点レビューと4シナリオのシミュレーションを行い、「その先」を機械的な停止条件 → 公開 → 評価の独立 → 続く既定の順に並べ直した。定義は README と design.md 0（SKILL.md には SG12 で）。
 
 ## 出来たもの
@@ -16,6 +16,7 @@
 - `gdd-loop` 手順5・7（SG13）：「その先」が空なら受け入れシナリオごとの結果を書き、GOAL 達成に見えると伝えて「サブゴールを足す / 完了報告（`gdd/reviews/GOAL.md`）を書く」を聞く。試験用 `simulations/goal-done/gdd/`（commit しない）
 - `plugins/polaris/agents/evaluator.md`（SG11）：評価基準と成果物の場所だけを受け取り、自分で測って基準ごとの表を返す。`gdd-loop` 5 が `polaris:evaluator` を呼び、表をそのまま貼る。試験用 `simulations/eval-test/gdd/`（commit しない）
 - `gdd-loop` 7（SG12）：作る系で evaluator の表が全行「達成」なら人間に聞かず「次へ進む（自動）」として手順2へ。冒頭に Human-on-the-loop の1文。試験用 `simulations/auto-test/gdd/`（commit しない）
+- `plugins/polaris/evals/`（SG17）：`auto-continue`（SG0・SG1 が自動で進み SG2 で止まる）と `goal-reached`（「その先」が空で GOAL 達成の2択）。scaffold_script が試験用 `gdd/` を作り、graders が a.txt / b.txt とレビューの判断欄を見る。README に走らせ方
 - design.md と plugin の対応表（SG14）：`gdd/reviews/SG14.md`。入っている 14、一部 6、無い 6（予定無しはアーカイブ一式、大きさの指針、典型的な並び、N 周無変化）
 - `.claude/settings.json`：どこの `gdd/state.md` も allow。`gdd/` と `simulations/**/gdd/` の goal.md / subgoals.md を ask
 - design.md：改善ループ（5）、3案と adr.md（3）、アーカイブ前に学びを雛形へ移す（6）。README：入れ方と始め方
