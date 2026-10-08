@@ -4,7 +4,7 @@
 
 ## 現状
 
-- SG11 完了（人間が `simulations/eval-test` で evaluator の採点が表に入るのを確認）。次は SG12（続く既定にする）。
+- SG12（続く既定）を作り、`gdd/reviews/SG12.md` の判断待ち。人間の起動確認（`/polaris:gdd-loop simulations/auto-test`）が済むまで完了にしない。
 - 2026-10-07 に Human-on-the-loop の多視点レビューと4シナリオのシミュレーションを行い、「その先」を機械的な停止条件 → 公開 → 評価の独立 → 続く既定の順に並べ直した。定義は README と design.md 0（SKILL.md には SG12 で）。
 
 ## 出来たもの
@@ -15,6 +15,7 @@
 - `gdd-init`（SG9）：戻せない行為（依存の追加、マイグレーション、push / PR マージ / release、履歴の書き換え、settings の変更）の ask ルールを使う側の settings.json に書く
 - `gdd-loop` 手順5・7（SG13）：「その先」が空なら受け入れシナリオごとの結果を書き、GOAL 達成に見えると伝えて「サブゴールを足す / 完了報告（`gdd/reviews/GOAL.md`）を書く」を聞く。試験用 `simulations/goal-done/gdd/`（commit しない）
 - `plugins/polaris/agents/evaluator.md`（SG11）：評価基準と成果物の場所だけを受け取り、自分で測って基準ごとの表を返す。`gdd-loop` 5 が `polaris:evaluator` を呼び、表をそのまま貼る。試験用 `simulations/eval-test/gdd/`（commit しない）
+- `gdd-loop` 7（SG12）：作る系で evaluator の表が全行「達成」なら人間に聞かず「次へ進む（自動）」として手順2へ。冒頭に Human-on-the-loop の1文。試験用 `simulations/auto-test/gdd/`（commit しない）
 - design.md と plugin の対応表（SG14）：`gdd/reviews/SG14.md`。入っている 14、一部 6、無い 6（予定無しはアーカイブ一式、大きさの指針、典型的な並び、N 周無変化）
 - `.claude/settings.json`：どこの `gdd/state.md` も allow。`gdd/` と `simulations/**/gdd/` の goal.md / subgoals.md を ask
 - design.md：改善ループ（5）、3案と adr.md（3）、アーカイブ前に学びを雛形へ移す（6）。README：入れ方と始め方
@@ -72,6 +73,8 @@
 - `state.md` の学びはそのリポジトリでしか効かない。どの題材でも効く学びは、手順か雛形に移すまで「仕組みになった」とは言わない。
 - ファイルを読む Bash は、入力待ちで止まらないように `</dev/null` を付け、ファイル名が空でないか確かめる。
 - design.md 7 の「機械的に判定する」は SKILL.md の指示文のままで、hook も ask ルールも無い。これが無い限り、人間に聞く回数を減らすことは AI の自己申告を信じることと同じになる。順序は停止条件 → 評価の独立 → 続く既定。→ 一部ハーネス化済み：SG9（`gdd-init` の ask ルール、`guard-gdd-writes.sh`）。残りは design.md 7 の末尾に列挙
+- hook はカレントディレクトリに依存させない。`CLAUDE_PROJECT_DIR` に `cd` してから探す。相対パスの `find .` で実行前リストを作っていたため、cwd が変わった1回で全 goal.md / subgoals.md（10ファイル）が消えた（SG12）。テストは「別のディレクトリから pre を流す」ケースを含める。→ ハーネス化済み：`guard-gdd-writes.sh` 冒頭、`tests/guard-gdd-writes.sh`
+- 消す・戻す hook は、消す前の控えを残す。10ファイルの復旧はこの控えからできた。
 - Bash コマンドの文字列を見るブロックリストは負ける（25 経路中 6 しか止まらなかった）。止めたいのは結果なので、実行前に控えて実行後に比べて戻す。
 - hook は本物と同じ形の JSON を流すテストを先に通してから報告する（`tests/guard-gdd-writes.sh`）。この sandbox からは Claude Code に hook を読み込ませた確認ができないので、そこは人間に頼む。
 - 判断を「未判断・持ち越し」で記録しない。人間が答えなかった、または対応不要と言ったら「見送り」として確定し、同じことを二度と聞かない。→ 反映済み：`gdd-loop` の 7

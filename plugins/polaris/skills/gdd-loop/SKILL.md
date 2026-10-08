@@ -5,7 +5,7 @@ description: Run one Goal Driven Development loop. Advances the "Next:" sub-goal
 
 # gdd-loop
 
-Each run advances one sub-goal, reports, and stops. Do not commit.
+Human-on-the-loop: the AI proceeds by default; the human is called in when a sub-goal needs their judgment and when a mechanical stop condition fires, and can stop or overturn at any time. Do not commit.
 
 Talk to the human, write reviews, and ask questions in the language the human uses. Keep the headings of the templates as they are. Existing files may use translated markers (e.g. `次：` for "Next:", `完了：` for "Done:"); treat them the same and keep the language the file already uses.
 
@@ -78,7 +78,9 @@ Gather the material for the review before writing it.
 
 ## 7. Have the human choose, then stop
 
-Do not just ask the human to fill in the Decision section. Always offer choices with AskUserQuestion.
+A Build sub-goal whose evaluator table is all "Met" is done without asking the human: write "Proceed (automatic)" in the Decision section and go to step 2 with the first "Later" sub-goal as the next one.
+
+Otherwise, do not just ask the human to fill in the Decision section. Always offer choices with AskUserQuestion.
 
 - Phrase questions so that someone who does not know the code or the jargon understands them. Say in the question what it is about.
   - Question 1 (single choice): "Is SG<N> good as it is?" Options: "OK, proceed", "Change it (change direction)", "Stop". For a Decide sub-goal, split "OK" into the three options (e.g. "Proceed with option A").

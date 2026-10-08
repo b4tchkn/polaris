@@ -37,6 +37,14 @@ bash_case "delete"          'rm gdd/goal.md'
 bash_case "nested dir"      'echo hacked > sub/gdd/goal.md'
 bash_case "git checkout"    'git init -q . 2>/dev/null; git add -A; git -c user.email=a@b -c user.name=a commit -qm i; echo hacked > gdd/goal.md; git add -A; git -c user.email=a@b -c user.name=a commit -qm h; git checkout -q HEAD~1 -- gdd/goal.md; echo hacked2 > gdd/goal.md'
 
+# pre and post from different directories must not treat every file as new (this deleted 10 files once)
+export CLAUDE_PROJECT_DIR="$W"
+(cd sub && json Bash "" | bash "$HOOK" pre)
+json Bash "" | bash "$HOOK" post 2>/dev/null; rc=$?
+check "bash: cwd changed between pre and post" 0 "$rc"
+[ -f gdd/goal.md ] && [ -f sub/gdd/goal.md ] || { echo "FAIL bash: cwd changed deleted files"; fail=1; }
+unset CLAUDE_PROJECT_DIR
+
 # Bash creating a new goal.md where none existed
 mkdir -p new/gdd
 json Bash "" | bash "$HOOK" pre

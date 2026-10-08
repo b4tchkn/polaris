@@ -13,6 +13,9 @@ input=$(cat)
 
 field() { printf '%s' "$input" | sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" | head -1; }
 
+# Anchor on the project root: pre and post must look at the same tree whatever the shell cwd is.
+cd "${CLAUDE_PROJECT_DIR:-$(field cwd)}" 2>/dev/null || cd . || exit 0
+
 tool=$(field tool_name)
 session=$(field session_id)
 file=$(field file_path)
