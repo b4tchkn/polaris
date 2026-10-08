@@ -67,7 +67,7 @@ Gather the material for the review before writing it.
   - Harden a learning: turn a recurring or mechanically checkable learning into enforcement → `.claude/settings.json` / hook / `CLAUDE.md`
   - Revise sub-goals: add, remove, or reorder "Later" → `subgoals.md` / `goal.md`
 - Only propose. Apply them only after the human adopts them in the Decision section (step 2).
-- Draft three next sub-goal options (following step 3) that reflect the retrospective. Give each option evaluation criteria, marked quantitative (measured by numbers) or qualitative (judged by the human).
+- Draft three next sub-goal options (following step 3) that reflect the retrospective. Give each option evaluation criteria, marked quantitative (measured by numbers) or qualitative (judged by the human). Size: one goal per sub-goal, no larger than what could be thrown away if it misses; smaller after rejections, larger after approvals.
 - If "Later" in `subgoals.md` is empty, the goal may be reached. Instead of the next sub-goal options, write for each acceptance scenario in `goal.md` the result and whether it was met.
 
 ## 6. Write the sub-goal review

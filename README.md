@@ -59,4 +59,6 @@ The AI can propose changes to `goal.md` and `subgoals.md`, but every write needs
 4. It writes a review with all of that plus what was built and its least confident decision.
 5. You choose. The AI asks why, and records your reason in `adr.md`.
 
+When no sub-goal is left, the AI tells you the goal looks reached and asks whether to add sub-goals or write a goal completion report (`gdd/reviews/GOAL.md`: acceptance scenarios and their results, what was left undone, candidates for the next goal). Archiving a finished goal and starting the next one is not automated yet.
+
 The AI replies in the language you use.
