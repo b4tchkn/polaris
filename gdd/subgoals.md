@@ -121,14 +121,14 @@
 | 評価基準 | 定量：試験用 `gdd/` で1回の起動で2サブゴールが進み、reviews/ に SG0.md と SG1.md ができる。定性：止まるべきところで止まったと人間が判断する |
 | 結果 | `gdd-loop` 7 に「作る系で evaluator の表が全行『達成』なら人間に聞かずに次へ進む」の1行、冒頭に Human-on-the-loop の1文、README を実態に合わせた。人間が `simulations/auto-test` で起動し、SG0・SG1 が自動で進み SG2（定性あり）で止まるのを確認（2026-10-08）。起動確認中に hook が cwd 依存で全 goal.md / subgoals.md を削除する事故があり、hook を `CLAUDE_PROJECT_DIR` 基準に直して再現テストを追加、10ファイルは hook の控えから復旧 |
 
-## 次：SG17 skill の挙動を `claude plugin eval` で確かめる
+## 完了：SG17 skill の挙動を `claude plugin eval` で確かめる
 
 | 項目 | 内容 |
 |---|---|
 | ゴール | gdd-loop の挙動（SG12 の自動続行、SG13 の完了分岐）を、人間が手で起動しなくても `claude plugin eval` で確かめられるようにする |
 | 種類と完了条件 | 作る系。plugin に eval スイートが入り、試験用 `gdd/` を渡して gdd-loop を起動するケースが2つ（自動続行：a.txt / b.txt ができ SG0・SG1 の判断欄が自動、SG2 で止まる。完了分岐：「その先」が空で GOAL 達成の2択を聞く）ある。人間が `claude plugin eval` を走らせて2ケースが通るのを確認するまで完了にしない。README にテストの走らせ方を書く |
 | 評価基準 | 定量：`claude plugin eval` のレポートで2ケースが pass。定性：ケースの書き方が、次に挙動を足したときに人間が真似できると判断できる |
-| 見せるもの | eval スイートのファイルと、`claude plugin eval` のレポート |
+| 結果 | `plugins/polaris/evals/` に6ケース（init、first-run、apply-proceed、apply-stop、auto-continue、goal-reached）。人間の実走で6ケース pass（2026-10-08）。eval が見つけた抜け2つ（gdd-loop 手順2の完了セクションの形式、gdd-init 手順2の Write 指定）を直した。README に走らせ方。eval では AskUserQuestion と settings.json 書き込みが使えないため、返答の文と「書こうとした」で見る |
 
 ## その先（粗い見通し）
 
