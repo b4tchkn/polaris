@@ -112,19 +112,27 @@
 | 評価基準 | 定量：SG11 自身のレビューで「達成したか」欄がすべて evaluator の出力になっている。README に記述がある。定性：採点が作業者の自己申告より厳しいと人間が感じる |
 | 結果 | `plugins/polaris/agents/evaluator.md` を追加し、`gdd-loop` 5 が `polaris:evaluator` を呼んで表をそのまま貼る形にした。README に2文。SG11 自身の採点は evaluator（代役）が行い「一部達成」。人間が `simulations/eval-test` で起動し、evaluator の採点が表に入るのを確認（2026-10-08） |
 
-## 次：SG12 続く既定にする
+## 完了：SG12 続く既定にする
 
 | 項目 | 内容 |
 |---|---|
 | ゴール | 作る系のサブゴールで evaluator の採点がすべて「達成」で、停止条件に当たらなければ、人間の判断を待たずに次のサブゴールへ進む。Human-on-the-loop の定義を `gdd-loop` の SKILL.md に入れる |
 | 種類と完了条件 | 作る系。試験用 `gdd/` で `/polaris:gdd-loop` を1回起動すると、SG0（作る系、定量のみ、達成）のレビューを書いたあと人間を待たずに SG1 へ進む。定性基準があるサブゴール、「一部達成 / 未達 / 未確認」、決める系、goal.md / subgoals.md の書き換えが要るとき、停止条件に当たったときは今までどおり止まる。README の「Today every sub-goal still stops for you」を実態に合わせる。人間が試験用 `gdd/` で起動して確認するまで完了にしない |
 | 評価基準 | 定量：試験用 `gdd/` で1回の起動で2サブゴールが進み、reviews/ に SG0.md と SG1.md ができる。定性：止まるべきところで止まったと人間が判断する |
-| 見せるもの | SKILL.md / README の差分と、試験用 `gdd/` の起動結果（reviews/、state.md） |
+| 結果 | `gdd-loop` 7 に「作る系で evaluator の表が全行『達成』なら人間に聞かずに次へ進む」の1行、冒頭に Human-on-the-loop の1文、README を実態に合わせた。人間が `simulations/auto-test` で起動し、SG0・SG1 が自動で進み SG2（定性あり）で止まるのを確認（2026-10-08）。起動確認中に hook が cwd 依存で全 goal.md / subgoals.md を削除する事故があり、hook を `CLAUDE_PROJECT_DIR` 基準に直して再現テストを追加、10ファイルは hook の控えから復旧 |
+
+## 次：SG17 skill の挙動を `claude plugin eval` で確かめる
+
+| 項目 | 内容 |
+|---|---|
+| ゴール | gdd-loop の挙動（SG12 の自動続行、SG13 の完了分岐）を、人間が手で起動しなくても `claude plugin eval` で確かめられるようにする |
+| 種類と完了条件 | 作る系。plugin に eval スイートが入り、試験用 `gdd/` を渡して gdd-loop を起動するケースが2つ（自動続行：a.txt / b.txt ができ SG0・SG1 の判断欄が自動、SG2 で止まる。完了分岐：「その先」が空で GOAL 達成の2択を聞く）ある。人間が `claude plugin eval` を走らせて2ケースが通るのを確認するまで完了にしない。README にテストの走らせ方を書く |
+| 評価基準 | 定量：`claude plugin eval` のレポートで2ケースが pass。定性：ケースの書き方が、次に挙動を足したときに人間が真似できると判断できる |
+| 見せるもの | eval スイートのファイルと、`claude plugin eval` のレポート |
 
 ## その先（粗い見通し）
 
 | # | ゴール | 種類 |
 |---|---|---|
 | SG10 | GitHub で公開し、既存のリポジトリに `/plugin install` で入れて 1→100 を試す（人間が行う。AI は公開までの plugin 整備だけ） | 作る |
-| SG17 | skill の挙動を `claude plugin eval` で確かめる（試験用 `gdd/` を渡して gdd-loop を起動し、できるファイルとレビューの判断欄を assert する。SG12 の自動続行と SG13 の完了分岐を最初のケースにする） | 作る |
 | SG15 | アーカイブと次 GOAL への引き継ぎ（design.md 6 ②〜④、大ゴールの振り返り、hook の学び判定を `archive/` 込みに直す、README の節）を入れる | 作る |
