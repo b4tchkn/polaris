@@ -103,5 +103,21 @@ json Edit "$N" | bash "$HOOK" post 2>/dev/null; check "non-test file -> ok" 0 $?
 json Write "$W/gdd/brandnew.md" | bash "$HOOK" pre; echo hi > "$W/gdd/brandnew.md"
 json Write "$W/gdd/brandnew.md" | bash "$HOOK" post 2>/dev/null; check "write new file -> ok" 0 $?
 
+# --- gdd/ shape (lint-gdd.sh): the edit stays, the AI is told to fix it
+S="$W/gdd/subgoals.md"
+json Edit "$S" | bash "$HOOK" pre
+printf '# Sub-goals\n\n## 次：SG0 x\n' > "$S"
+json Edit "$S" | bash "$HOOK" post 2>/dev/null; check "shape: translated marker -> refused" 2 $?
+
+json Edit "$S" | bash "$HOOK" pre
+printf '# Sub-goals\n\n## Next: SG0 x\n\n| Item | Content |\n|---|---|\n| Goal | g |\n| Type and done condition | Build. it runs |\n| Evaluation criteria | c |\n| What to show | s |\n\n## Later (rough outlook)\n\n| # | Goal | Type |\n|---|---|---|\n' > "$S"
+json Edit "$S" | bash "$HOOK" post 2>/dev/null; check "shape: template shape -> ok" 0 $?
+
+R="$W/gdd/reviews/SG0.md"; mkdir -p "$W/gdd/reviews"
+json Write "$R" | bash "$HOOK" pre
+printf '# Sub-goal review: SG0\n\n## 判断\n\n' > "$R"
+json Write "$R" | bash "$HOOK" post 2>/dev/null; check "shape: new review with translated headings -> refused" 2 $?
+rm "$R"
+
 echo "workdir: $W"
 exit $fail

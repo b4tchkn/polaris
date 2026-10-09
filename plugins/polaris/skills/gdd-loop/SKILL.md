@@ -7,7 +7,7 @@ description: Run one Goal Driven Development loop. Advances the "Next:" sub-goal
 
 Human-on-the-loop: the AI proceeds by default; the human is called in when a sub-goal needs their judgment and when a mechanical stop condition fires, and can stop or overturn at any time. Do not commit.
 
-Talk to the human, write reviews, and ask questions in the language the human uses. Keep the headings of the templates as they are. Existing files may use translated markers (e.g. `次：` for "Next:", `完了：` for "Done:"); treat them the same and keep the language the file already uses.
+Talk to the human, write reviews, and ask questions in the language the human uses. Keep the templates' headings, markers (`Next:`, `Done:`) and table labels in English as they are, whatever language the content is in; a hook checks this shape after every write to `gdd/`.
 
 If a directory is passed as an argument (e.g. `simulations/morning-review`), read every `gdd/` below as `<directory>/gdd/`, and put what you build inside that directory. Without an argument, target the repository root.
 

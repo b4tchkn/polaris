@@ -63,6 +63,10 @@ case_() { # name, expected check id ("" = passes), shell edit run inside the fix
 
 case_ "valid fixture" "" ":"
 case_ "fresh gdd-init templates" "" "rm -r gdd/reviews; cp '$ROOT'/plugins/polaris/skills/gdd-init/templates/{goal,subgoals}.md gdd/"
+case_ "only goal.md written so far" "" "rm -r gdd/subgoals.md gdd/reviews"
+case_ "S6 accepts a full-width period" "" "sed -i.bak 's/Build. It runs/作る系。動く/' gdd/subgoals.md"
+case_ "goal check in place of next options when Later is empty" "" "sed -i.bak '/^| SG2 |/d' gdd/subgoals.md && sed -i.bak 's/^## Next sub-goal options/## Goal check (Later is empty)/' gdd/reviews/SG1.md"
+case_ "R2 goal check while Later still has rows" R2 "sed -i.bak 's/^## Next sub-goal options/## Goal check (Later is empty)/' gdd/reviews/SG1.md"
 case_ "G1 goal heading" G1 "sed -i.bak 's/^# Goal: /# /' gdd/goal.md"
 case_ "S1 translated heading" S1 "sed -i.bak 's/^## Next: /## 次：/' gdd/subgoals.md"
 case_ "S2 two Next" S2 "printf '\n## Next: SG3 Again\n' >> gdd/subgoals.md"

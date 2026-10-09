@@ -2,7 +2,7 @@
 # Lints the gdd/ state files against the shape of the plugin's templates, so that tools reading
 # them (panes, graders) work whatever language the content is written in.
 # Headings and table labels must be the templates' English ones; the content may be any language.
-# Read-only: it never writes to gdd/.
+# Read-only: it never writes to gdd/. A file that does not exist yet is not checked (gdd-init writes them one by one).
 # Usage: lint-gdd.sh [project dir]   (default: .)   Prints one line per problem; exit 1 if any.
 # Needs bash, grep, sed, awk.
 
@@ -17,9 +17,7 @@ report() { printf '%s: %s%s\n' "$1" "$2" "${3:+ $3}"; fail=1; } # where, check i
 
 # --- goal.md
 # G1  the first heading is "# Goal: <name>"
-if [ ! -f "$gdd/goal.md" ]; then
-  report gdd/goal.md G1 "missing"
-else
+if [ -f "$gdd/goal.md" ]; then
   first=$(grep -n -m1 '^# ' "$gdd/goal.md")
   case "${first#*:}" in
     "# Goal: "?*) ;;
@@ -33,12 +31,10 @@ fi
 # S3  Done sections, then Next, then Later
 # S4  no SG number twice across Done, Next and Later
 # S5  the Next table has every row label of the template's Next table, none empty
-# S6  "Type and done condition" reads "<type>. <done condition>"
+# S6  "Type and done condition" reads "<type>. <done condition>" (or "<type>。<done condition>")
 # S7  every Later row is "| SG<n> | <goal> | <type> |"
 sub="$gdd/subgoals.md"
-if [ ! -f "$sub" ]; then
-  report gdd/subgoals.md S1 "missing"
-else
+if [ -f "$sub" ]; then
   # The Next table's row labels, from the template, tab-separated.
   labels=$(awk '/^## /{inNext=($0 ~ /^## Next:/); sep=0; next}
     inNext && /^\|/ { t=$0; gsub(/[ \t]/, "", t); if (t ~ /^\|[-:|]+$/) { sep=1; next }
@@ -82,13 +78,14 @@ else
           else if (val[need[i]] == "") bad(at[need[i]], "S5", "\"" need[i] "\" is empty")
         }
         k = "Type and done condition"
-        if (val[k] != "" && val[k] !~ /^[^.]+\. ./) bad(at[k], "S6", "\"" k "\" must read \"<type>. <done condition>\"")
+        if (val[k] != "" && val[k] !~ /^[^.]+\. ./ && val[k] !~ /^[^.]+。./) bad(at[k], "S6", "\"" k "\" must read \"<type>. <done condition>\"")
       }' "$sub")
 fi
 
 # --- reviews/
 # R1  each reviews/SG<n>.md names a Done or Next sub-goal
-# R2  the reviews of Next and of the last Done have the template's "## " headings, same order (Decision last)
+# R2  the reviews of Next and of the last Done have the template's "## " headings, same order (Decision last);
+#     with Later empty, "Next sub-goal options" may be another heading (gdd-loop writes the goal check there)
 # R4  the last Done's review has a filled Decision
 # X1  only the Next's review may have an empty Decision
 # X2  the last Done has a review
@@ -96,6 +93,14 @@ next_id=$(sed -n 's/^## Next: \(SG[0-9]*\) .*/\1/p' "$sub" 2>/dev/null | head -1
 last_done=$(sed -n 's/^## Done: \(SG[0-9]*\) .*/\1/p' "$sub" 2>/dev/null | tail -1)
 known=$(sed -nE 's/^## (Done|Next): (SG[0-9]+) .*/\2/p' "$sub" 2>/dev/null)
 template_heads=$(grep '^## ' "$review_tpl")
+later_rows=$(awk '/^## /{ l = ($0 ~ /^## Later([ (]|$)/); next } l && /^\|[ \t]*SG[0-9]+[ \t]*\|/ { n++ } END { print n + 0 }' "$sub" 2>/dev/null)
+
+heads_ok() { # review file
+  T="$template_heads" FREE=$([ "${later_rows:-0}" = 0 ] && echo '## Next sub-goal options') \
+    awk 'BEGIN { n = split(ENVIRON["T"], t, "\n") } { g[++m] = $0 }
+      END { if (m != n) exit 1; for (i = 1; i <= n; i++) if (g[i] != t[i] && t[i] != ENVIRON["FREE"]) exit 1 }' \
+    < <(grep '^## ' "$1")
+}
 
 # The Decision section with comments and blanks removed; empty means no answer yet.
 decision() {
@@ -111,7 +116,7 @@ for f in "$gdd"/reviews/SG*.md; do
   where="gdd/reviews/$id.md"
   printf '%s\n' "$known" | grep -qx "$id" || report "$where" R1 "$id is not a Done or Next sub-goal in subgoals.md"
   if [ "$id" = "$next_id" ] || [ "$id" = "$last_done" ]; then
-    [ "$(grep '^## ' "$f")" = "$template_heads" ] ||
+    heads_ok "$f" ||
       report "$where" R2 "the \"## \" headings must be the template's, in its order: $(printf '%s' "$template_heads" | sed 's/^## //' | paste -sd '|' -)"
   fi
   if grep -qx '## Decision' "$f" && [ -z "$(decision "$f")" ] && [ "$id" != "$next_id" ]; then

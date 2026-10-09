@@ -5,11 +5,13 @@
 #   - a learning removed from gdd/state.md                      -> restored, exit 2
 #   - gdd/adr.md rewritten instead of appended                   -> restored, exit 2
 #   - a skip/ignore added to a test file                         -> exit 2 (stop and ask)
+#   - an Edit/Write that leaves gdd/ off the templates' shape    -> exit 2 with lint-gdd.sh's findings
 # Needs bash, grep, sed, awk, shasum, find. No jq.
 # ponytail: the Bash snapshot runs `find` over the repo on every command; prune more dirs if it gets slow.
 
 mode="$1"
 input=$(cat)
+lint="$(cd "$(dirname "$0")/.." && pwd)/scripts/lint-gdd.sh"
 
 field() { printf '%s' "$input" | sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" | head -1; }
 
@@ -61,8 +63,7 @@ case "$mode:$tool" in
   post:Edit|post:Write)
     [ -n "$file" ] || exit 0
     old="$snap/$(key "$file")"
-    [ -f "$old" ] && [ -f "$file" ] || exit 0
-    case "$file" in
+    [ -f "$old" ] && [ -f "$file" ] && case "$file" in
       */gdd/state.md)
         missing=$(awk '/^## /{p=($0 ~ /Learnings/ || index($0,"学び")>0)} p && /^- /{print}' "$old" |
           while IFS= read -r l; do grep -qF -- "$l" "$file" || printf '%s\n' "$l"; done)
@@ -82,6 +83,14 @@ $missing"; }
         fi
         ;;
     esac
+    case "$file" in
+      */gdd/*.md) root="${file%/gdd/*}" ;;
+      gdd/*.md) root=. ;;
+      *) exit 0 ;;
+    esac
+    problems=$(bash "$lint" "$root") || refuse "The gdd/ files must keep the shape of the templates (lint-gdd.sh found):
+$problems
+Fix them now. Keep the templates' headings and table labels in English as they are; the content may be in any language."
     ;;
 esac
 exit 0
