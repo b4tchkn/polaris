@@ -86,6 +86,7 @@
 - eval の fixture は本物の流れをそのまま再現する（人間が決めた → AI が動く）。結果だけを置いて AI に察させない（apply-proceed の hardened で CLAUDE.md を置くだけの fixture が落ちた）。
 - eval の fixture に書く人間のコメントや答えは、解釈が1つに決まる文にする。曖昧だと AI が正しく聞き返して（手順2の3案）落ちる。
 - eval の history_file は本物のセッション記録と同じ構造の .jsonl（sessionId / uuid / parentUuid 付き）なら動く。AskUserQuestion と settings.json 書き込みは eval では使えない。
+- eval の `history_file` を使うケースは、実行後にケースのディレクトリへ本物のセッション記録（`<sessionId>.jsonl`）を書き戻す。セッション記録には個人情報が記載される可能性があるので commit しない（`.gitignore` 済み）。commit 前のチェックは `git add` の後に `git grep --cached` で行う（`git grep` は未追跡ファイルを見ない）。
 - hook はカレントディレクトリに依存させない。`CLAUDE_PROJECT_DIR` に `cd` してから探す。相対パスの `find .` で実行前リストを作っていたため、cwd が変わった1回で全 goal.md / subgoals.md（10ファイル）が消えた（SG12）。テストは「別のディレクトリから pre を流す」ケースを含める。→ ハーネス化済み：`guard-gdd-writes.sh` 冒頭、`tests/guard-gdd-writes.sh`
 - 消す・戻す hook は、消す前の控えを残す。10ファイルの復旧はこの控えからできた。
 - Bash コマンドの文字列を見るブロックリストは負ける（25 経路中 6 しか止まらなかった）。止めたいのは結果なので、実行前に控えて実行後に比べて戻す。
