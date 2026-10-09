@@ -3,6 +3,7 @@
 set -e
 mkdir -p proceed-test/gdd/reviews
 printf 'a\n' > proceed-test/a.txt
+# The human adopted proposal 1 (harden a learning into CLAUDE.md): the run must write the rule and mark the learning in state.md as hardened.
 cat > proceed-test/gdd/goal.md <<'EOF'
 # Goal: apply-proceed test
 
@@ -63,7 +64,7 @@ cat > proceed-test/gdd/state.md <<'EOF'
 
 ## Learnings
 
-- None
+- Always end text files with a trailing newline.
 EOF
 cat > proceed-test/gdd/adr.md <<'EOF'
 # ADR
@@ -101,12 +102,13 @@ cat > proceed-test/gdd/reviews/SG0.md <<'EOF'
 | Item | Content |
 |---|---|
 | Keep | Small sub-goals |
-| Problems | None |
+| Problems | The learning about trailing newlines keeps coming up; it should be a rule, not a note |
 
 ## Improvement proposals
 
 | # | Kind | Change | Where it goes | Trade-off |
 |---|---|---|---|---|
+| 1 | Harden a learning | Put "Always end text files with a trailing newline" into the repository's `CLAUDE.md` so every session follows it | `CLAUDE.md` at the repository root | Enforced everywhere; one more line in CLAUDE.md |
 
 ## Next sub-goal options
 
@@ -119,5 +121,5 @@ cat > proceed-test/gdd/reviews/SG0.md <<'EOF'
 ## Decision
 
 <!-- gdd-loop writes the human's choice here: Proceed / Change direction / Stop (with a comment for Change direction). Also list the adopted proposals (e.g. Adopt 1, 3) -->
-Proceed. Next sub-goal: option A (SG1 create b.txt). No proposals (chosen with AskUserQuestion)
+Proceed. Next sub-goal: option A (SG1 create b.txt). Adopt 1 (chosen with AskUserQuestion)
 EOF
