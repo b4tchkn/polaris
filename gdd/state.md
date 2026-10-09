@@ -4,7 +4,7 @@
 
 ## 現状
 
-- SG17 完了（6ケース pass）。次は SG15（アーカイブと次 GOAL への引き継ぎ）。人間の指示でまだ着手しない。
+- SG18 完了（15ケース pass、対応表あり）。次は SG19（未カバー8つのケースを足す）、その後 SG20（ヒルクライミング）。SG15 は「その先」のまま。
 - 2026-10-07 に Human-on-the-loop の多視点レビューと4シナリオのシミュレーションを行い、「その先」を機械的な停止条件 → 公開 → 評価の独立 → 続く既定の順に並べ直した。定義は README と design.md 0（SKILL.md には SG12 で）。
 
 ## 出来たもの
@@ -16,7 +16,7 @@
 - `gdd-loop` 手順5・7（SG13）：「その先」が空なら受け入れシナリオごとの結果を書き、GOAL 達成に見えると伝えて「サブゴールを足す / 完了報告（`gdd/reviews/GOAL.md`）を書く」を聞く。試験用 `simulations/goal-done/gdd/`（commit しない）
 - `plugins/polaris/agents/evaluator.md`（SG11）：評価基準と成果物の場所だけを受け取り、自分で測って基準ごとの表を返す。`gdd-loop` 5 が `polaris:evaluator` を呼び、表をそのまま貼る。試験用 `simulations/eval-test/gdd/`（commit しない）
 - `gdd-loop` 7（SG12）：作る系で evaluator の表が全行「達成」なら人間に聞かず「次へ進む（自動）」として手順2へ。冒頭に Human-on-the-loop の1文。試験用 `simulations/auto-test/gdd/`（commit しない）
-- `plugins/polaris/evals/`（SG17）：6ケース。`init`、`first-run`、`apply-proceed`、`apply-stop`、`auto-continue`（SG0・SG1 が自動で進み SG2 で止まる）と `goal-reached`（「その先」が空で GOAL 達成の2択）。scaffold_script が試験用 `gdd/` を作り、graders が a.txt / b.txt とレビューの判断欄を見る。README に走らせ方
+- `plugins/polaris/evals/`（SG17 → SG18 で15ケース）：決める系、方向転換、提案の採用、依存で止まる、言語、history_file で人間の答えを再現する3つ（初回の答え、完了報告、見送り）、案を選んで adr。指示との対応表は `gdd/reviews/SG18.md`。SG17 時点の6ケース：`init`、`first-run`、`apply-proceed`、`apply-stop`、`auto-continue`（SG0・SG1 が自動で進み SG2 で止まる）と `goal-reached`（「その先」が空で GOAL 達成の2択）。scaffold_script が試験用 `gdd/` を作り、graders が a.txt / b.txt とレビューの判断欄を見る。README に走らせ方
 - design.md と plugin の対応表（SG14）：`gdd/reviews/SG14.md`。入っている 14、一部 6、無い 6（予定無しはアーカイブ一式、大きさの指針、典型的な並び、N 周無変化）
 - `.claude/settings.json`：どこの `gdd/state.md` も allow。`gdd/` と `simulations/**/gdd/` の goal.md / subgoals.md を ask
 - design.md：改善ループ（5）、3案と adr.md（3）、アーカイブ前に学びを雛形へ移す（6）。README：入れ方と始め方
@@ -42,6 +42,7 @@
 - SG11 → 次へ進む（起動確認済み）。次は順番どおり SG12。提案 1（評価基準の書き方）を採用。
 - SG12 → 次へ進む（起動確認済み）。次は順番どおり SG17。提案 1（既にある仕組みで止まるものは条件に書かない）を採用。
 - SG17 → 次へ進む（6ケース pass）。次は順番どおり SG15（着手は人間の指示待ち）。提案 1（長い作業は分けて伝える）を採用。
+- 2026-10-09：人間の割り込みで SG18（全挙動を eval で）を追加して着手。SG18 → 次へ進む。次は SG19（未カバー8つ）→ SG20（ヒルクライミング）。理由「未カバーを残したままヒルクライミングに入らない」。提案 1（fixture の文は解釈が1つに決まるように）、2（未カバーをサブゴールに）を採用。
 
 ## 却下された案
 
@@ -80,6 +81,8 @@
 - eval の実行では AskUserQuestion が使えず（AI は文章で聞く）、`.claude/settings.json` への書き込みは拒否される。これらはグレーダーで「返答の文」「書こうとした」を見る。
 - eval が plugin の指示の曖昧さを2つ見つけた（完了セクションの形式、gdd-init の書き方）。挙動を足したら eval のケースも足す。
 - 長い作業は小さなコマンドに分け、合間に一言伝える（1コマンドが数分かかると人間には止まって見える）。ディレクトリごとの再帰削除は使わず、消すファイルを個別に指定する（人間側の hook が止める）。
+- eval の fixture に書く人間のコメントや答えは、解釈が1つに決まる文にする。曖昧だと AI が正しく聞き返して（手順2の3案）落ちる。
+- eval の history_file は本物のセッション記録と同じ構造の .jsonl（sessionId / uuid / parentUuid 付き）なら動く。AskUserQuestion と settings.json 書き込みは eval では使えない。
 - hook はカレントディレクトリに依存させない。`CLAUDE_PROJECT_DIR` に `cd` してから探す。相対パスの `find .` で実行前リストを作っていたため、cwd が変わった1回で全 goal.md / subgoals.md（10ファイル）が消えた（SG12）。テストは「別のディレクトリから pre を流す」ケースを含める。→ ハーネス化済み：`guard-gdd-writes.sh` 冒頭、`tests/guard-gdd-writes.sh`
 - 消す・戻す hook は、消す前の控えを残す。10ファイルの復旧はこの控えからできた。
 - Bash コマンドの文字列を見るブロックリストは負ける（25 経路中 6 しか止まらなかった）。止めたいのは結果なので、実行前に控えて実行後に比べて戻す。
