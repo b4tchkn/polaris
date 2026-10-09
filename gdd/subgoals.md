@@ -2,164 +2,164 @@
 
 > goal.md の GOAL を分解したサブゴールの一覧。AI が案を出し、人間が承認して確定する（`.claude/settings.json` の ask で強制）。
 
-## 完了：SG0 構成と配布方法を決める
+## Done: SG0 構成と配布方法を決める
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | エンジンと状態の分け方、配布方法を決める |
-| 種類と完了条件 | 決める系。構成に人間が合意したら完了 |
-| 結果 | エンジン（`.claude/`）と状態（`gdd/`）を分ける。新規リポジトリは Template から作り、既存リポジトリには plugin と `gdd-init` で導入する。設計は `docs/design.md` に置く |
+| Goal | エンジンと状態の分け方、配布方法を決める |
+| Type and done condition | 決める系。構成に人間が合意したら完了 |
+| Result | エンジン（`.claude/`）と状態（`gdd/`）を分ける。新規リポジトリは Template から作り、既存リポジトリには plugin と `gdd-init` で導入する。設計は `docs/design.md` に置く |
 
-## 完了：SG1 状態ファイルの雛形と gdd-init を作る
+## Done: SG1 状態ファイルの雛形と gdd-init を作る
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | 空の `gdd/` を生成する `gdd-init` skill と、状態ファイルの雛形を作る |
-| 種類と完了条件 | 作る系。空のディレクトリで `gdd-init` を実行すると、雛形一式と settings の ask ルールが揃う |
-| 結果 | `.claude/skills/gdd-init/` に skill と雛形（goal.md / subgoals.md / state.md）を作った。予算と constraints.md は廃止し、前提は goal.md と CLAUDE.md に置く。`archive/` は初めてゴールが完了したときに作る |
+| Goal | 空の `gdd/` を生成する `gdd-init` skill と、状態ファイルの雛形を作る |
+| Type and done condition | 作る系。空のディレクトリで `gdd-init` を実行すると、雛形一式と settings の ask ルールが揃う |
+| Result | `.claude/skills/gdd-init/` に skill と雛形（goal.md / subgoals.md / state.md）を作った。予算と constraints.md は廃止し、前提は goal.md と CLAUDE.md に置く。`archive/` は初めてゴールが完了したときに作る |
 
-## 完了：SG2 Loop を1周回す skill を作る
+## Done: SG2 Loop を1周回す skill を作る
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | 1回の起動で次のサブゴールを1つ進め、サブゴール完了報告（振り返りを含む）を出して止まる `gdd-loop` skill を作る |
-| 種類と完了条件 | 作る系。このリポジトリで `gdd-loop` を1回起動すると、サブゴールを進めて `state.md` を書き直し、design.md 4.1 の項目を満たすサブゴール完了報告を出して止まる |
-| 結果 | `.claude/skills/gdd-loop/` と報告の雛形を作った。報告は `gdd/reports/SG<N>.md` に置き、「判断」欄が空なら次に進まない。`/gdd-loop` での起動確認は SG3 で行う |
+| Goal | 1回の起動で次のサブゴールを1つ進め、サブゴール完了報告（振り返りを含む）を出して止まる `gdd-loop` skill を作る |
+| Type and done condition | 作る系。このリポジトリで `gdd-loop` を1回起動すると、サブゴールを進めて `state.md` を書き直し、design.md 4.1 の項目を満たすサブゴール完了報告を出して止まる |
+| Result | `.claude/skills/gdd-loop/` と報告の雛形を作った。報告は `gdd/reports/SG<N>.md` に置き、「判断」欄が空なら次に進まない。`/gdd-loop` での起動確認は SG3 で行う |
 
-## 完了：SG3 小さな新規アプリの題材を決める
+## Done: SG3 小さな新規アプリの題材を決める
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | 0→1 を回す小さな新規アプリの題材（誰の何を解決するか）を決める |
-| 種類と完了条件 | 決める系。題材に人間が合意したら完了 |
-| 結果 | 方向転換。題材3案はやめ、`simulations/` で題材を1つずつ GDD で回し、振り返りを GDD 本体の改善に使う。1つ目は「朝に、昨日の出来事を複数のツールから集めて振り返り、今日まずやった方がいいことを提案する skill」 |
+| Goal | 0→1 を回す小さな新規アプリの題材（誰の何を解決するか）を決める |
+| Type and done condition | 決める系。題材に人間が合意したら完了 |
+| Result | 方向転換。題材3案はやめ、`simulations/` で題材を1つずつ GDD で回し、振り返りを GDD 本体の改善に使う。1つ目は「朝に、昨日の出来事を複数のツールから集めて振り返り、今日まずやった方がいいことを提案する skill」 |
 
-## 完了：SG4 振り返りを改善ループにする
+## Done: SG4 振り返りを改善ループにする
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | サブゴール完了時の振り返りで、学び全体とこれまでの報告を見直し、GDD の仕組みの修正・学びのハーネス化・サブゴールの見直しを毎回提案する形を `gdd-loop` に入れる |
-| 種類と完了条件 | 作る系。学びを消さない、改善の提案欄がある、採用したものだけ反映する、design.md 5 がこの流れになっている、の4つ |
-| 結果 | `gdd-loop` に改善の提案（4種類、番号付き）と「学びは消さない」を入れ、design.md 5 を改善ループに書き直した。判断は毎回 AskUserQuestion で選んでもらう形にした（6）。採用した提案で、Bash から goal.md / subgoals.md への書き込みを止める hook を入れた |
+| Goal | サブゴール完了時の振り返りで、学び全体とこれまでの報告を見直し、GDD の仕組みの修正・学びのハーネス化・サブゴールの見直しを毎回提案する形を `gdd-loop` に入れる |
+| Type and done condition | 作る系。学びを消さない、改善の提案欄がある、採用したものだけ反映する、design.md 5 がこの流れになっている、の4つ |
+| Result | `gdd-loop` に改善の提案（4種類、番号付き）と「学びは消さない」を入れ、design.md 5 を改善ループに書き直した。判断は毎回 AskUserQuestion で選んでもらう形にした（6）。採用した提案で、Bash から goal.md / subgoals.md への書き込みを止める hook を入れた |
 
-## 完了：SG5 シミュレーションを回せるようにする
+## Done: SG5 シミュレーションを回せるようにする
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | `simulations/<名前>/` の中で `gdd-init` と `gdd-loop` を使えるようにし、1つ目のシミュレーションの状態ファイルを作る |
-| 種類と完了条件 | 作る系。`simulations/` が commit されず、対象ディレクトリを渡すとそこの `gdd/` を読み書きする。`simulations/morning-review/gdd/` に雛形一式が揃う |
-| 結果 | `gdd-init` / `gdd-loop` が対象ディレクトリを受け取れる。`simulations/` は commit しない。`simulations/**` の goal.md / subgoals.md は ask、どこの state.md も allow。`simulations/morning-review/gdd/` を作った。ゴールが雛形のままなら、`gdd-loop` がゴールと SG0 を一緒に決める |
+| Goal | `simulations/<名前>/` の中で `gdd-init` と `gdd-loop` を使えるようにし、1つ目のシミュレーションの状態ファイルを作る |
+| Type and done condition | 作る系。`simulations/` が commit されず、対象ディレクトリを渡すとそこの `gdd/` を読み書きする。`simulations/morning-review/gdd/` に雛形一式が揃う |
+| Result | `gdd-init` / `gdd-loop` が対象ディレクトリを受け取れる。`simulations/` は commit しない。`simulations/**` の goal.md / subgoals.md は ask、どこの state.md も allow。`simulations/morning-review/gdd/` を作った。ゴールが雛形のままなら、`gdd-loop` がゴールと SG0 を一緒に決める |
 
-## 完了：SG6 シミュレーション1（朝の振り返り skill）を動くところまで回す
+## Done: SG6 シミュレーション1（朝の振り返り skill）を動くところまで回す
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | `/gdd-loop simulations/morning-review` をくり返し、朝の振り返り skill を動くところまで作る |
-| 種類と完了条件 | 作る系。朝に実行すると、昨日の出来事の振り返りと今日まずやることが出る skill が動く。シミュレーションの中の判断はすべて人間が選ぶ |
-| 結果 | SG0〜SG3 を回し、6つの集める先から Slack に届く skill が `/morning-review` で動いた。人間の判断15回、adr.md に6件。実際の朝に使って直す前に終えた |
+| Goal | `/gdd-loop simulations/morning-review` をくり返し、朝の振り返り skill を動くところまで作る |
+| Type and done condition | 作る系。朝に実行すると、昨日の出来事の振り返りと今日まずやることが出る skill が動く。シミュレーションの中の判断はすべて人間が選ぶ |
+| Result | SG0〜SG3 を回し、6つの集める先から Slack に届く skill が `/morning-review` で動いた。人間の判断15回、adr.md に6件。実際の朝に使って直す前に終えた |
 
-## 完了：SG7 シミュレーション1の学びを GDD 本体に反映する
+## Done: SG7 シミュレーション1の学びを GDD 本体に反映する
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | シミュレーション1の学びのうち、どの題材でも効くものを `gdd-loop` の手順か雛形に入れる |
-| 種類と完了条件 | 作る系。どの題材でも効く学びが `gdd-loop` / 雛形に入り、`state.md` の該当する学びに「→ 反映済み：<場所>」が付く |
-| 評価基準 | 定量：人間が選んだ学び（評価基準の追加を含む4つ）がすべて手順か雛形に入っている。定性：別のリポジトリで `gdd-init` から始めても、その学びが効く形になっていると人間が判断できる |
-| 結果 | 4つを手順と雛形に入れた（定量は達成）。別のリポジトリではまだ動かしていない（定性は一部）。配り方を plugin だけに決めた |
+| Goal | シミュレーション1の学びのうち、どの題材でも効くものを `gdd-loop` の手順か雛形に入れる |
+| Type and done condition | 作る系。どの題材でも効く学びが `gdd-loop` / 雛形に入り、`state.md` の該当する学びに「→ 反映済み：<場所>」が付く |
+| Evaluation criteria | 定量：人間が選んだ学び（評価基準の追加を含む4つ）がすべて手順か雛形に入っている。定性：別のリポジトリで `gdd-init` から始めても、その学びが効く形になっていると人間が判断できる |
+| Result | 4つを手順と雛形に入れた（定量は達成）。別のリポジトリではまだ動かしていない（定性は一部）。配り方を plugin だけに決めた |
 
-## 完了：SG8 polaris を plugin にする
+## Done: SG8 polaris を plugin にする
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | polaris のリポジトリを、`/plugin install` で入れられる plugin とマーケットプレイスの形にする |
-| 種類と完了条件 | 作る系。polaris 以外のディレクトリで plugin として読み込み、`/polaris:gdd-init` → `/polaris:gdd-loop` が通る。Bash から goal.md / subgoals.md への書き込みを止める hook も plugin と一緒に効く |
-| 評価基準 | 定量：別のディレクトリで `/polaris:gdd-init` と `/polaris:gdd-loop` の両方が起動できる。定性：README だけで、初めての人が入れ方と始め方をわかると人間が判断できる |
-| 結果 | エンジンを `plugins/polaris/` に移し英語の plugin にした。マーケットプレイスと MIT ライセンスを付けた。`claude plugin validate` は通過、別ディレクトリで `gdd-init` が起動し hook も効いた。書き込み完了と `gdd-loop` の起動は sandbox の制約で AI 側では未確認のまま、人間の判断で完了 |
+| Goal | polaris のリポジトリを、`/plugin install` で入れられる plugin とマーケットプレイスの形にする |
+| Type and done condition | 作る系。polaris 以外のディレクトリで plugin として読み込み、`/polaris:gdd-init` → `/polaris:gdd-loop` が通る。Bash から goal.md / subgoals.md への書き込みを止める hook も plugin と一緒に効く |
+| Evaluation criteria | 定量：別のディレクトリで `/polaris:gdd-init` と `/polaris:gdd-loop` の両方が起動できる。定性：README だけで、初めての人が入れ方と始め方をわかると人間が判断できる |
+| Result | エンジンを `plugins/polaris/` に移し英語の plugin にした。マーケットプレイスと MIT ライセンスを付けた。`claude plugin validate` は通過、別ディレクトリで `gdd-init` が起動し hook も効いた。書き込み完了と `gdd-loop` の起動は sandbox の制約で AI 側では未確認のまま、人間の判断で完了 |
 
-## 完了：SG9 機械的な停止条件を実装する
+## Done: SG9 機械的な停止条件を実装する
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | 戻せない行為と状態ファイルの不変条件を、AI の判断を通さずに hook と ask ルールで止める |
-| 種類と完了条件 | 作る系。gdd-init が書く ask ルールに戻せない行為（依存の追加、マイグレーション、公開・送信、`.claude/settings.json`、design.md）が入る。goal.md / subgoals.md への Bash 書き込みは差分で検知して巻き戻す。`state.md` の学びの削除、`adr.md` の書き換え、テストの skip 追加を hook が止める |
-| 評価基準 | 定量：敵対的レビューで通った 25 パターンのうち、goal.md / subgoals.md 書き込みの全経路が止まる。定性：止まった理由の文を見て、人間が何をすべきかわかる |
-| 結果 | `guard-gdd-writes.sh` が実行前に控えて実行後に比べる形で、goal.md / subgoals.md の Bash 書き込み・学びの削除・adr.md の書き換えを戻し、テストの skip 追加を止める（テスト 20 ケース）。gdd-init が戻せない行為の ask ルールを書く。外部サービスの選定・課金・認証・シナリオの緩和・assert を弱める変更・N 周無変化は指示文のまま。hook を読み込んだ状態の確認は人間が行い完了 |
+| Goal | 戻せない行為と状態ファイルの不変条件を、AI の判断を通さずに hook と ask ルールで止める |
+| Type and done condition | 作る系。gdd-init が書く ask ルールに戻せない行為（依存の追加、マイグレーション、公開・送信、`.claude/settings.json`、design.md）が入る。goal.md / subgoals.md への Bash 書き込みは差分で検知して巻き戻す。`state.md` の学びの削除、`adr.md` の書き換え、テストの skip 追加を hook が止める |
+| Evaluation criteria | 定量：敵対的レビューで通った 25 パターンのうち、goal.md / subgoals.md 書き込みの全経路が止まる。定性：止まった理由の文を見て、人間が何をすべきかわかる |
+| Result | `guard-gdd-writes.sh` が実行前に控えて実行後に比べる形で、goal.md / subgoals.md の Bash 書き込み・学びの削除・adr.md の書き換えを戻し、テストの skip 追加を止める（テスト 20 ケース）。gdd-init が戻せない行為の ask ルールを書く。外部サービスの選定・課金・認証・シナリオの緩和・assert を弱める変更・N 周無変化は指示文のまま。hook を読み込んだ状態の確認は人間が行い完了 |
 
-## 完了：SG14 design.md と plugin の差を洗い出す
+## Done: SG14 design.md と plugin の差を洗い出す
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | design.md にあって plugin（skill、雛形、hook、README）に入っていない仕様を洗い出し、サブゴールに足すものを決める。アーカイブ（design.md 6 ②）は今の hook に巻き戻される（state.md の初期化が「学びの削除」、adr.md の雛形書きが「書き換え」になる）ので、hook の修正も洗い出しに含める |
-| 種類と完了条件 | 決める系。design.md の各節と plugin の対応表ができ、差のうち足すもの・足さないものを人間が選んだら完了 |
-| 評価基準 | 定量：design.md の全節が対応表に載っている。定性：足す・足さないの判断に人間が納得する |
-| 結果 | 対応表は `gdd/reviews/SG14.md`（入っている 14、一部 6、無い 6、対象外 3）。足すのはアーカイブ一式（SG15）だけ。大きさの指針は `gdd-loop` 5 に1行で反映。典型的な並びと N 周無変化は足さない。SG10 の公開は人間が行う。表は design.md だけを見ていて、plugin 内のずれ（README に完了の分岐が無い、gdd-init の archive の一文）は拾えなかった → SG13 を「次」に戻して直す |
+| Goal | design.md にあって plugin（skill、雛形、hook、README）に入っていない仕様を洗い出し、サブゴールに足すものを決める。アーカイブ（design.md 6 ②）は今の hook に巻き戻される（state.md の初期化が「学びの削除」、adr.md の雛形書きが「書き換え」になる）ので、hook の修正も洗い出しに含める |
+| Type and done condition | 決める系。design.md の各節と plugin の対応表ができ、差のうち足すもの・足さないものを人間が選んだら完了 |
+| Evaluation criteria | 定量：design.md の全節が対応表に載っている。定性：足す・足さないの判断に人間が納得する |
+| Result | 対応表は `gdd/reviews/SG14.md`（入っている 14、一部 6、無い 6、対象外 3）。足すのはアーカイブ一式（SG15）だけ。大きさの指針は `gdd-loop` 5 に1行で反映。典型的な並びと N 周無変化は足さない。SG10 の公開は人間が行う。表は design.md だけを見ていて、plugin 内のずれ（README に完了の分岐が無い、gdd-init の archive の一文）は拾えなかった → SG13 を「次」に戻して直す |
 
-## 完了：SG13 GOAL 完了の流れを入れる
+## Done: SG13 GOAL 完了の流れを入れる
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | 最後のサブゴールが終わったとき（design.md 6 の①）、GOAL が達成されたように見えると伝え、サブゴールを足すか完了報告を書くかを聞く分岐を `gdd-loop` に入れ、plugin ユーザーに見える説明（README、gdd-init の文）も合わせる。アーカイブと次 GOAL への引き継ぎ（6 の②〜④）は含めない |
-| 種類と完了条件 | 作る系。「その先」が空の `gdd/` で `gdd-loop` を起動すると、受け入れシナリオごとの結果を書き、「サブゴールを足して続ける / GOAL 完了報告を書く」を聞く。完了報告を選ぶと `gdd/reviews/GOAL.md`（受け入れシナリオと結果、やり残し、次の GOAL 候補）を書いて止まる。README にこの動きが書かれ、gdd-init の archive の一文が実態と合っている。人間が `simulations/goal-done` で起動して分岐を確認するまで完了にしない |
-| 評価基準 | 定量：SKILL.md の追記が手順5と7の2か所に収まっている。README と gdd-init に完了の動きの記述がある。定性：人間が試験用 `gdd/` で起動して、分岐の文が伝わると判断できる |
-| 結果 | 手順5と7に1行ずつ追記、README の「How a loop works」と gdd-init の archive の一文を合わせた。人間が `/polaris:gdd-loop simulations/goal-done` で起動し、GOAL 達成に見えると伝えて2択を聞くところまで確認（2026-10-08） |
+| Goal | 最後のサブゴールが終わったとき（design.md 6 の①）、GOAL が達成されたように見えると伝え、サブゴールを足すか完了報告を書くかを聞く分岐を `gdd-loop` に入れ、plugin ユーザーに見える説明（README、gdd-init の文）も合わせる。アーカイブと次 GOAL への引き継ぎ（6 の②〜④）は含めない |
+| Type and done condition | 作る系。「その先」が空の `gdd/` で `gdd-loop` を起動すると、受け入れシナリオごとの結果を書き、「サブゴールを足して続ける / GOAL 完了報告を書く」を聞く。完了報告を選ぶと `gdd/reviews/GOAL.md`（受け入れシナリオと結果、やり残し、次の GOAL 候補）を書いて止まる。README にこの動きが書かれ、gdd-init の archive の一文が実態と合っている。人間が `simulations/goal-done` で起動して分岐を確認するまで完了にしない |
+| Evaluation criteria | 定量：SKILL.md の追記が手順5と7の2か所に収まっている。README と gdd-init に完了の動きの記述がある。定性：人間が試験用 `gdd/` で起動して、分岐の文が伝わると判断できる |
+| Result | 手順5と7に1行ずつ追記、README の「How a loop works」と gdd-init の archive の一文を合わせた。人間が `/polaris:gdd-loop simulations/goal-done` で起動し、GOAL 達成に見えると伝えて2択を聞くところまで確認（2026-10-08） |
 
-## 完了：SG11 評価を独立させる
+## Done: SG11 評価を独立させる
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | 作業した AI とは別のコンテキストの evaluator が、サブゴールの評価基準を採点し、その結果をレビューの「評価基準との対応」に載せる |
-| 種類と完了条件 | 作る系。`gdd-loop` の手順5で、評価基準と成果物の場所だけを渡した別コンテキスト（サブエージェント）が、基準ごとの結果と達成 / 未達を返し、それがそのままレビューの表に入る。作業した AI は表を書き換えない。README の「How a loop works」にも evaluator が採点することを書く。人間が試験用 `gdd/` で起動して evaluator の採点が表に入るのを確認するまで完了にしない |
-| 評価基準 | 定量：SG11 自身のレビューで「達成したか」欄がすべて evaluator の出力になっている。README に記述がある。定性：採点が作業者の自己申告より厳しいと人間が感じる |
-| 結果 | `plugins/polaris/agents/evaluator.md` を追加し、`gdd-loop` 5 が `polaris:evaluator` を呼んで表をそのまま貼る形にした。README に2文。SG11 自身の採点は evaluator（代役）が行い「一部達成」。人間が `simulations/eval-test` で起動し、evaluator の採点が表に入るのを確認（2026-10-08） |
+| Goal | 作業した AI とは別のコンテキストの evaluator が、サブゴールの評価基準を採点し、その結果をレビューの「評価基準との対応」に載せる |
+| Type and done condition | 作る系。`gdd-loop` の手順5で、評価基準と成果物の場所だけを渡した別コンテキスト（サブエージェント）が、基準ごとの結果と達成 / 未達を返し、それがそのままレビューの表に入る。作業した AI は表を書き換えない。README の「How a loop works」にも evaluator が採点することを書く。人間が試験用 `gdd/` で起動して evaluator の採点が表に入るのを確認するまで完了にしない |
+| Evaluation criteria | 定量：SG11 自身のレビューで「達成したか」欄がすべて evaluator の出力になっている。README に記述がある。定性：採点が作業者の自己申告より厳しいと人間が感じる |
+| Result | `plugins/polaris/agents/evaluator.md` を追加し、`gdd-loop` 5 が `polaris:evaluator` を呼んで表をそのまま貼る形にした。README に2文。SG11 自身の採点は evaluator（代役）が行い「一部達成」。人間が `simulations/eval-test` で起動し、evaluator の採点が表に入るのを確認（2026-10-08） |
 
-## 完了：SG12 続く既定にする
+## Done: SG12 続く既定にする
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | 作る系のサブゴールで evaluator の採点がすべて「達成」で、停止条件に当たらなければ、人間の判断を待たずに次のサブゴールへ進む。Human-on-the-loop の定義を `gdd-loop` の SKILL.md に入れる |
-| 種類と完了条件 | 作る系。試験用 `gdd/` で `/polaris:gdd-loop` を1回起動すると、SG0（作る系、定量のみ、達成）のレビューを書いたあと人間を待たずに SG1 へ進む。定性基準があるサブゴール、「一部達成 / 未達 / 未確認」、決める系、goal.md / subgoals.md の書き換えが要るとき、停止条件に当たったときは今までどおり止まる。README の「Today every sub-goal still stops for you」を実態に合わせる。人間が試験用 `gdd/` で起動して確認するまで完了にしない |
-| 評価基準 | 定量：試験用 `gdd/` で1回の起動で2サブゴールが進み、reviews/ に SG0.md と SG1.md ができる。定性：止まるべきところで止まったと人間が判断する |
-| 結果 | `gdd-loop` 7 に「作る系で evaluator の表が全行『達成』なら人間に聞かずに次へ進む」の1行、冒頭に Human-on-the-loop の1文、README を実態に合わせた。人間が `simulations/auto-test` で起動し、SG0・SG1 が自動で進み SG2（定性あり）で止まるのを確認（2026-10-08）。起動確認中に hook が cwd 依存で全 goal.md / subgoals.md を削除する事故があり、hook を `CLAUDE_PROJECT_DIR` 基準に直して再現テストを追加、10ファイルは hook の控えから復旧 |
+| Goal | 作る系のサブゴールで evaluator の採点がすべて「達成」で、停止条件に当たらなければ、人間の判断を待たずに次のサブゴールへ進む。Human-on-the-loop の定義を `gdd-loop` の SKILL.md に入れる |
+| Type and done condition | 作る系。試験用 `gdd/` で `/polaris:gdd-loop` を1回起動すると、SG0（作る系、定量のみ、達成）のレビューを書いたあと人間を待たずに SG1 へ進む。定性基準があるサブゴール、「一部達成 / 未達 / 未確認」、決める系、goal.md / subgoals.md の書き換えが要るとき、停止条件に当たったときは今までどおり止まる。README の「Today every sub-goal still stops for you」を実態に合わせる。人間が試験用 `gdd/` で起動して確認するまで完了にしない |
+| Evaluation criteria | 定量：試験用 `gdd/` で1回の起動で2サブゴールが進み、reviews/ に SG0.md と SG1.md ができる。定性：止まるべきところで止まったと人間が判断する |
+| Result | `gdd-loop` 7 に「作る系で evaluator の表が全行『達成』なら人間に聞かずに次へ進む」の1行、冒頭に Human-on-the-loop の1文、README を実態に合わせた。人間が `simulations/auto-test` で起動し、SG0・SG1 が自動で進み SG2（定性あり）で止まるのを確認（2026-10-08）。起動確認中に hook が cwd 依存で全 goal.md / subgoals.md を削除する事故があり、hook を `CLAUDE_PROJECT_DIR` 基準に直して再現テストを追加、10ファイルは hook の控えから復旧 |
 
-## 完了：SG17 skill の挙動を `claude plugin eval` で確かめる
+## Done: SG17 skill の挙動を `claude plugin eval` で確かめる
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | gdd-loop の挙動（SG12 の自動続行、SG13 の完了分岐）を、人間が手で起動しなくても `claude plugin eval` で確かめられるようにする |
-| 種類と完了条件 | 作る系。plugin に eval スイートが入り、試験用 `gdd/` を渡して gdd-loop を起動するケースが2つ（自動続行：a.txt / b.txt ができ SG0・SG1 の判断欄が自動、SG2 で止まる。完了分岐：「その先」が空で GOAL 達成の2択を聞く）ある。人間が `claude plugin eval` を走らせて2ケースが通るのを確認するまで完了にしない。README にテストの走らせ方を書く |
-| 評価基準 | 定量：`claude plugin eval` のレポートで2ケースが pass。定性：ケースの書き方が、次に挙動を足したときに人間が真似できると判断できる |
-| 結果 | `plugins/polaris/evals/` に6ケース（init、first-run、apply-proceed、apply-stop、auto-continue、goal-reached）。人間の実走で6ケース pass（2026-10-08）。eval が見つけた抜け2つ（gdd-loop 手順2の完了セクションの形式、gdd-init 手順2の Write 指定）を直した。README に走らせ方。eval では AskUserQuestion と settings.json 書き込みが使えないため、返答の文と「書こうとした」で見る |
+| Goal | gdd-loop の挙動（SG12 の自動続行、SG13 の完了分岐）を、人間が手で起動しなくても `claude plugin eval` で確かめられるようにする |
+| Type and done condition | 作る系。plugin に eval スイートが入り、試験用 `gdd/` を渡して gdd-loop を起動するケースが2つ（自動続行：a.txt / b.txt ができ SG0・SG1 の判断欄が自動、SG2 で止まる。完了分岐：「その先」が空で GOAL 達成の2択を聞く）ある。人間が `claude plugin eval` を走らせて2ケースが通るのを確認するまで完了にしない。README にテストの走らせ方を書く |
+| Evaluation criteria | 定量：`claude plugin eval` のレポートで2ケースが pass。定性：ケースの書き方が、次に挙動を足したときに人間が真似できると判断できる |
+| Result | `plugins/polaris/evals/` に6ケース（init、first-run、apply-proceed、apply-stop、auto-continue、goal-reached）。人間の実走で6ケース pass（2026-10-08）。eval が見つけた抜け2つ（gdd-loop 手順2の完了セクションの形式、gdd-init 手順2の Write 指定）を直した。README に走らせ方。eval では AskUserQuestion と settings.json 書き込みが使えないため、返答の文と「書こうとした」で見る |
 
-## 完了：SG18 plugin の全挙動を eval で確かめられるようにする
+## Done: SG18 plugin の全挙動を eval で確かめられるようにする
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | ヒルクライミング（eval を安全網にして指示を減らす）の前提として、plugin の挙動を `claude plugin eval` で網羅的に確かめられるようにする。人間の答えが要る動きは `context.history_file` で会話を再現する |
-| 種類と完了条件 | 作る系。SKILL.md（gdd-loop / gdd-init）、evaluator.md、雛形の指示を1行ずつ表にし、各行に守っている eval ケースか hook テストが付く。付かない行は「テスト不能」の理由が書いてある。人間が全ケースを走らせて pass するまで完了にしない |
-| 評価基準 | 定量：表の全行にテストか理由が付いている。追加ケースが全部 pass。定性：ヒルクライミングを始めてよいと人間が判断できる |
-| 結果 | 6→15ケース（決める系、方向転換、提案の採用、依存で止まる、言語、history_file で人間の答えを再現する初回・完了報告・見送り、案を選んで adr）。人間の実走で15ケース pass（2026-10-09）。対応表は `gdd/reviews/SG18.md`：gdd-loop の指示42行のうち eval 直接 20、間接 8、hook テスト 3、テスト不能 8、未カバー 8。未カバー8つは SG19 で足す |
+| Goal | ヒルクライミング（eval を安全網にして指示を減らす）の前提として、plugin の挙動を `claude plugin eval` で網羅的に確かめられるようにする。人間の答えが要る動きは `context.history_file` で会話を再現する |
+| Type and done condition | 作る系。SKILL.md（gdd-loop / gdd-init）、evaluator.md、雛形の指示を1行ずつ表にし、各行に守っている eval ケースか hook テストが付く。付かない行は「テスト不能」の理由が書いてある。人間が全ケースを走らせて pass するまで完了にしない |
+| Evaluation criteria | 定量：表の全行にテストか理由が付いている。追加ケースが全部 pass。定性：ヒルクライミングを始めてよいと人間が判断できる |
+| Result | 6→15ケース（決める系、方向転換、提案の採用、依存で止まる、言語、history_file で人間の答えを再現する初回・完了報告・見送り、案を選んで adr）。人間の実走で15ケース pass（2026-10-09）。対応表は `gdd/reviews/SG18.md`：gdd-loop の指示42行のうち eval 直接 20、間接 8、hook テスト 3、テスト不能 8、未カバー 8。未カバー8つは SG19 で足す |
 
-## 完了：SG19 未カバーの挙動8つを eval に足す
+## Done: SG19 未カバーの挙動8つを eval に足す
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | SG18 の対応表で「未カバー（足せる）」とした8つにケースを足す：解釈が分かれるコメントで3案を出して聞く、戻せない判断の残り（データモデル・外部サービス・課金・認証）、受け入れシナリオの緩和で止まる、達成に影響する判断で止まる、ハーネス化した学びに印を付ける、evaluator の表をそのまま貼る、改善提案を出す、gdd-init の上書き確認 |
-| 種類と完了条件 | 作る系。8つの挙動それぞれにケース（またはグレーダー）があり、人間が走らせて pass する。対応表の「未カバー」が消える |
-| 評価基準 | 定量：対応表に「未カバー」の行が無い。全ケース pass。定性：なし |
-| 結果 | 着手前にサブエージェントで精査し、4ケース追加（ambiguous-comment、stop-data-model、evaluator-verdict、init-existing）、apply-proceed にハーネス化の印のグレーダー、3つは理由付きで見送り。計19ケース、人間の実走で全部 pass（2026-10-09）。対応表に未カバーなし |
+| Goal | SG18 の対応表で「未カバー（足せる）」とした8つにケースを足す：解釈が分かれるコメントで3案を出して聞く、戻せない判断の残り（データモデル・外部サービス・課金・認証）、受け入れシナリオの緩和で止まる、達成に影響する判断で止まる、ハーネス化した学びに印を付ける、evaluator の表をそのまま貼る、改善提案を出す、gdd-init の上書き確認 |
+| Type and done condition | 作る系。8つの挙動それぞれにケース（またはグレーダー）があり、人間が走らせて pass する。対応表の「未カバー」が消える |
+| Evaluation criteria | 定量：対応表に「未カバー」の行が無い。全ケース pass。定性：なし |
+| Result | 着手前にサブエージェントで精査し、4ケース追加（ambiguous-comment、stop-data-model、evaluator-verdict、init-existing）、apply-proceed にハーネス化の印のグレーダー、3つは理由付きで見送り。計19ケース、人間の実走で全部 pass（2026-10-09）。対応表に未カバーなし |
 
-## 次：SG20 ヒルクライミング
+## Next: SG20 ヒルクライミング
 
-| 項目 | 内容 |
+| Item | Content |
 |---|---|
-| ゴール | 19ケース pass を保ったまま、gdd-loop / gdd-init の SKILL.md から重複・効いていない行・既にある仕組みで止まるものを消し、同じ品質でより短い指示にする |
-| 種類と完了条件 | 作る系。最初に (1) 自由文を見るケースを `--runs 3` で回してゆらぎを知り、(2) SKILL.md の数行を消してケースが落ちることを確かめる。そのあと指示を1行（1項目）ずつ消す → 関係するケースを回す → pass なら残す、落ちたら戻す。最後に全件 `--runs 2` で pass。消した行と残した行の一覧を人間が見て判断するまで完了にしない |
-| 評価基準 | 定量：SKILL.md の行数（または文字数）の減少、19ケース pass（`--runs 2`）。定性：読みやすくなり、挙動が変わっていないと人間が判断する |
-| 見せるもの | 前後の diff、消した行ごとの理由と eval の結果、最終の eval レポート |
+| Goal | 19ケース pass を保ったまま、gdd-loop / gdd-init の SKILL.md から重複・効いていない行・既にある仕組みで止まるものを消し、同じ品質でより短い指示にする |
+| Type and done condition | 作る系。最初に (1) 自由文を見るケースを `--runs 3` で回してゆらぎを知り、(2) SKILL.md の数行を消してケースが落ちることを確かめる。そのあと指示を1行（1項目）ずつ消す → 関係するケースを回す → pass なら残す、落ちたら戻す。最後に全件 `--runs 2` で pass。消した行と残した行の一覧を人間が見て判断するまで完了にしない |
+| Evaluation criteria | 定量：SKILL.md の行数（または文字数）の減少、19ケース pass（`--runs 2`）。定性：読みやすくなり、挙動が変わっていないと人間が判断する |
+| What to show | 前後の diff、消した行ごとの理由と eval の結果、最終の eval レポート |
 
-## その先（粗い見通し）
+## Later (rough outlook)
 
-| # | ゴール | 種類 |
+| # | Goal | Type |
 |---|---|---|
 | SG10 | GitHub で公開し、既存のリポジトリに `/plugin install` で入れて 1→100 を試す（人間が行う。AI は公開までの plugin 整備だけ） | 作る |
 | SG15 | アーカイブと次 GOAL への引き継ぎ（design.md 6 ②〜④、大ゴールの振り返り、hook の学び判定を `archive/` 込みに直す、README の節）を入れる | 作る |
