@@ -1,10 +1,10 @@
 # ADR
 
-> Decisions the human made by choosing among options, with the human's reasons. Append only; never rewrite.
+> Decisions the human made, with the human's reasons. Append only; never rewrite.
 
 <!-- Entry format:
 
-## <YYYY-MM-DD> SG<N> <what was decided, short>
+## <YYYY-MM-DD> <sub-goal slug> <what was decided, short>
 
 - Decided: <what was decided>
 - Options:

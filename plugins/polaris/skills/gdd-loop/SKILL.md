@@ -1,94 +1,46 @@
 ---
 name: gdd-loop
-description: Run one Goal Driven Development loop. Advances the "Next:" sub-goal in gdd/subgoals.md by one, rewrites gdd/state.md, writes a sub-goal review (with retrospective and next sub-goal options) to gdd/reviews/, asks the human to choose, and stops. Use when "gdd-loop", "advance the next sub-goal", "run the loop". Do not use when gdd/ does not exist (run gdd-init first).
+description: Run Goal Driven Development loops. Picks the next sub-goal by goal distance and uncertainty, has a worker build it in its own worktree, reviews it with an evaluator in a separate context, retrospects, and continues or stops for the human. Independent sub-goals run in parallel; each finished sub-goal becomes a pull request. Use when "gdd-loop", "advance the goal", "run the loop". Do not use when gdd/ does not exist (run gdd-init first).
+allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh *)
 ---
 
 # gdd-loop
 
-Human-on-the-loop: the AI proceeds by default; the human is called in when a sub-goal needs their judgment and when a mechanical stop condition fires, and can stop or overturn at any time. Do not commit.
+Human-on-the-loop: the AI decides what to do next and proceeds by default. The human is called in for direction (the goal, Decide sub-goals), when a mechanical stop condition fires (ask rules, hook), and when the gate below says ask. The human can stop or overturn anything at any time.
 
-Talk to the human, write reviews, and ask questions in the language the human uses. Keep the headings of the templates as they are. Existing files may use translated markers (e.g. `次：` for "Next:", `完了：` for "Done:"); treat them the same and keep the language the file already uses.
+Talk to the human, write reviews, and ask questions in the language the human uses. Keep template headings and frontmatter keys as they are. Existing files may use translated headings; keep the language the file already uses.
 
-If a directory is passed as an argument (e.g. `simulations/morning-review`), read every `gdd/` below as `<directory>/gdd/`, and put what you build inside that directory. Without an argument, target the repository root.
+If a directory is passed as an argument (e.g. `simulations/morning-review`), read every `gdd/` below as `<directory>/gdd/` and build inside that directory. Without an argument, target the repository root.
 
-## 1. Read the situation
+## Files
 
-- Read `gdd/goal.md`, `gdd/subgoals.md`, and `gdd/state.md`.
-- If `gdd/reviews/` has reviews, read the latest one.
+- `gdd/goal.md`: the goal. Frontmatter holds the mechanical checks (`scenario_<n>_check`, `done_checks`, `max_files`, `max_lines`) and the human's preferences (`prefer`, `avoid`). Every write needs the human's approval (ask rule).
+- `gdd/subgoals/{candidates,in-progress,done}/<slug>.md`: one file per sub-goal, in the shape of `templates/subgoal.md`. The directory is its state. Move files with `git mv` (or `mv`). `advances:` is required (the hook refuses a file without it).
+- `gdd/state.md`: Now / Built so far / Uncertainties / Rejected ideas / Learnings, rewritten every loop within one page. Never delete learnings.
+- `gdd/reviews/<slug>.md`: one review per sub-goal, in the shape of `templates/review.md`.
+- `gdd/adr.md`: decisions the human made, append only.
 
-## 2. Check the previous decision
+`bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` reports goal progress, done checks, stall, trust streak, and which candidates are ready and which overlap. `... <gdd-dir> gate <slug>` says whether the loop may continue after `<slug>` without the human. Run `git fetch -q` first when the repository has a remote. Use the script's answers; do not redo its checks by hand.
 
-If there is no previous review and `goal.md` is still the template (`<goal name>` remains), do not advance a sub-goal. Do this and stop:
+## Loop
 
-- Ask the human questions with AskUserQuestion to decide the goal (who uses it, what success looks like, and so on). Give options with a recommendation, and avoid jargon.
-- From the answers, write `goal.md`, plus SG0 and "Later" in `subgoals.md` (the ask rule makes the human approve).
+0. **Goal.** If `goal.md` is still the template (`<goal name>` remains) or the human asked to change the goal, follow `steps/set-goal.md` and stop.
+1. **Pending decision.** If a review's Decision section is empty, ask its question again as in `steps/decide.md` before anything else.
+2. **Plan.** Follow `steps/plan.md`: choose the next sub-goal(s), write their criteria, move them to `in-progress/`.
+3. **Work.** Hand each in-progress sub-goal to a worker (`steps/plan.md` says how). The worker builds on branch `gdd/<slug>` in its own worktree and commits there; it never touches `gdd/`.
+4. **Review and retrospect.** Follow `steps/review.md` for each finished sub-goal: evaluator, progress, retrospective, the next choice, the review file.
+5. **Decide.** Follow `steps/decide.md`: the gate decides whether to continue without asking; otherwise ask the human one question. Apply the answer, open the pull request, then go back to 2, or stop.
 
-If there is no previous review, go to step 3. Otherwise, read the "Decision" section at the end.
+Stop when the human says stop, when you need the human and they are not answering, or when the goal looks reached (`steps/decide.md`).
 
-| Decision | Action |
-|---|---|
-| Empty | Have the human choose as in step 7, write it into the Decision section, then go through this table again |
-| Proceed | Copy the decision into the decision log in `state.md`. Apply the improvement proposals adopted in the Decision section (do not apply the others). Update `subgoals.md` from the chosen next sub-goal option: rename the previous sub-goal's heading from "Next:" to "Done:" (e.g. `## Done: SG0 <goal>`), keep its table, and add a "Result" row; then write the chosen option as the new "Next:" section. Then go to step 3 |
-| Change direction | Copy the decision and comment into the decision log in `state.md`. Write a revision of `subgoals.md` that reflects the comment, then stop |
-| Stop | Copy the decision into the decision log in `state.md`, then stop |
+## Rules for every step
 
-Writes to `subgoals.md` / `goal.md` need human approval through the ask rule. Stop if they decline.
-
-When applying the human's decisions or comments, if the interpretation can split (a number, a scope, where to write it), offer three options with trade-offs and let the human choose before writing.
-
-## 3. Advance the sub-goal
-
-- Work only on the "Next:" sub-goal in `subgoals.md`. Do not touch later ones.
-- Do not re-propose anything in "Rejected ideas" in `state.md`. Follow "Learnings".
-- When you offer options, offer three (what to show in a Decide sub-goal, decisions you stop to ask, and next sub-goal options in step 5). The three must differ in what happens next or in trade-offs (speed / certainty / scope, and so on). Write a one-line trade-off for each. Do not offer three rewordings of one idea.
-- Before deciding how to use outside data (APIs, logs, tickets, and so on) or a done condition that depends on it, try it on real data and confirm the data you assume actually exists.
-- A Build sub-goal is done only when what you built works through its real entry point (`/<name>` for a skill, launching and using it for an app). Walking through the steps yourself in the conversation does not count. If you cannot launch it, ask the human to.
-- Stop and ask the human when you hit any of the following (have them choose from three options with AskUserQuestion, then ask the reason and record it in `gdd/adr.md` as in step 7):
-  - Hard-to-reverse decisions: data model, choice of external service, billing, authentication, adding a dependency
-  - Changes that loosen acceptance scenarios or tests
-  - Decisions whose outcome affects reaching the goal or a sub-goal
-
-## 4. Rewrite state.md
-
-Rewrite the whole file within one page (do not append): Now / Built so far / Decision log / Rejected ideas / Learnings.
-
-- Never delete learnings. Merging duplicates is fine.
-- When a learning has been turned into a harness rule or a process step, keep it and add "→ hardened: <where>".
-
-## 5. Retrospect
-
-Gather the material for the review before writing it.
-
-- Have the evaluation scored in a separate context: run the Agent tool with `subagent_type: "polaris:evaluator"`, giving it only the sub-goal's goal, type and done condition, evaluation criteria, the paths of the deliverables, and how to run them. Do not pass your own view of the result. Paste the table it returns into the review unchanged; if you disagree with a verdict, say so under "Least confident decision" instead of editing the table.
-- From this loop and all learnings in `state.md`, list what to keep and the problems (rework, where the human stepped in, why something was rejected).
-- From those, derive numbered improvement proposals. For each, write where it goes and its trade-off (what gets better, what it costs). Leave out items with nowhere to go. There are four kinds:
-  - Add learning: something the AI should follow in later loops → learnings in `state.md`
-  - Fix the process: change how GDD runs in this repository → `CLAUDE.md` or `.claude/` in this repository
-  - Harden a learning: turn a recurring or mechanically checkable learning into enforcement → `.claude/settings.json` / hook / `CLAUDE.md`
-  - Revise sub-goals: add, remove, or reorder "Later" → `subgoals.md` / `goal.md`
-- Only propose. Apply them only after the human adopts them in the Decision section (step 2).
-- Draft three next sub-goal options (following step 3) that reflect the retrospective. Give each option evaluation criteria, marked quantitative (measured by numbers) or qualitative (judged by the human). Size: one goal per sub-goal, no larger than what could be thrown away if it misses; smaller after rejections, larger after approvals.
-- If "Later" in `subgoals.md` is empty, the goal may be reached. Instead of the next sub-goal options, write for each acceptance scenario in `goal.md` the result and whether it was met.
-
-## 6. Write the sub-goal review
-
-- Write `gdd/reviews/SG<N>.md` in the shape of `templates/review.md` (`<N>` is this sub-goal's number), filling it from step 5.
-- Leave the Decision section empty (filled in step 7).
-- Show the same content in the chat, then go to step 7.
-
-## 7. Have the human choose, then stop
-
-A Build sub-goal whose evaluator table is all "Met" is done without asking the human: write "Proceed (automatic)" in the Decision section and go to step 2 with the first "Later" sub-goal as the next one.
-
-Otherwise, do not just ask the human to fill in the Decision section. Always offer choices with AskUserQuestion.
-
-- Phrase questions so that someone who does not know the code or the jargon understands them. Say in the question what it is about.
-  - Question 1 (single choice): "Is SG<N> good as it is?" Options: "OK, proceed", "Change it (change direction)", "Stop". For a Decide sub-goal, split "OK" into the three options (e.g. "Proceed with option A").
-  - Question 2 (single choice): "Which sub-goal next?" Offer the three options with descriptions that show their trade-offs.
-    - If "Later" is empty, first say that the goal looks reached, and make Question 2: "Add sub-goals and continue" / "Write the goal completion report". If they choose the report, write `gdd/reviews/GOAL.md` with the acceptance scenarios and their results (from step 5), what was left undone, and two or three candidates for the next goal, then stop.
-  - Question 3 (multiple choice): "Which improvement proposals should be applied?" For each, describe in one line what changes and its trade-off. Skip this question if there are no proposals.
-- Put the recommended option first and add "(Recommended)".
-- Write the answers into the Decision section (e.g. `Proceed. Adopt 1, 2 (chosen with AskUserQuestion)`). If they chose "Change it" or Other, copy what they wrote as a comment. If they did not answer a question, write "skipped" for it and do not ask it again on a later run.
-- When the human chose among options (three options for what to show, three next sub-goal options, a decision you stopped to ask in step 3), follow up with AskUserQuestion asking why they chose it. Offer two or three reasons drawn from the options' trade-offs, and let them write freely through Other.
-- Append one entry to `gdd/adr.md` in the entry format written at the top of that file (never rewrite earlier entries): date and sub-goal / what was decided / options offered (with trade-offs) / option chosen / reason (the human's answer, copied as is).
-- Then stop. Applying the decision and starting the next sub-goal happen from step 2 on the next run.
+- Work only on in-progress sub-goals. Do not re-propose anything in "Rejected ideas". Follow "Learnings".
+- Before deciding how to use outside data (APIs, logs, tickets) or a done condition that depends on it, try it on real data and confirm the data exists.
+- A Build sub-goal is done only when it works through its real entry point (`/<name>` for a skill, launching and using it for an app). If you cannot launch it, ask the human to.
+- Stop and ask the human (three options with trade-offs via AskUserQuestion, then ask why and append to `gdd/adr.md`) on:
+  - hard-to-reverse decisions: data model, external service, billing, authentication, adding a dependency
+  - changes that loosen acceptance scenarios, `done_checks`, or tests
+  - anything in `avoid:` of `goal.md`
+- When an instruction from the human can be read more than one way (a number, a scope, where to write it), offer three readings and let them choose before writing.
+- Commit `gdd/` changes on the current branch at the end of each loop (`docs(gdd): <slug> <what happened>`). Never push the default branch without the human.
