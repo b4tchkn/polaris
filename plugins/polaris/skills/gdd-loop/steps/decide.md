@@ -34,9 +34,12 @@ Write the answer into the Decision section (e.g. `OK. Next: <slug> (chosen with 
 
 ## Finish a sub-goal
 
-- Build: push `gdd/<slug>` and open a pull request (`gh pr create --head gdd/<slug>`; title = the sub-goal sentence, body = the review's "What was built" and evaluator table plus a link to the review file). Push and merge go through the human's ask rules. Write the pull request URL into the sub-goal file. Merging is the human's or CI's. If the repository has no remote, or the human declines the push, leave the branch as it is and say so.
-- Decide: no pull request; the decision is in the review and `gdd/adr/`.
-- `git mv` the sub-goal file to `gdd/subgoals/done/`, add a "Result" line to it, and commit `gdd/`. Sub-goals that depend on it become ready once its pull request is merged.
+Every sub-goal, Build or Decide, ends as a pull request, so the human sees what was done and why in one place.
+
+1. `git mv` the sub-goal file to `gdd/subgoals/done/`, add a "Result" line to it, and commit `gdd/` on the current branch.
+2. In the sub-goal's worktree (a Decide sub-goal has none: create it with `git worktree add .claude/worktrees/<slug> -b gdd/<slug>`), copy in the sub-goal file from `done/`, its review, the ADRs written for it, and for a Decide sub-goal what was shown (spec, mock, comparison). Commit them on `gdd/<slug>`.
+3. Push `gdd/<slug>` and open a pull request (`gh pr create --head gdd/<slug>`; title = the sub-goal sentence, body = the review's "What was built", the evaluator table, and the Decision). Push and merge go through the human's ask rules. If the repository has no remote, or the human declines the push, leave the branch as it is and say so.
+4. Write the pull request URL into the sub-goal file. Merging is the human's or CI's. Sub-goals that depend on it become ready once it is merged.
 
 ## Goal reached
 

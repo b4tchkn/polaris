@@ -1,12 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Edit(**/gdd/state.md)"
+      "Edit(**/gdd/state.md)",
+      "Edit(**/gdd/subgoals/**)",
+      "Edit(**/gdd/reviews/**)"
     ],
     "ask": [
       "Edit(/gdd/goal.md)",
-      "Edit(**/gdd/subgoals/**)",
-      "Edit(**/gdd/reviews/**)",
       "Edit(/simulations/**/gdd/goal.md)",
       "Bash(git commit *)",
       "Bash(git push *)",

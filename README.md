@@ -10,7 +10,7 @@
 
 Goal Driven Development (GDD) for Claude Code.
 
-You set a goal. The AI decides what to do next by how far each acceptance scenario still is and what is still unknown, builds sub-goals in their own worktrees (in parallel when they are independent), and opens a pull request for each. After a sub-goal it either continues on its own or asks you one question. You decide the direction; you do not have to read the code or approve every step.
+You set a goal. The AI decides what to do next by how far each acceptance scenario still is and what is still unknown, builds sub-goals in their own worktrees (in parallel when they are independent), and opens a pull request for every finished sub-goal. After a sub-goal it either continues on its own or asks you one question. You decide the direction; you do not have to read the code or approve every step.
 
 Human-on-the-loop, as polaris means it: the AI proceeds by default. You are called in when a sub-goal is done and when a mechanical stop condition fires (a decision that is hard to reverse), and you can stop or overturn it at any time. This matches the "Approver" level (L4) in [Levels of Autonomy for AI Agents](https://arxiv.org/abs/2506.12469) by Feng, McDonald, and Zhang (2025), where the user is involved only when the agent hits a blocker it cannot resolve on its own. The AI continues without you only when a script and two reviewers agree it is safe (see "When the AI continues on its own"); everything else stops for your decision.
 
@@ -58,7 +58,7 @@ Every write to `goal.md` needs your approval.
 2. **Work.** A worker builds each one on branch `gdd/<slug>` in its own worktree and commits. When it hits a decision that is hard to reverse (data model, external services, authentication, new dependencies) or would loosen the acceptance criteria, it stops; the AI asks you three options and passes your answer back.
 3. **Review.** The evaluator scores the criteria from evidence it gathers itself, the scenario checks run on the worker's branch, and the AI looks back: learnings go into `state.md` at once, anything that needs work becomes a new candidate. It picks what comes next and the next-reviewer checks that choice.
 4. **Decide.** If the gate allows it, the loop continues. Otherwise you get one question: "Done, next is X because Y. OK / Change something / Stop". If you change its plan, it asks why and records your reason in `gdd/adr/`.
-5. **Finish.** Each finished Build sub-goal becomes a pull request. Sub-goals that depend on it start once it is merged.
+5. **Finish.** Every finished sub-goal becomes a pull request with its code (if any), its sub-goal file, its review, and the decisions behind it, so you can see what happened in the pull request review. Sub-goals that depend on it start once it is merged.
 
 ### When the AI continues on its own
 
