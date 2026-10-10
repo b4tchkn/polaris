@@ -28,5 +28,6 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
    - `worktree.baseRef`: `"head"`, so the worktrees gdd-loop works in start from the current commit instead of the remote default branch.
    - Create the file if missing. Merge without removing existing keys or rules, and skip rules that already exist.
    - Tell the human that the new rules in `.claude/settings.json` take effect once they accept the trust prompt for the project settings (restart Claude Code if it does not appear).
-4. Report the files you created or changed, then stop. Do not commit (the human decides when the setup goes in).
-5. Tell the human the next step: run `/polaris:gdd-loop` to decide the goal together.
+4. Add `.claude/worktrees/` to `.gitignore` (create it if missing) so the workers' worktrees do not show up as untracked files.
+5. Report the files you created or changed, then stop. Do not commit (the human decides when the setup goes in).
+6. Tell the human the next step: run `/polaris:gdd-loop` to decide the goal together.
