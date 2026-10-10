@@ -4,7 +4,8 @@ HOOK="$(cd "$(dirname "$0")/.." && pwd)/plugins/polaris/hooks/guard-gdd-writes.s
 W=$(mktemp -d "${TMPDIR:-/tmp}/guard-test-XXXX"); cd "$W"
 export TMPDIR="$W/tmp"; mkdir -p "$TMPDIR" gdd sub/gdd tests
 printf '# Goal: X\n' > gdd/goal.md
-printf '# Sub-goals\n' > gdd/subgoals.md
+mkdir -p gdd/subgoals/candidates gdd/subgoals/done
+printf -- '---\ntype: build\nadvances: scenario_1\n---\n# a\n' > gdd/subgoals/candidates/a.md
 printf '# Goal: Y\n' > sub/gdd/goal.md
 printf '# State\n\n## Now\n\n- a\n\n## Learnings\n\n- keep one\n- keep two\n' > gdd/state.md
 printf '# State\n\n## 現状\n\n- a\n\n## 学び\n\n- 学び一\n- 学び二\n' > gdd/state-ja.md
@@ -15,21 +16,23 @@ fail=0
 check() { # name expected_exit actual_exit
   if [ "$2" = "$3" ]; then echo "PASS $1"; else echo "FAIL $1 (want exit $2, got $3)"; fail=1; fi
 }
-json() { printf '{"session_id":"s1","tool_name":"%s","tool_input":{"command":"x","file_path":"%s"}}' "$1" "$2"; }
+json() { # tool file_path [cwd] [agent_id]
+  printf '{"session_id":"s1",%s%s"tool_name":"%s","tool_input":{"command":"x","file_path":"%s"}}' \
+    "${3:+\"cwd\":\"$3\",}" "${4:+\"agent_id\":\"$4\",}" "$1" "$2"
+}
 
-# --- Bash writes to goal/subgoals: each must be reverted and refused
+# --- Bash writes to goal.md: each must be reverted and refused
 bash_case() { # name, command that writes
   json Bash "" | bash "$HOOK" pre
   bash -c "$2" 2>/dev/null
   json Bash "" | bash "$HOOK" post 2>/dev/null; rc=$?
   check "bash: $1" 2 "$rc"
   [ "$(cat gdd/goal.md)" = "# Goal: X" ] || { echo "FAIL bash: $1 goal.md not restored"; fail=1; }
-  [ "$(cat gdd/subgoals.md)" = "# Sub-goals" ] || { echo "FAIL bash: $1 subgoals.md not restored"; fail=1; }
   [ "$(cat sub/gdd/goal.md)" = "# Goal: Y" ] || { echo "FAIL bash: $1 sub goal.md not restored"; fail=1; }
 }
 bash_case "redirect"        'echo hacked > gdd/goal.md'
 bash_case "python open"     'python3 -c "open(\"gdd/goal.md\",\"w\").write(\"hacked\")"'
-bash_case "cd then write"   'cd gdd && echo hacked > subgoals.md'
+bash_case "cd then write"   'cd gdd && echo hacked > goal.md'
 bash_case "variable path"   'F=gdd/goal.md; echo hacked > $F'
 bash_case "glob"            'echo hacked > gdd/go*.md'
 bash_case "sed -i"          'sed -i "" "s/X/hacked/" gdd/goal.md'
@@ -57,6 +60,50 @@ check "bash: create new goal.md" 2 "$rc"
 json Bash "" | bash "$HOOK" pre
 cat gdd/goal.md > /dev/null; echo x > gdd/state.md.tmp; echo y > notes.md
 json Bash "" | bash "$HOOK" post 2>/dev/null; check "bash: read-only / other files" 0 $?
+
+# --- sub-goal files: `advances:` is required; moves keep content and pass
+json Bash "" | bash "$HOOK" pre
+mv gdd/subgoals/candidates/a.md gdd/subgoals/done/a.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: move between dirs -> ok" 0 $?
+
+json Bash "" | bash "$HOOK" pre
+printf -- '---\ntype: build\n---\n# b\n' > gdd/subgoals/candidates/b.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: bash new file without advances -> refused" 2 $?
+[ ! -f gdd/subgoals/candidates/b.md ] || { echo "FAIL subgoal: file without advances not removed"; fail=1; }
+
+json Bash "" | bash "$HOOK" pre
+printf -- '---\ntype: build\nadvances: U1\n---\n# c\n' > gdd/subgoals/candidates/c.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: bash new file with advances -> ok" 0 $?
+
+S="$W/gdd/subgoals/done/a.md"
+json Edit "$S" | bash "$HOOK" pre
+printf -- '---\ntype: build\nadvances:\n---\n# a\n' > "$S"
+json Edit "$S" | bash "$HOOK" post 2>/dev/null; check "subgoal: edit empties advances -> refused" 2 $?
+grep -q "scenario_1" "$S" || { echo "FAIL subgoal: not restored"; fail=1; }
+
+S2="$W/gdd/subgoals/candidates/d.md"
+json Write "$S2" | bash "$HOOK" pre
+printf '# d\n' > "$S2"
+json Write "$S2" | bash "$HOOK" post 2>/dev/null; check "subgoal: write without frontmatter -> refused" 2 $?
+[ ! -f "$S2" ] || { echo "FAIL subgoal: new file not removed"; fail=1; }
+
+# --- parallel subagents: agent B's snapshot must not overwrite agent A's
+json Bash "" "" agentA | bash "$HOOK" pre
+echo hacked > gdd/goal.md
+json Bash "" "" agentB | bash "$HOOK" pre
+json Bash "" "" agentB | bash "$HOOK" post 2>/dev/null
+json Bash "" "" agentA | bash "$HOOK" post 2>/dev/null; check "agents: A's change is caught after B ran" 2 $?
+[ "$(cat gdd/goal.md)" = "# Goal: X" ] || { echo "FAIL agents: goal.md not restored"; fail=1; }
+
+# --- worktree: the root is the git root of cwd, not CLAUDE_PROJECT_DIR
+WT=$(mktemp -d "${TMPDIR}/wt-XXXX"); mkdir -p "$WT/gdd" "$WT/src"; printf '# Goal: WT\n' > "$WT/gdd/goal.md"
+git -C "$WT" init -q
+export CLAUDE_PROJECT_DIR="$W/sub"
+json Bash "" "$WT/src" | bash "$HOOK" pre
+echo hacked > "$WT/gdd/goal.md"
+json Bash "" "$WT/src" | bash "$HOOK" post 2>/dev/null; check "worktree: goal.md under cwd's git root is guarded" 2 $?
+[ "$(cat "$WT/gdd/goal.md")" = "# Goal: WT" ] || { echo "FAIL worktree: goal.md not restored"; fail=1; }
+unset CLAUDE_PROJECT_DIR
 
 # --- state.md learnings
 P="$W/gdd/state.md"
