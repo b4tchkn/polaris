@@ -1,3 +1,15 @@
+---
+scenario_1_check: human
+scenario_2_check: human
+scenario_3_check: human
+scenario_4_check: human
+scenario_5_check: claude plugin validate plugins/polaris
+done_checks: bash tests/guard-gdd-writes.sh >/dev/null && bash tests/gdd-status.sh >/dev/null && claude plugin validate plugins/polaris >/dev/null
+max_files: 15
+max_lines: 600
+prefer: certainty
+avoid: none
+---
 # Goal: Goal Driven Development 基盤
 
 ## 大ゴール（北極星）

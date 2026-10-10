@@ -1,13 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Edit(**/gdd/state.md)"
+      "Edit(**/gdd/state.md)",
+      "Edit(**/gdd/subgoals/**)",
+      "Edit(**/gdd/reviews/**)"
     ],
     "ask": [
       "Edit(/gdd/goal.md)",
-      "Edit(/gdd/subgoals.md)",
       "Edit(/simulations/**/gdd/goal.md)",
-      "Edit(/simulations/**/gdd/subgoals.md)",
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(gh pr create *)",
@@ -17,5 +17,8 @@
       "mcp__github__push_files",
       "mcp__github__create_or_update_file"
     ]
+  },
+  "worktree": {
+    "baseRef": "head"
   }
 }
