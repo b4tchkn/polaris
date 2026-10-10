@@ -1,11 +1,11 @@
 # Review and retrospect
 
-Do this for each finished sub-goal, one at a time.
+Do this for each finished sub-goal, one at a time. When several finished together, review all of them before going to `steps/decide.md`.
 
 ## Evaluate
 
 - Run the Agent tool with `subagent_type: "polaris:evaluator"`, giving it only the sub-goal file, where the deliverables are (the worker's worktree path and branch), and how to run them. Do not pass your own view of the result. Paste its table into the review unchanged; if you disagree with a verdict, say so under "Least confident decision".
-- Run `gdd-status.sh <gdd-dir>` and copy its `progress:` line into the review's frontmatter.
+- Run `gdd-status.sh <gdd-dir> --at <worktree path>` (checks run on the sub-goal's work, not on the main checkout) and copy its `progress:` line into the review's frontmatter. For a Decide sub-goal, leave out `--at`.
 
 ## Retrospect
 

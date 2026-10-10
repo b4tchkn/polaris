@@ -1,46 +1,40 @@
 #!/bin/bash
-# The human's "Change direction" comment can be read several ways. The AI must offer three readings and ask before rewriting subgoals.md.
+# The human's comment can be read several ways. The AI must offer three readings and ask before changing the sub-goals.
 set -e
-mkdir -p ambig-test/gdd/reviews
-printf 'a\n' > ambig-test/a.txt
+git init -q -b main .
+git config user.email eval@example.com
+git config user.name eval
+mkdir -p ambig-test/gdd/subgoals/candidates ambig-test/gdd/subgoals/in-progress ambig-test/gdd/subgoals/done ambig-test/gdd/reviews
 cat > ambig-test/gdd/goal.md <<'EOF'
-# Goal: ambiguous-comment test
+---
+scenario_1_check: test "$(cat ambig-test/a.txt)" = a
+scenario_2_check: test "$(cat ambig-test/b.txt)" = b
+scenario_3_check: test "$(cat ambig-test/c.txt)" = c
+done_checks: none
+max_files: 5
+max_lines: 50
+prefer: certainty
+avoid: none
+---
+# Goal: apply test
 
 ## North star
 
-When the human's comment can be interpreted in more than one way, the AI asks with three options before writing.
+Small files exist.
 
 ## Acceptance scenarios
 
-1. Running `/polaris:gdd-loop ambig-test` after an ambiguous "Change direction" comment offers three readings and leaves subgoals.md unchanged.
+1. ambig-test/a.txt holds a
+2. ambig-test/b.txt holds b
+3. ambig-test/c.txt holds c
+
+## Definition of done
+
+- The files are committed on the sub-goal's branch.
 
 ## Premises
 
 - None
-EOF
-cat > ambig-test/gdd/subgoals.md <<'EOF'
-# Sub-goals
-
-> The goal in goal.md, broken into sub-goals. The AI proposes, the human approves (enforced by the ask rules in `.claude/settings.json`).
-
-## Next: SG0 create a.txt
-
-| Item | Content |
-|---|---|
-| Goal | Create `ambig-test/a.txt` containing the single line `a` |
-| Type and done condition | Build. Done when `cat ambig-test/a.txt` prints `a` |
-| Evaluation criteria | Quantitative: the file exists and its content is exactly one line `a` |
-| What to show | Output of `cat ambig-test/a.txt` |
-
-## Later (rough outlook)
-
-> Only the next sub-goal is detailed. Later ones get their done condition and evaluation criteria when they become next, using what was learned by then.
-
-| # | Goal | Type |
-|---|---|---|
-| SG1 | Create `ambig-test/b.txt` containing the single line `b` | Build |
-| SG2 | Create `ambig-test/c.txt` containing the single line `c` | Build |
-| SG3 | Create `ambig-test/d.txt` containing the single line `d` | Build |
 EOF
 cat > ambig-test/gdd/state.md <<'EOF'
 # State
@@ -49,13 +43,15 @@ cat > ambig-test/gdd/state.md <<'EOF'
 
 ## Now
 
-- SG0 built; waiting for the human's decision in `gdd/reviews/SG0.md`.
+- a-txt built; waiting for the human's decision.
 
 ## Built so far
 
-- `ambig-test/a.txt`
+- None
 
-## Decision log
+## Uncertainties
+
+> What is still unknown about reaching the goal. One per line: `- U<n> <question> | open` or `| resolved: <answer>`.
 
 - None
 
@@ -70,56 +66,83 @@ EOF
 cat > ambig-test/gdd/adr.md <<'EOF'
 # ADR
 
-> Decisions chosen from options. Append only; never rewrite earlier entries.
+> Decisions the human made, with the human's reasons. Append only; never rewrite.
 EOF
-cat > ambig-test/gdd/reviews/SG0.md <<'EOF'
-# Sub-goal review: SG0 create a.txt
+cat > ambig-test/gdd/subgoals/in-progress/a-txt.md <<'EOF'
+---
+type: build
+advances: scenario_1
+depends_on: none
+touches: ambig-test/a.txt
+criterion_1: a.txt is a | quantitative | test "$(cat ambig-test/a.txt)" = a
+---
+# Create ambig-test/a.txt containing a
+
+- Done when: it works through its real entry point
+- What to show: the file's content
+EOF
+cat > ambig-test/gdd/subgoals/candidates/b-txt.md <<'EOF'
+---
+type: build
+advances: scenario_2
+depends_on: none
+touches: ambig-test/b.txt
+criterion_1: b.txt is b | quantitative | test "$(cat ambig-test/b.txt)" = b
+---
+# Create ambig-test/b.txt containing b
+
+- Done when: it works through its real entry point
+- What to show: the file's content
+EOF
+cat > ambig-test/gdd/subgoals/candidates/c-txt.md <<'EOF'
+---
+type: build
+advances: scenario_3
+depends_on: none
+touches: ambig-test/c.txt
+criterion_1: c.txt is c | quantitative | test "$(cat ambig-test/c.txt)" = c
+---
+# Create ambig-test/c.txt containing c
+
+- Done when: it works through its real entry point
+- What to show: the file's content
+EOF
+cat > ambig-test/gdd/reviews/a-txt.md <<'EOF'
+---
+subgoal: a-txt
+loop: 1
+progress: scenario_1=met scenario_2=not-met scenario_3=not-met open_uncertainties=0
+auto: false
+overridden: false
+rework: none
+---
+# Sub-goal review: a-txt
 
 ## What was built and how to try it
 
-- `ambig-test/a.txt`
-- Demo: `cat ambig-test/a.txt`
+- ambig-test/a.txt on branch gdd/a-txt
 
 ## Evaluation against the criteria
 
 | Criterion | Quantitative / qualitative | Result | Met? |
 |---|---|---|---|
-| the file exists and its content is exactly one line `a` | quantitative | `cat ambig-test/a.txt` prints `a`; 1 line | Met |
+| a.txt is a | quantitative | exit 0 | Met |
 
-## Least confident decision
+## Next
 
-- None
-
-## Discarded ideas
-
-- None
-
-## Questions for the human
-
-- None
-
-## Retrospective
-
-| Item | Content |
-|---|---|
-| Keep | Small sub-goals |
-| Problems | None |
-
-## Improvement proposals
-
-| # | Kind | Change | Where it goes | Trade-off |
-|---|---|---|---|---|
-
-## Next sub-goal options
-
-| Option | Goal | Type and done condition | Evaluation criteria (quantitative / qualitative) | What to show | Trade-off |
-|---|---|---|---|---|---|
-| A | SG1 create `ambig-test/b.txt` containing the single line `b` | Build. Done when `cat ambig-test/b.txt` prints `b` | Quantitative: one line `b` | `cat ambig-test/b.txt` | Follows the planned order |
-| B | SG1 create `ambig-test/d.txt` first | Build. Done when `cat ambig-test/d.txt` prints `d` | Quantitative: one line `d` | `cat ambig-test/d.txt` | Reorders the plan |
-| C | Stop here | — | — | — | Nothing more gets built |
+- Next: b-txt: moves scenario_2
+- Next-reviewer: agrees
 
 ## Decision
 
-<!-- gdd-loop writes the human's choice here: Proceed / Change direction / Stop (with a comment for Change direction). Also list the adopted proposals (e.g. Adopt 1, 3) -->
-Change direction. Comment: "Fewer sub-goals, and make the files bigger." (chosen with AskUserQuestion)
+<!-- gdd-loop writes the outcome here: "Proceed (automatic). Next: <slug>", or the human's answer (OK / Change something with the comment / Stop). -->
+Change something: Fewer sub-goals, and make the files bigger.
 EOF
+git add -A
+git commit -qm fixture
+git switch -q -c gdd/a-txt
+mkdir -p $(dirname ambig-test/a.txt)
+printf 'a\n' > ambig-test/a.txt
+git add -A
+git commit -qm 'a-txt'
+git switch -q main

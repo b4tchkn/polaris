@@ -34,7 +34,8 @@ cd "$(cat "$snap/root" 2>/dev/null || printf .)" 2>/dev/null || exit 0
 key() { printf '%s' "$1" | shasum | cut -c1-16; }
 sum() { shasum < "$1" | cut -c1-40; }
 gdd_files() {
-  find . \( -name .git -o -name node_modules -o -name build -o -name .gradle \) -prune \
+  # Other worktrees under .claude/worktrees/ have their own guard (their own root); a worker creating one mid-command is not a write.
+  find . \( -name .git -o -name node_modules -o -name build -o -name .gradle -o -path ./.claude/worktrees \) -prune \
     -o \( -path '*/gdd/goal.md' -o -path '*/gdd/subgoals/*.md' \) -print 2>/dev/null
 }
 refuse() { printf '%s\n' "$1" >&2; exit 2; }

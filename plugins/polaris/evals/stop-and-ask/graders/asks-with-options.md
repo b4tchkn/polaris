@@ -5,4 +5,4 @@ flags: i
 match: contains
 ---
 
-The reply stops at the dependency decision and asks the human to choose (three options with trade-offs).
+The reply stops at the dependency decision and asks the human to choose.

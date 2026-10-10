@@ -1,19 +1,23 @@
 #!/bin/bash
 # Mechanical part of gdd-loop: reads the frontmatter of gdd/ files and reports what can be decided without judgment.
-#   gdd-status.sh <gdd-dir>              goal distance, stall, streak, sub-goals and whether each candidate is ready
-#   gdd-status.sh <gdd-dir> gate <slug>  "auto" or "ask: <reasons>" for continuing after <slug> without the human
+#   gdd-status.sh <gdd-dir> [--at <dir>]              goal distance, stall, streak, sub-goals and whether each candidate is ready
+#   gdd-status.sh <gdd-dir> gate <slug> [--at <dir>]  "auto" or "ask: <reasons>" for continuing after <slug> without the human
+# --at runs the scenario and done checks in <dir> (a worker's worktree) instead of the repository that holds <gdd-dir>.
 # Frontmatter is flat `key: value`, one per line. Needs bash, git, sed, grep, awk. gh is used when present.
 # ponytail: scenario and done checks rerun on every call; cache them if a project's checks get slow.
 
-dir="${1:-gdd}"; cmd="$2"; slug="$3"
+at=""; args=()
+while [ $# -gt 0 ]; do case "$1" in --at) at="$2"; shift 2 ;; *) args+=("$1"); shift ;; esac; done
+dir="${args[0]:-gdd}"; cmd="${args[1]}"; slug="${args[2]}"
 [ -f "$dir/goal.md" ] || { echo "no $dir/goal.md" >&2; exit 1; }
 root=$(cd "$dir/.." && pwd)
+checks_root="${at:-$root}"
 STALL_N=3   # identical progress in this many latest reviews = stalled
 TRUST_N=3   # this many latest reviews not overridden and without rework = trusted
 
 fm() { sed -n '1{/^---$/!q;};2,/^---$/p' "$1" | sed -n "s/^$2:[[:space:]]*//p" | head -1; }
 fm_keys() { sed -n '1{/^---$/!q;};2,/^---$/p' "$1" | sed -n "s/^\($2\):.*/\1/p"; }
-run() { (cd "$root" && bash -c "$1") >/dev/null 2>&1; }
+run() { (cd "$checks_root" && bash -c "$1") >/dev/null 2>&1; }
 file_of() { ls "$dir"/subgoals/*/"$1".md 2>/dev/null | head -1; }
 state_of() { f=$(file_of "$1"); [ -n "$f" ] && basename "$(dirname "$f")"; }
 default_ref() { git -C "$root" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null || echo main; }

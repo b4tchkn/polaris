@@ -1,43 +1,36 @@
 #!/bin/bash
-# The human writes in Japanese; the review must be written in Japanese too. SG0 has a qualitative criterion so the loop stops after one sub-goal.
+# The human writes in Japanese; the review must be in Japanese too. The sub-goal has a qualitative criterion so the loop stops after it.
 set -e
-mkdir -p lang-test/gdd
+git init -q -b main .
+git config user.email eval@example.com
+git config user.name eval
+mkdir -p lang-test/gdd/subgoals/candidates lang-test/gdd/subgoals/in-progress lang-test/gdd/subgoals/done lang-test/gdd/reviews
 cat > lang-test/gdd/goal.md <<'EOF'
-# Goal: language test
+---
+scenario_1_check: human
+done_checks: none
+max_files: 5
+max_lines: 50
+prefer: certainty
+avoid: none
+---
+# Goal: greeting
 
 ## North star
 
-The AI talks to the human and writes reviews in the language the human uses.
+hello.txt holds a friendly greeting.
 
 ## Acceptance scenarios
 
-1. When the human writes in Japanese, the sub-goal review is written in Japanese.
+1. lang-test/hello.txt holds a friendly one-line greeting
+
+## Definition of done
+
+- The files are committed on the sub-goal's branch.
 
 ## Premises
 
 - None
-EOF
-cat > lang-test/gdd/subgoals.md <<'EOF'
-# Sub-goals
-
-> The goal in goal.md, broken into sub-goals. The AI proposes, the human approves (enforced by the ask rules in `.claude/settings.json`).
-
-## Next: SG0 create hello.txt
-
-| Item | Content |
-|---|---|
-| Goal | Create `lang-test/hello.txt` with a one-line greeting |
-| Type and done condition | Build. Done when the file exists with one line |
-| Evaluation criteria | Quantitative: the file has exactly one line. Qualitative: the human finds the greeting friendly |
-| What to show | Output of `cat lang-test/hello.txt` |
-
-## Later (rough outlook)
-
-> Only the next sub-goal is detailed. Later ones get their done condition and evaluation criteria when they become next, using what was learned by then.
-
-| # | Goal | Type |
-|---|---|---|
-| SG1 | Add a second greeting | Build |
 EOF
 cat > lang-test/gdd/state.md <<'EOF'
 # State
@@ -52,7 +45,9 @@ cat > lang-test/gdd/state.md <<'EOF'
 
 - None
 
-## Decision log
+## Uncertainties
+
+> What is still unknown about reaching the goal. One per line: `- U<n> <question> | open` or `| resolved: <answer>`.
 
 - None
 
@@ -67,5 +62,21 @@ EOF
 cat > lang-test/gdd/adr.md <<'EOF'
 # ADR
 
-> Decisions chosen from options. Append only; never rewrite earlier entries.
+> Decisions the human made, with the human's reasons. Append only; never rewrite.
 EOF
+cat > lang-test/gdd/subgoals/candidates/hello-txt.md <<'EOF'
+---
+type: build
+advances: scenario_1
+depends_on: none
+touches: lang-test/hello.txt
+criterion_1: the file has one line | quantitative | test $(wc -l < lang-test/hello.txt) -eq 1
+criterion_2: the human finds the greeting friendly | qualitative
+---
+# Create lang-test/hello.txt with a one-line greeting
+
+- Done when: it works through its real entry point
+- What to show: the file's content
+EOF
+git add -A
+git commit -qm fixture

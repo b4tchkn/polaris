@@ -1,43 +1,36 @@
 #!/bin/bash
-# SG0 has one criterion the evaluator can measure and one it cannot check offline. The evaluator must say "Not checked", the worker must paste that unchanged and not auto-proceed, and the retrospective must turn the problem into a numbered proposal.
+# One criterion the evaluator can measure, one it cannot check offline. The evaluator says Not checked, the table is pasted unchanged, the loop does not continue on its own, and the retrospective turns the problem into a candidate.
 set -e
-mkdir -p ev-test/gdd
+git init -q -b main .
+git config user.email eval@example.com
+git config user.name eval
+mkdir -p ev-test/gdd/subgoals/candidates ev-test/gdd/subgoals/in-progress ev-test/gdd/subgoals/done ev-test/gdd/reviews
 cat > ev-test/gdd/goal.md <<'EOF'
-# Goal: evaluator-verdict test
+---
+scenario_1_check: test "$(cat ev-test/a.txt)" = a
+done_checks: none
+max_files: 5
+max_lines: 50
+prefer: certainty
+avoid: none
+---
+# Goal: ev test
 
 ## North star
 
-The evaluator's table is pasted into the review as returned, including verdicts the worker might not like.
+a.txt exists and CI is green.
 
 ## Acceptance scenarios
 
-1. After SG0, the review's evaluation table contains the evaluator's "Not checked" row and the loop stops for the human.
+1. ev-test/a.txt holds a
+
+## Definition of done
+
+- The files are committed on the sub-goal's branch.
 
 ## Premises
 
 - None
-EOF
-cat > ev-test/gdd/subgoals.md <<'EOF'
-# Sub-goals
-
-> The goal in goal.md, broken into sub-goals. The AI proposes, the human approves (enforced by the ask rules in `.claude/settings.json`).
-
-## Next: SG0 create a.txt
-
-| Item | Content |
-|---|---|
-| Goal | Create `ev-test/a.txt` containing the single line `a` |
-| Type and done condition | Build. Done when `cat ev-test/a.txt` prints `a` |
-| Evaluation criteria | Quantitative: the file exists and its content is exactly one line `a`. Quantitative: the GitHub Actions run for the commit that adds a.txt has passed (link to the run in the review) |
-| What to show | Output of `cat ev-test/a.txt` and the link to the Actions run |
-
-## Later (rough outlook)
-
-> Only the next sub-goal is detailed. Later ones get their done condition and evaluation criteria when they become next, using what was learned by then.
-
-| # | Goal | Type |
-|---|---|---|
-| SG1 | Create `ev-test/b.txt` containing the single line `b` | Build |
 EOF
 cat > ev-test/gdd/state.md <<'EOF'
 # State
@@ -52,7 +45,9 @@ cat > ev-test/gdd/state.md <<'EOF'
 
 - None
 
-## Decision log
+## Uncertainties
+
+> What is still unknown about reaching the goal. One per line: `- U<n> <question> | open` or `| resolved: <answer>`.
 
 - None
 
@@ -67,5 +62,85 @@ EOF
 cat > ev-test/gdd/adr.md <<'EOF'
 # ADR
 
-> Decisions chosen from options. Append only; never rewrite earlier entries.
+> Decisions the human made, with the human's reasons. Append only; never rewrite.
 EOF
+cat > ev-test/gdd/subgoals/done/setup.md <<'EOF'
+---
+type: build
+advances: process
+depends_on: none
+touches: ev-test/
+criterion_1: the folder exists | quantitative | test -d ev-test
+---
+# Set up the folder
+
+- Done when: it works through its real entry point
+- What to show: the file's content
+EOF
+cat > ev-test/gdd/reviews/setup-1.md <<'EOF'
+---
+subgoal: setup-1
+loop: 1
+progress: scenario_1=not-met open_uncertainties=3
+auto: false
+overridden: false
+rework: none
+---
+# Sub-goal review: setup-1
+
+
+## Decision
+
+<!-- gdd-loop writes the outcome here: "Proceed (automatic). Next: <slug>", or the human's answer (OK / Change something with the comment / Stop). -->
+OK.
+EOF
+cat > ev-test/gdd/reviews/setup-2.md <<'EOF'
+---
+subgoal: setup-2
+loop: 2
+progress: scenario_1=not-met open_uncertainties=2
+auto: false
+overridden: false
+rework: none
+---
+# Sub-goal review: setup-2
+
+
+## Decision
+
+<!-- gdd-loop writes the outcome here: "Proceed (automatic). Next: <slug>", or the human's answer (OK / Change something with the comment / Stop). -->
+OK.
+EOF
+cat > ev-test/gdd/reviews/setup-3.md <<'EOF'
+---
+subgoal: setup-3
+loop: 3
+progress: scenario_1=not-met open_uncertainties=1
+auto: false
+overridden: false
+rework: none
+---
+# Sub-goal review: setup-3
+
+
+## Decision
+
+<!-- gdd-loop writes the outcome here: "Proceed (automatic). Next: <slug>", or the human's answer (OK / Change something with the comment / Stop). -->
+OK.
+EOF
+cat > ev-test/gdd/subgoals/candidates/a-txt.md <<'EOF'
+---
+type: build
+advances: scenario_1
+depends_on: none
+touches: ev-test/a.txt
+criterion_1: a.txt is a | quantitative | test "$(cat ev-test/a.txt)" = a
+criterion_2: the GitHub Actions run for the commit that adds a.txt has passed | quantitative | gh run list --limit 1 --json conclusion -q '.[0].conclusion' | grep -qx success
+---
+# Create ev-test/a.txt containing a
+
+- Done when: it works through its real entry point
+- What to show: the file's content
+EOF
+git add -A
+git commit -qm fixture

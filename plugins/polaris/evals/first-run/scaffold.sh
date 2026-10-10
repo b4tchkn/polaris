@@ -1,44 +1,38 @@
 #!/bin/bash
 # A gdd/ exactly as gdd-init leaves it: goal.md is still the template.
 set -e
-mkdir -p gdd
+git init -q -b main .
+git config user.email eval@example.com
+git config user.name eval
+mkdir -p gdd/subgoals/candidates gdd/subgoals/in-progress gdd/subgoals/done gdd/reviews
 cat > gdd/goal.md <<'EOF'
+---
+scenario_1_check: <shell command that exits 0 when scenario 1 holds, run from the repository root; or "human" when only the human can judge it>
+done_checks: <shell command every sub-goal must pass (tests, lint), or "none">
+max_files: 10
+max_lines: 300
+prefer: <speed | certainty>
+avoid: <areas the AI must not touch, or "none">
+---
 # Goal: <goal name>
 
 ## North star
 
-<What this goal should achieve>
+<What this goal should achieve, in one sentence>
 
 ## Acceptance scenarios
 
 1. <A scenario that shows the goal is reached>
 
+## Definition of done
+
+- <The quality bar every sub-goal meets (what done_checks runs, plus anything a command cannot check)>
+
 ## Premises
 
 - None
 EOF
-cat > gdd/subgoals.md <<'EOF'
-# Sub-goals
-
-> The goal in goal.md, broken into sub-goals. The AI proposes, the human approves (enforced by the ask rules in `.claude/settings.json`).
-
-## Next: SG0 <goal>
-
-| Item | Content |
-|---|---|
-| Goal | <What this sub-goal achieves, in one sentence> |
-| Type and done condition | <Decide: settle a spec, approach, or scope; done when the human agrees. Build: make something that works; done when it works through its real entry point> |
-| Evaluation criteria | <How to tell whether it went well. Mark each as quantitative (measured by numbers) or qualitative (judged by the human)> |
-| What to show | <What the human looks at to decide when the sub-goal is done> |
-
-## Later (rough outlook)
-
-> Only the next sub-goal is detailed. Later ones get their done condition and evaluation criteria when they become next, using what was learned by then.
-
-| # | Goal | Type |
-|---|---|---|
-EOF
-cat > gdd/state.md <<'EOF'
+cat > ./gdd/state.md <<'EOF'
 # State
 
 > The AI rewrites this every loop, within one page. Never delete learnings.
@@ -51,7 +45,9 @@ cat > gdd/state.md <<'EOF'
 
 - None
 
-## Decision log
+## Uncertainties
+
+> What is still unknown about reaching the goal. One per line: `- U<n> <question> | open` or `| resolved: <answer>`.
 
 - None
 
@@ -63,8 +59,10 @@ cat > gdd/state.md <<'EOF'
 
 - None
 EOF
-cat > gdd/adr.md <<'EOF'
+cat > ./gdd/adr.md <<'EOF'
 # ADR
 
-> Decisions chosen from options. Append only; never rewrite earlier entries.
+> Decisions the human made, with the human's reasons. Append only; never rewrite.
 EOF
+git add -A
+git commit -qm fixture

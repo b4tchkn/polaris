@@ -1,6 +1,10 @@
 ---
-type: file_exists
-path: decide-test/gdd/reviews/SG0.md
+type: regex
+pattern: "subgoal: note-format"
+match: contains
+target:
+  source: file
+  path: decide-test/gdd/reviews/note-format.md
 ---
 
-The Decide sub-goal still gets a review (the comparison is what the human looks at).
+The Decide sub-goal still gets a review.

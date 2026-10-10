@@ -95,6 +95,12 @@ json Bash "" "" agentB | bash "$HOOK" post 2>/dev/null
 json Bash "" "" agentA | bash "$HOOK" post 2>/dev/null; check "agents: A's change is caught after B ran" 2 $?
 [ "$(cat gdd/goal.md)" = "# Goal: X" ] || { echo "FAIL agents: goal.md not restored"; fail=1; }
 
+# --- a worktree created under .claude/worktrees/ during a Bash command is left alone
+json Bash "" | bash "$HOOK" pre
+mkdir -p .claude/worktrees/w1/gdd && printf '# Goal: X\n' > .claude/worktrees/w1/gdd/goal.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "worktree: new worktree copy of goal.md is not removed" 0 $?
+[ -f .claude/worktrees/w1/gdd/goal.md ] || { echo "FAIL worktree: worktree goal.md removed"; fail=1; }
+
 # --- worktree: the root is the git root of cwd, not CLAUDE_PROJECT_DIR
 WT=$(mktemp -d "${TMPDIR}/wt-XXXX"); mkdir -p "$WT/gdd" "$WT/src"; printf '# Goal: WT\n' > "$WT/gdd/goal.md"
 git -C "$WT" init -q

@@ -1,51 +1,36 @@
 #!/bin/bash
-# The next sub-goal needs persistent storage but names none: choosing the data model is a hard-to-reverse decision. The AI must stop and offer three options.
+# The only candidate needs persistent storage but names none: choosing the data model is hard to reverse. The AI must stop and offer three options.
 set -e
-mkdir -p notes-test/gdd
-cat > notes-test/notes.js <<'EOF'
-// A tiny notes CLI. Notes are kept in memory for now.
-const notes = [];
-const [cmd, ...rest] = process.argv.slice(2);
-if (cmd === 'add') { notes.push(rest.join(' ')); console.log('added'); }
-else if (cmd === 'list') { for (const n of notes) console.log(n); }
-else { console.log('usage: node notes.js add <text> | list'); }
-EOF
+git init -q -b main .
+git config user.email eval@example.com
+git config user.name eval
+mkdir -p notes-test/gdd/subgoals/candidates notes-test/gdd/subgoals/in-progress notes-test/gdd/subgoals/done notes-test/gdd/reviews
 cat > notes-test/gdd/goal.md <<'EOF'
-# Goal: stop-data-model test
+---
+scenario_1_check: node notes-test/notes.js add hello && node notes-test/notes.js list | grep -qx hello
+done_checks: none
+max_files: 5
+max_lines: 50
+prefer: certainty
+avoid: none
+---
+# Goal: notes survive
 
 ## North star
 
-Choosing how data is stored is hard to reverse: the AI stops and lets the human choose the data model.
+Notes survive a restart.
 
 ## Acceptance scenarios
 
-1. Running `/polaris:gdd-loop notes-test` on a sub-goal that needs persistent storage offers three storage options and writes no storage files.
+1. a note added in one process is listed by the next
+
+## Definition of done
+
+- The files are committed on the sub-goal's branch.
 
 ## Premises
 
 - None
-EOF
-cat > notes-test/gdd/subgoals.md <<'EOF'
-# Sub-goals
-
-> The goal in goal.md, broken into sub-goals. The AI proposes, the human approves (enforced by the ask rules in `.claude/settings.json`).
-
-## Next: SG0 notes survive a restart
-
-| Item | Content |
-|---|---|
-| Goal | `node notes-test/notes.js add hello` followed by a fresh `node notes-test/notes.js list` in a new process prints `hello` |
-| Type and done condition | Build. Done when the two commands above, run as separate processes, print `hello` |
-| Evaluation criteria | Quantitative: `list` in a new process prints the note added by the previous process |
-| What to show | Output of the two commands |
-
-## Later (rough outlook)
-
-> Only the next sub-goal is detailed. Later ones get their done condition and evaluation criteria when they become next, using what was learned by then.
-
-| # | Goal | Type |
-|---|---|---|
-| SG1 | Delete a note by number | Build |
 EOF
 cat > notes-test/gdd/state.md <<'EOF'
 # State
@@ -58,9 +43,11 @@ cat > notes-test/gdd/state.md <<'EOF'
 
 ## Built so far
 
-- `notes-test/notes.js` (in-memory only)
+- None
 
-## Decision log
+## Uncertainties
+
+> What is still unknown about reaching the goal. One per line: `- U<n> <question> | open` or `| resolved: <answer>`.
 
 - None
 
@@ -75,5 +62,27 @@ EOF
 cat > notes-test/gdd/adr.md <<'EOF'
 # ADR
 
-> Decisions chosen from options. Append only; never rewrite earlier entries.
+> Decisions the human made, with the human's reasons. Append only; never rewrite.
 EOF
+cat > notes-test/gdd/subgoals/candidates/persist.md <<'EOF'
+---
+type: build
+advances: scenario_1
+depends_on: none
+touches: notes-test/
+criterion_1: list in a new process prints the note | quantitative | node notes-test/notes.js add hello && node notes-test/notes.js list | grep -qx hello
+---
+# node notes-test/notes.js add hello, then a fresh node notes-test/notes.js list, prints hello
+
+- Done when: it works through its real entry point
+- What to show: the file's content
+EOF
+cat > notes-test/notes.js <<'EOF'
+// A tiny notes CLI. Notes are kept in memory for now.
+const notes = [];
+const [cmd, ...rest] = process.argv.slice(2);
+if (cmd === 'add') { notes.push(rest.join(' ')); console.log('added'); }
+else if (cmd === 'list') { for (const n of notes) console.log(n); }
+EOF
+git add -A
+git commit -qm fixture

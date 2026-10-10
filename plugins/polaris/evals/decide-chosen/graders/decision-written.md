@@ -5,7 +5,7 @@ flags: s
 match: contains
 target:
   source: file
-  path: chosen-test/gdd/reviews/SG0.md
+  path: chosen-test/gdd/reviews/note-format.md
 ---
 
 The Decision section records the chosen option.

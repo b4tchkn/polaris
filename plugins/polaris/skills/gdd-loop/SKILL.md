@@ -20,12 +20,12 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 - `gdd/reviews/<slug>.md`: one review per sub-goal, in the shape of `templates/review.md`.
 - `gdd/adr.md`: decisions the human made, append only.
 
-`bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` reports goal progress, done checks, stall, trust streak, and which candidates are ready and which overlap. `... <gdd-dir> gate <slug>` says whether the loop may continue after `<slug>` without the human. Run `git fetch -q` first when the repository has a remote. Use the script's answers; do not redo its checks by hand.
+`bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` reports goal progress, done checks, stall, trust streak, and which candidates are ready and which overlap. `... <gdd-dir> gate <slug>` says whether the loop may continue after `<slug>` without the human. Add `--at <worktree path>` to run the scenario and done checks on a worker's branch instead of the main checkout. Run `git fetch -q` first when the repository has a remote. Use the script's answers; do not redo its checks by hand.
 
 ## Loop
 
 0. **Goal.** If `goal.md` is still the template (`<goal name>` remains) or the human asked to change the goal, follow `steps/set-goal.md` and stop.
-1. **Pending decision.** If a review's Decision section is empty, ask its question again as in `steps/decide.md` before anything else.
+1. **Pending decision.** If the review of a sub-goal still in `in-progress/` has a filled Decision section (the human may write it in the file), apply it as in "Apply the answer" of `steps/decide.md`. If it is empty, ask its question again as in `steps/decide.md`.
 2. **Plan.** Follow `steps/plan.md`: choose the next sub-goal(s), write their criteria, move them to `in-progress/`.
 3. **Work.** Hand each in-progress sub-goal to a worker (`steps/plan.md` says how). The worker builds on branch `gdd/<slug>` in its own worktree and commits there; it never touches `gdd/`.
 4. **Review and retrospect.** Follow `steps/review.md` for each finished sub-goal: evaluator, progress, retrospective, the next choice, the review file.

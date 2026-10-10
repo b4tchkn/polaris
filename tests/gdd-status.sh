@@ -38,6 +38,8 @@ has "ready: dep not done"               "ready=no ( cur not done )"
 has "overlap: shared path prefix"       "clash type=build advances=scenario_1 ready=yes overlaps=[cur ]"
 has "no stall without reviews"          "stalled: no"
 
+mkdir -p "$W/wt/src" && touch "$W/wt/src/a.txt"
+out=$(bash "$S" gdd --at "$W/wt"); has "progress: checks run where --at points" "scenario_1=met"
 touch src/a.txt
 out=$(bash "$S" gdd); has "progress: scenario met" "scenario_1=met"
 

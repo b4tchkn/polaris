@@ -1,42 +1,36 @@
 #!/bin/bash
-# Creates the test gdd/ for the goal-reached case in the eval workspace: SG0 is the only sub-goal, "Later" is empty.
+# One candidate covers the only scenario. After it, every scenario is met and nothing is left: the AI says the goal looks reached instead of inventing more work.
 set -e
-mkdir -p goal-done/gdd
+git init -q -b main .
+git config user.email eval@example.com
+git config user.name eval
+mkdir -p goal-done/gdd/subgoals/candidates goal-done/gdd/subgoals/in-progress goal-done/gdd/subgoals/done goal-done/gdd/reviews
 cat > goal-done/gdd/goal.md <<'EOF'
-# Goal: goal-reached test
+---
+scenario_1_check: test "$(cat goal-done/done.txt)" = done
+done_checks: none
+max_files: 5
+max_lines: 50
+prefer: certainty
+avoid: none
+---
+# Goal: goal reached test
 
 ## North star
 
-When "Later" is empty, gdd-loop says the goal looks reached and asks whether to add sub-goals or write the completion report.
+done.txt exists.
 
 ## Acceptance scenarios
 
-1. Running `/polaris:gdd-loop goal-done` says the goal looks reached and offers "add sub-goals" / "write the goal completion report".
+1. goal-done/done.txt holds done
+
+## Definition of done
+
+- The files are committed on the sub-goal's branch.
 
 ## Premises
 
 - None
-EOF
-cat > goal-done/gdd/subgoals.md <<'EOF'
-# Sub-goals
-
-> The goal in goal.md, broken into sub-goals. The AI proposes, the human approves (enforced by the ask rules in `.claude/settings.json`).
-
-## Next: SG0 create done.txt
-
-| Item | Content |
-|---|---|
-| Goal | Create `goal-done/done.txt` containing the single line `done` |
-| Type and done condition | Build. Done when `cat goal-done/done.txt` prints `done` |
-| Evaluation criteria | Quantitative: the file exists and its content is exactly one line `done` |
-| What to show | Output of `cat goal-done/done.txt` |
-
-## Later (rough outlook)
-
-> Only the next sub-goal is detailed. Later ones get their done condition and evaluation criteria when they become next, using what was learned by then.
-
-| # | Goal | Type |
-|---|---|---|
 EOF
 cat > goal-done/gdd/state.md <<'EOF'
 # State
@@ -51,7 +45,9 @@ cat > goal-done/gdd/state.md <<'EOF'
 
 - None
 
-## Decision log
+## Uncertainties
+
+> What is still unknown about reaching the goal. One per line: `- U<n> <question> | open` or `| resolved: <answer>`.
 
 - None
 
@@ -66,5 +62,20 @@ EOF
 cat > goal-done/gdd/adr.md <<'EOF'
 # ADR
 
-> Decisions chosen from options. Append only; never rewrite earlier entries.
+> Decisions the human made, with the human's reasons. Append only; never rewrite.
 EOF
+cat > goal-done/gdd/subgoals/candidates/done-txt.md <<'EOF'
+---
+type: build
+advances: scenario_1
+depends_on: none
+touches: goal-done/done.txt
+criterion_1: done.txt is done | quantitative | test "$(cat goal-done/done.txt)" = done
+---
+# Create goal-done/done.txt containing done
+
+- Done when: it works through its real entry point
+- What to show: the file's content
+EOF
+git add -A
+git commit -qm fixture

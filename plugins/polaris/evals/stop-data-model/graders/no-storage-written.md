@@ -6,4 +6,4 @@ min: 0
 max: 0
 ---
 
-No storage file or migration was created before the human chose the data model.
+No storage file or migration was created before the human chose.

@@ -1,7 +1,7 @@
 ---
 name: first-run
-max_turns: 20
-timeout_seconds: 300
+max_turns: 30
+timeout_seconds: 600
 runs: 1
 allowed_tools: [Read, Glob, Grep, Skill, Bash, Write, Edit, Agent, AskUserQuestion]
 ---

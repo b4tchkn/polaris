@@ -1,43 +1,36 @@
 #!/bin/bash
-# SG0 is built and reviewed, "Later" is empty. history.jsonl holds the AI asking "add sub-goals or write the completion report?"; the prompt is the human's answer.
+# done-txt is finished and every scenario is met. history.jsonl holds the AI asking whether to add sub-goals or write the report; the prompt is the human's answer.
 set -e
-mkdir -p done-test/gdd/reviews
-printf 'done\n' > done-test/done.txt
+git init -q -b main .
+git config user.email eval@example.com
+git config user.name eval
+mkdir -p done-test/gdd/subgoals/candidates done-test/gdd/subgoals/in-progress done-test/gdd/subgoals/done done-test/gdd/reviews
 cat > done-test/gdd/goal.md <<'EOF'
-# Goal: completion-report test
+---
+scenario_1_check: test "$(cat done-test/done.txt)" = done
+done_checks: none
+max_files: 5
+max_lines: 50
+prefer: certainty
+avoid: none
+---
+# Goal: completion test
 
 ## North star
 
-When the human chooses the completion report, gdd-loop writes `gdd/reviews/GOAL.md`.
+done.txt exists.
 
 ## Acceptance scenarios
 
-1. `cat done-test/done.txt` prints `done`.
+1. done-test/done.txt holds done
+
+## Definition of done
+
+- The files are committed on the sub-goal's branch.
 
 ## Premises
 
 - None
-EOF
-cat > done-test/gdd/subgoals.md <<'EOF'
-# Sub-goals
-
-> The goal in goal.md, broken into sub-goals. The AI proposes, the human approves (enforced by the ask rules in `.claude/settings.json`).
-
-## Next: SG0 create done.txt
-
-| Item | Content |
-|---|---|
-| Goal | Create `done-test/done.txt` containing the single line `done` |
-| Type and done condition | Build. Done when `cat done-test/done.txt` prints `done` |
-| Evaluation criteria | Quantitative: the file exists and its content is exactly one line `done` |
-| What to show | Output of `cat done-test/done.txt` |
-
-## Later (rough outlook)
-
-> Only the next sub-goal is detailed. Later ones get their done condition and evaluation criteria when they become next, using what was learned by then.
-
-| # | Goal | Type |
-|---|---|---|
 EOF
 cat > done-test/gdd/state.md <<'EOF'
 # State
@@ -46,13 +39,15 @@ cat > done-test/gdd/state.md <<'EOF'
 
 ## Now
 
-- SG0 built and reviewed. "Later" is empty, so the goal looks reached. Waiting for the human: add sub-goals or write the completion report.
+- None
 
 ## Built so far
 
-- `done-test/done.txt`
+- done-test/done.txt
 
-## Decision log
+## Uncertainties
+
+> What is still unknown about reaching the goal. One per line: `- U<n> <question> | open` or `| resolved: <answer>`.
 
 - None
 
@@ -67,53 +62,38 @@ EOF
 cat > done-test/gdd/adr.md <<'EOF'
 # ADR
 
-> Decisions chosen from options. Append only; never rewrite earlier entries.
+> Decisions the human made, with the human's reasons. Append only; never rewrite.
 EOF
-cat > done-test/gdd/reviews/SG0.md <<'EOF'
-# Sub-goal review: SG0 create done.txt
+cat > done-test/gdd/subgoals/done/done-txt.md <<'EOF'
+---
+type: build
+advances: scenario_1
+depends_on: none
+touches: done-test/done.txt
+criterion_1: done.txt is done | quantitative | test "$(cat done-test/done.txt)" = done
+---
+# Create done-test/done.txt containing done
 
-## What was built and how to try it
+- Done when: it works through its real entry point
+- What to show: the file's content
+EOF
+cat > done-test/gdd/reviews/done-txt.md <<'EOF'
+---
+subgoal: done-txt
+loop: 1
+progress: scenario_1=met open_uncertainties=0
+auto: false
+overridden: false
+rework: none
+---
+# Sub-goal review: done-txt
 
-- `done-test/done.txt`
-- Demo: `cat done-test/done.txt`
-
-## Evaluation against the criteria
-
-| Criterion | Quantitative / qualitative | Result | Met? |
-|---|---|---|---|
-| the file exists and its content is exactly one line `done` | quantitative | `cat done-test/done.txt` prints `done`; 1 line | Met |
-
-## Least confident decision
-
-- None
-
-## Discarded ideas
-
-- None
-
-## Questions for the human
-
-- "Later" is empty, so the goal looks reached. Add sub-goals, or write the goal completion report?
-
-## Retrospective
-
-| Item | Content |
-|---|---|
-| Keep | Small sub-goals |
-| Problems | None |
-
-## Improvement proposals
-
-| # | Kind | Change | Where it goes | Trade-off |
-|---|---|---|---|---|
-
-## Goal check (Later is empty)
-
-| Acceptance scenario | Result | Met? |
-|---|---|---|
-| 1. `cat done-test/done.txt` prints `done` | prints `done` | Met |
 
 ## Decision
 
-<!-- gdd-loop writes the human's choice here: Proceed / Change direction / Stop (with a comment for Change direction). Also list the adopted proposals (e.g. Adopt 1, 3) -->
+<!-- gdd-loop writes the outcome here: "Proceed (automatic). Next: <slug>", or the human's answer (OK / Change something with the comment / Stop). -->
+OK.
 EOF
+printf 'done\n' > done-test/done.txt
+git add -A
+git commit -qm fixture

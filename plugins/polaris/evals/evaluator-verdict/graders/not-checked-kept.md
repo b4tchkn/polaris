@@ -4,7 +4,7 @@ pattern: "\\|[^\\n]*Not checked[^\\n]*\\|"
 match: contains
 target:
   source: file
-  path: ev-test/gdd/reviews/SG0.md
+  path: ev-test/gdd/reviews/a-txt.md
 ---
 
-The evaluator could not verify the Actions-run criterion offline, so its row says "Not checked", and the worker pasted the table unchanged instead of softening it.
+The Actions criterion could not be verified offline, so its row says Not checked, pasted unchanged.

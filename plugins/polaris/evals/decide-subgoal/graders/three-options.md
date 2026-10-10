@@ -1,6 +1,6 @@
 ---
 type: regex
-pattern: "trade-?offs?"
+pattern: "trade-?offs?|downside|cost"
 flags: i
 match: contains
 ---

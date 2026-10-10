@@ -1,6 +1,6 @@
 ---
 type: regex
-pattern: "shopping"
+pattern: "shopping|list"
 flags: i
 match: contains
 target:
