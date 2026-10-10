@@ -59,11 +59,7 @@ cat > goal-done/gdd/state.md <<'EOF'
 
 - None
 EOF
-cat > goal-done/gdd/adr.md <<'EOF'
-# ADR
-
-> Decisions the human made, with the human's reasons. Append only; never rewrite.
-EOF
+mkdir -p goal-done/gdd/adr
 cat > goal-done/gdd/subgoals/candidates/done-txt.md <<'EOF'
 ---
 type: build

@@ -193,7 +193,7 @@ rework: false
 
 - 未確定事項は `goal.md` ではなく `state.md` の「Uncertainties」に置く。`goal.md` は書くたびに人間の承認が要るため、毎周の状態更新に向かない。レビューの `progress:` に未解決の数を残し、停滞の判定に使う。
 - `subgoals/` への書き込みは ask にしない（`gdd-init` が allow を書く）。代わりに hook が `advances:` の無いファイルを戻す。
-- `adr.md` に書くのはメインのセッションだけ。worker は `gdd/` に触れないので、同時追記は起きない。
+- ADR は `gdd/adr/<日付>-<slug>.md` の1判断1ファイルにした。既存のファイルは変えられず（hook が戻す）、新しいファイルはどのセッションからでも足せる。
 - 既定値：停滞 = 直近3件のレビューの progress が同じ。聞かずに進むには直近3件が覆されず手戻りも無いこと。大きさの上限は雛形で 10 ファイル / 300 行。
 - 並列化は1セッション内で行う：worker サブエージェント（`isolation: worktree`）がブランチ `gdd/<slug>` で作ってコミットし、メインが統合する。`gdd-init` は `worktree.baseRef: "head"` を書く。
 - ゴールまでの距離は worker の worktree で測る（`gdd-status.sh --at <worktree>`）。メインのチェックアウトにはマージ前の成果が無いため。

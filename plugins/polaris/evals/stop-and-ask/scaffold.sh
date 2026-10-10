@@ -59,11 +59,7 @@ cat > dep-test/gdd/state.md <<'EOF'
 
 - None
 EOF
-cat > dep-test/gdd/adr.md <<'EOF'
-# ADR
-
-> Decisions the human made, with the human's reasons. Append only; never rewrite.
-EOF
+mkdir -p dep-test/gdd/adr
 cat > dep-test/gdd/subgoals/candidates/tomorrow.md <<'EOF'
 ---
 type: build

@@ -18,7 +18,7 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 - `gdd/subgoals/{candidates,in-progress,done}/<slug>.md`: one file per sub-goal, in the shape of `templates/subgoal.md`. The directory is its state. Move files with `git mv` (or `mv`). `advances:` is required (the hook refuses a file without it).
 - `gdd/state.md`: Now / Built so far / Uncertainties / Rejected ideas / Learnings, rewritten every loop within one page. Never delete learnings.
 - `gdd/reviews/<slug>.md`: one review per sub-goal, in the shape of `templates/review.md`.
-- `gdd/adr.md`: decisions the human made, append only.
+- `gdd/adr/<YYYY-MM-DD>-<slug>.md`: one file per decision the human made, in the shape of `templates/adr.md`. Never change one once written (the hook restores it); a new decision gets a new file. Any session may add one.
 
 `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` reports goal progress, done checks, stall, trust streak, and which candidates are ready and which overlap. `... <gdd-dir> gate <slug>` says whether the loop may continue after `<slug>` without the human. Add `--at <worktree path>` to run the scenario and done checks on a worker's branch instead of the main checkout. Run `git fetch -q` first when the repository has a remote. Use the script's answers; do not redo its checks by hand.
 
@@ -38,7 +38,7 @@ Stop when the human says stop, when you need the human and they are not answerin
 - Work only on in-progress sub-goals. Do not re-propose anything in "Rejected ideas". Follow "Learnings".
 - Before deciding how to use outside data (APIs, logs, tickets) or a done condition that depends on it, try it on real data and confirm the data exists.
 - A Build sub-goal is done only when it works through its real entry point (`/<name>` for a skill, launching and using it for an app). If you cannot launch it, ask the human to.
-- Stop and ask the human (three options with trade-offs via AskUserQuestion, then ask why and append to `gdd/adr.md`) on:
+- Stop and ask the human (three options with trade-offs via AskUserQuestion, then ask why and record it in `gdd/adr/`) on:
   - hard-to-reverse decisions: data model, external service, billing, authentication, adding a dependency
   - changes that loosen acceptance scenarios, `done_checks`, or tests
   - anything in `avoid:` of `goal.md`

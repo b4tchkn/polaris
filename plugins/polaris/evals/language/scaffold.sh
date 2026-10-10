@@ -59,11 +59,7 @@ cat > lang-test/gdd/state.md <<'EOF'
 
 - None
 EOF
-cat > lang-test/gdd/adr.md <<'EOF'
-# ADR
-
-> Decisions the human made, with the human's reasons. Append only; never rewrite.
-EOF
+mkdir -p lang-test/gdd/adr
 cat > lang-test/gdd/subgoals/candidates/hello-txt.md <<'EOF'
 ---
 type: build

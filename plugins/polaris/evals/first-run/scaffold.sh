@@ -59,10 +59,6 @@ cat > ./gdd/state.md <<'EOF'
 
 - None
 EOF
-cat > ./gdd/adr.md <<'EOF'
-# ADR
-
-> Decisions the human made, with the human's reasons. Append only; never rewrite.
-EOF
+mkdir -p ./gdd/adr
 git add -A
 git commit -qm fixture

@@ -61,11 +61,7 @@ cat > par-test/gdd/state.md <<'EOF'
 
 - None
 EOF
-cat > par-test/gdd/adr.md <<'EOF'
-# ADR
-
-> Decisions the human made, with the human's reasons. Append only; never rewrite.
-EOF
+mkdir -p par-test/gdd/adr
 cat > par-test/gdd/subgoals/done/setup.md <<'EOF'
 ---
 type: build

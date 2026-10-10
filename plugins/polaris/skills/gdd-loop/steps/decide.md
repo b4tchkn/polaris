@@ -29,13 +29,13 @@ Write the answer into the Decision section (e.g. `OK. Next: <slug> (chosen with 
 ## Apply the answer
 
 - **OK**: finish the sub-goal (below) and go back to `steps/plan.md`.
-- **Change something**: set `overridden: true` in the review, ask why unless the comment already says (two or three reasons drawn from the situation, plus Other), and append an entry to `gdd/adr.md`. Then apply it: redo work (the sub-goal stays in progress; resume its worker with SendMessage or hand it out again), add or drop candidates, or change the goal (`steps/set-goal.md`). Go back to `steps/plan.md`.
+- **Change something**: set `overridden: true` in the review, ask why unless the comment already says (two or three reasons drawn from the situation, plus Other), and record it in `gdd/adr/`. Then apply it: redo work (the sub-goal stays in progress; resume its worker with SendMessage or hand it out again), add or drop candidates, or change the goal (`steps/set-goal.md`). Go back to `steps/plan.md`.
 - **Stop**: commit `gdd/` and stop.
 
 ## Finish a sub-goal
 
 - Build: push `gdd/<slug>` and open a pull request (`gh pr create --head gdd/<slug>`; title = the sub-goal sentence, body = the review's "What was built" and evaluator table plus a link to the review file). Push and merge go through the human's ask rules. Write the pull request URL into the sub-goal file. Merging is the human's or CI's. If the repository has no remote, or the human declines the push, leave the branch as it is and say so.
-- Decide: no pull request; the decision is in the review and `gdd/adr.md`.
+- Decide: no pull request; the decision is in the review and `gdd/adr/`.
 - `git mv` the sub-goal file to `gdd/subgoals/done/`, add a "Result" line to it, and commit `gdd/`. Sub-goals that depend on it become ready once its pull request is merged.
 
 ## Goal reached

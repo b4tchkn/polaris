@@ -44,8 +44,4 @@ cat > ./gdd/state.md <<'EOF'
 
 - Keep this learning.
 EOF
-cat > ./gdd/adr.md <<'EOF'
-# ADR
-
-> Decisions the human made, with the human's reasons. Append only; never rewrite.
-EOF
+mkdir -p ./gdd/adr

@@ -1,10 +1,8 @@
 ---
-type: regex
-pattern: "README first"
-match: contains
-target:
-  source: file
-  path: change-test/gdd/adr.md
+type: tool_used
+tool: Write
+input_match: "change-test/gdd/adr/[^\"]*\\.md.*README first"
+min: 1
 ---
 
-The human's reason was appended to adr.md in their words.
+The human's reason was recorded in a new file in gdd/adr/, in their words.

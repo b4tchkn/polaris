@@ -1,10 +1,8 @@
 ---
-type: regex
-pattern: "JSON[\\s\\S]*(chosen|Chosen)[^\\n]*A|(chosen|Chosen)[^\\n]*A[\\s\\S]*JSON"
-match: contains
-target:
-  source: file
-  path: chosen-test/gdd/adr.md
+type: tool_used
+tool: Write
+input_match: "chosen-test/gdd/adr/[^\"]*\\.md.*JSON.*Chosen"
+min: 1
 ---
 
-The entry lists the options offered (including the ones not chosen) and names the chosen one.
+The ADR lists the options offered (including JSON, not chosen) and names the chosen one.

@@ -16,4 +16,4 @@ The goal is the yardstick for every later decision, so it is checked by a review
 4. Run the Agent tool with `subagent_type: "polaris:goal-reviewer"`, giving it only the draft `goal.md` and the uncertainties. Fix what it flags and run it again (at most twice). Do not argue with it in the draft; if you disagree, tell the human.
 5. Write `goal.md` (the ask rule makes the human approve). Before they approve, show them the reviewer's table and any finding you did not fix.
 6. Write one to three candidate sub-goals into `gdd/subgoals/candidates/` from `templates/subgoal.md`: small, each with `advances:` naming the scenario or uncertainty it moves. Rough is fine; `steps/plan.md` details them when they are chosen.
-7. Append the human's answers from 1 to `gdd/adr.md` as one entry, then stop. The next run plans the first sub-goal.
+7. Record the human's answers from 1 as one file in `gdd/adr/`, then stop. The next run plans the first sub-goal.

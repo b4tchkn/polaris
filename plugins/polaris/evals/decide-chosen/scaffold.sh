@@ -59,11 +59,7 @@ cat > chosen-test/gdd/state.md <<'EOF'
 
 - None
 EOF
-cat > chosen-test/gdd/adr.md <<'EOF'
-# ADR
-
-> Decisions the human made, with the human's reasons. Append only; never rewrite.
-EOF
+mkdir -p chosen-test/gdd/adr
 cat > chosen-test/gdd/subgoals/in-progress/note-format.md <<'EOF'
 ---
 type: decide

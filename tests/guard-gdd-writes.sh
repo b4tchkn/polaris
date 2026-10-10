@@ -9,7 +9,7 @@ printf -- '---\ntype: build\nadvances: scenario_1\n---\n# a\n' > gdd/subgoals/ca
 printf '# Goal: Y\n' > sub/gdd/goal.md
 printf '# State\n\n## Now\n\n- a\n\n## Learnings\n\n- keep one\n- keep two\n' > gdd/state.md
 printf '# State\n\n## 現状\n\n- a\n\n## 学び\n\n- 学び一\n- 学び二\n' > gdd/state-ja.md
-printf '# ADR\n\n## 2026-01-01 SG0 x\n\n- Decided: a\n' > gdd/adr.md
+mkdir -p gdd/adr && printf '# 2026-01-01 x\n\n- Decided: a\n' > gdd/adr/2026-01-01-x.md
 printf 'def test_a():\n    assert 1\n' > tests/test_a.py
 
 fail=0
@@ -127,16 +127,21 @@ json Edit "$W/gdd/state.md" | bash "$HOOK" pre
 printf '# State\n\n## 現状\n\n- b\n\n## 学び\n\n- 学び一\n' > "$W/gdd/state.md"
 json Edit "$W/gdd/state.md" | bash "$HOOK" post 2>/dev/null; check "state(ja): 学び removed -> refused" 2 $?
 
-# --- adr.md append-only
-A="$W/gdd/adr.md"
-json Edit "$A" | bash "$HOOK" pre
-printf '\n## 2026-01-02 SG1 y\n\n- Decided: b\n' >> "$A"
-json Edit "$A" | bash "$HOOK" post 2>/dev/null; check "adr: append" 0 $?
+# --- gdd/adr/: new files are fine, existing ones never change
+A="$W/gdd/adr/2026-01-02-y.md"
+json Write "$A" | bash "$HOOK" pre
+printf '# 2026-01-02 y\n\n- Decided: b\n' > "$A"
+json Write "$A" | bash "$HOOK" post 2>/dev/null; check "adr: new file" 0 $?
 
 json Edit "$A" | bash "$HOOK" pre
-printf '# ADR\n\n## 2026-01-01 SG0 x\n\n- Decided: CHANGED\n' > "$A"
-json Edit "$A" | bash "$HOOK" post 2>/dev/null; check "adr: rewrite -> refused" 2 $?
+printf '# 2026-01-02 y\n\n- Decided: CHANGED\n' > "$A"
+json Edit "$A" | bash "$HOOK" post 2>/dev/null; check "adr: edit existing -> refused" 2 $?
 grep -q "Decided: b" "$A" || { echo "FAIL adr: not restored"; fail=1; }
+
+json Bash "" | bash "$HOOK" pre
+rm "$A"; printf '# z\n' > gdd/adr/2026-01-03-z.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "adr: bash delete existing -> refused" 2 $?
+[ -f "$A" ] && [ -f gdd/adr/2026-01-03-z.md ] || { echo "FAIL adr: delete not restored or new file removed"; fail=1; }
 
 # --- tests: skip added
 T="$W/tests/test_a.py"

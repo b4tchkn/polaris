@@ -20,7 +20,7 @@ Do this for each finished sub-goal, one at a time. When several finished togethe
 ## Choose what comes next
 
 - Choose the next sub-goal as in `steps/plan.md` step 2 (do not move it yet).
-- Run the Agent tool with `subagent_type: "polaris:next-reviewer"`, giving it `goal.md`, the Uncertainties, `gdd/adr.md`, the candidates, and your choice with its reason. Put its verdict in the review. If it objects, either take its alternative (say so) or keep yours and let the human decide.
+- Run the Agent tool with `subagent_type: "polaris:next-reviewer"`, giving it `goal.md`, the Uncertainties, the files in `gdd/adr/`, the candidates, and your choice with its reason. Put its verdict in the review. If it objects, either take its alternative (say so) or keep yours and let the human decide.
 
 ## Write the review
 

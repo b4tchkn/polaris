@@ -4,7 +4,7 @@
 #   - gdd/goal.md changed or created by Bash                    -> restored, exit 2
 #   - a gdd/subgoals/**/*.md written without `advances:`        -> restored or removed, exit 2
 #   - a learning removed from gdd/state.md                      -> restored, exit 2
-#   - gdd/adr.md rewritten instead of appended                   -> restored, exit 2
+#   - an existing gdd/adr/*.md changed or deleted                -> restored, exit 2 (new files are fine)
 #   - a skip/ignore added to a test file                         -> exit 2 (stop and ask)
 # Needs bash, grep, sed, awk, shasum, find. No jq.
 # ponytail: the Bash snapshot runs `find` over the repo on every command; prune more dirs if it gets slow.
@@ -36,7 +36,7 @@ sum() { shasum < "$1" | cut -c1-40; }
 gdd_files() {
   # Other worktrees under .claude/worktrees/ have their own guard (their own root); a worker creating one mid-command is not a write.
   find . \( -name .git -o -name node_modules -o -name build -o -name .gradle -o -path ./.claude/worktrees \) -prune \
-    -o \( -path '*/gdd/goal.md' -o -path '*/gdd/subgoals/*.md' \) -print 2>/dev/null
+    -o \( -path '*/gdd/goal.md' -o -path '*/gdd/subgoals/*.md' -o -path '*/gdd/adr/*.md' \) -print 2>/dev/null
 }
 refuse() { printf '%s\n' "$1" >&2; exit 2; }
 # A sub-goal must say which acceptance scenario or uncertainty it advances.
@@ -55,9 +55,9 @@ case "$mode:$tool" in
     [ -f "$snap/bash.manifest" ] || exit 0
     changed=""; bad=""
     while IFS=$'\t' read -r s f; do
-      case "$f" in */gdd/goal.md) ;; *) continue ;; esac
+      case "$f" in */gdd/goal.md|*/gdd/adr/*.md) ;; *) continue ;; esac
       if [ ! -f "$f" ] || [ "$(sum "$f")" != "$s" ]; then
-        cp "$snap/$(key "$f")" "$f"
+        mkdir -p "$(dirname "$f")"; cp "$snap/$(key "$f")" "$f"
         changed="$changed $f"
       fi
     done < "$snap/bash.manifest"
@@ -65,6 +65,7 @@ case "$mode:$tool" in
       line=$(grep -F "	$f" "$snap/bash.manifest" | head -1)
       case "$f" in
         */gdd/goal.md) [ -n "$line" ] || { rm -f "$f"; changed="$changed $f"; } ;;
+        */gdd/adr/*.md) ;;
         *)
           [ "${line%%	*}" = "$(sum "$f")" ] && continue
           # Moving a sub-goal between candidates/in-progress/done keeps its content; only new or changed content is checked.
@@ -74,7 +75,7 @@ case "$mode:$tool" in
           ;;
       esac
     done < <(gdd_files)
-    [ -z "$changed" ] || refuse "Reverted Bash changes to:$changed. Do not write gdd/goal.md from Bash. Use the Edit tool so the human approves the change."
+    [ -z "$changed" ] || refuse "Reverted Bash changes to:$changed. Do not write gdd/goal.md from Bash (use the Edit tool so the human approves it), and never change or delete an existing ADR in gdd/adr/ (add a new file instead)."
     [ -z "$bad" ] || refuse "Reverted sub-goal files without an \`advances:\` line in the frontmatter:$bad. Every sub-goal must name the acceptance scenario or uncertainty it advances."
     ;;
 
@@ -102,10 +103,9 @@ case "$mode:$tool" in
         [ -z "$missing" ] || { cp "$old" "$file"; refuse "Restored gdd/state.md: these learnings were removed. Never delete a learning; keep its text and append to it instead:
 $missing"; }
         ;;
-      */gdd/adr.md)
-        n=$(wc -c < "$old")
-        [ "$(head -c "$n" "$file" | shasum)" = "$(shasum < "$old")" ] ||
-          { cp "$old" "$file"; refuse "Restored gdd/adr.md: it is append-only. Add a new entry at the end; never rewrite earlier entries."; }
+      */gdd/adr/*.md)
+        [ "$(sum "$file")" = "$(sum "$old")" ] ||
+          { cp "$old" "$file"; refuse "Restored $file: an ADR is never changed once written. Record a new decision in a new file in gdd/adr/."; }
         ;;
       *)
         if printf '%s' "$file" | grep -Eqi '(^|/)(tests?|spec|__tests__|androidTest)(/|$)|[._]test\.|[._]spec\.|Tests?\.[a-z]+$'; then

@@ -1,6 +1,6 @@
 ---
 name: gdd-init
-description: Set up Goal Driven Development in a repository. Writes the state files (gdd/goal.md, gdd/state.md, gdd/adr.md, gdd/subgoals/) from templates and adds rules to .claude/settings.json so that writes to goal.md and hard-to-reverse actions need human approval. Use when introducing GDD to a new or existing repository, or when starting a new goal after archiving the previous one. Triggers: "gdd-init", "set up GDD", "initialize GDD state".
+description: Set up Goal Driven Development in a repository. Writes the state files (gdd/goal.md, gdd/state.md, gdd/subgoals/, gdd/adr/) from templates and adds rules to .claude/settings.json so that writes to goal.md and hard-to-reverse actions need human approval. Use when introducing GDD to a new or existing repository, or when starting a new goal after archiving the previous one. Triggers: "gdd-init", "set up GDD", "initialize GDD state".
 ---
 
 # gdd-init
@@ -13,8 +13,8 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 
 ## Steps
 
-1. If `gdd/` already has `goal.md`, `state.md`, `adr.md`, or `subgoals/`, ask the human before overwriting. Stop if they decline.
-2. Write `goal.md`, `state.md`, and `adr.md` from this skill's `templates/` into `gdd/` as they are, using the Write tool (a Bash copy of `goal.md` is reverted by the hook). Create the empty directories `gdd/subgoals/candidates/`, `gdd/subgoals/in-progress/`, `gdd/subgoals/done/`, and `gdd/reviews/`.
+1. If `gdd/` already has `goal.md`, `state.md`, `subgoals/`, or `adr/`, ask the human before overwriting. Stop if they decline.
+2. Write `goal.md` and `state.md` from this skill's `templates/` into `gdd/` as they are, using the Write tool (a Bash copy of `goal.md` is reverted by the hook). Create the empty directories `gdd/subgoals/candidates/`, `gdd/subgoals/in-progress/`, `gdd/subgoals/done/`, `gdd/reviews/`, and `gdd/adr/`.
    - Do not touch `gdd/archive/`. Do not create it (archiving a finished goal is not implemented yet; `gdd-loop` only writes a goal completion report).
 3. Add these rules to `.claude/settings.json`:
    - `permissions.ask`: `Edit(/gdd/goal.md)`
