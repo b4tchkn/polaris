@@ -17,8 +17,8 @@
 - `gdd-loop` 手順5・7（SG13）：「その先」が空なら受け入れシナリオごとの結果を書き、GOAL 達成に見えると伝えて「サブゴールを足す / 完了報告（`gdd/reviews/GOAL.md`）を書く」を聞く。試験用 `simulations/goal-done/gdd/`（commit しない）
 - `plugins/polaris/agents/evaluator.md`（SG11）：評価基準と成果物の場所だけを受け取り、自分で測って基準ごとの表を返す。`gdd-loop` 5 が `polaris:evaluator` を呼び、表をそのまま貼る。試験用 `simulations/eval-test/gdd/`（commit しない）
 - `gdd-loop` 7（SG12）：作る系で evaluator の表が全行「達成」なら人間に聞かず「次へ進む（自動）」として手順2へ。冒頭に Human-on-the-loop の1文。試験用 `simulations/auto-test/gdd/`（commit しない）
-- `plugins/polaris/evals/`（SG19 で19ケース）：ambiguous-comment（3案は LLM 判定）、stop-data-model、evaluator-verdict、init-existing、apply-proceed にハーネス化の印。SG18 時点：決める系、方向転換、提案の採用、依存で止まる、言語、history_file で人間の答えを再現する3つ（初回の答え、完了報告、見送り）、案を選んで adr。指示との対応表は `gdd/reviews/SG18.md`。SG17 時点の6ケース：`init`、`first-run`、`apply-proceed`、`apply-stop`、`auto-continue`（SG0・SG1 が自動で進み SG2 で止まる）と `goal-reached`（「その先」が空で GOAL 達成の2択）。scaffold_script が試験用 `gdd/` を作り、graders が a.txt / b.txt とレビューの判断欄を見る。README に走らせ方
-- design.md と plugin の対応表（SG14）：`gdd/reviews/SG14.md`。入っている 14、一部 6、無い 6（予定無しはアーカイブ一式、大きさの指針、典型的な並び、N 周無変化）
+- `plugins/polaris/evals/`（SG19 で19ケース）：ambiguous-comment（3案は LLM 判定）、stop-data-model、evaluator-verdict、init-existing、apply-proceed にハーネス化の印。SG18 時点：決める系、方向転換、提案の採用、依存で止まる、言語、history_file で人間の答えを再現する3つ（初回の答え、完了報告、見送り）、案を選んで adr。指示との対応表は `gdd/archive/reviews/SG18.md`。SG17 時点の6ケース：`init`、`first-run`、`apply-proceed`、`apply-stop`、`auto-continue`（SG0・SG1 が自動で進み SG2 で止まる）と `goal-reached`（「その先」が空で GOAL 達成の2択）。scaffold_script が試験用 `gdd/` を作り、graders が a.txt / b.txt とレビューの判断欄を見る。README に走らせ方
+- design.md と plugin の対応表（SG14）：`gdd/archive/reviews/SG14.md`。入っている 14、一部 6、無い 6（予定無しはアーカイブ一式、大きさの指針、典型的な並び、N 周無変化）
 - `.claude/settings.json`：どこの `gdd/state.md` も allow。`gdd/` と `simulations/**/gdd/` の goal.md / subgoals.md を ask
 - design.md：改善ループ（5）、3案と adr.md（3）、アーカイブ前に学びを雛形へ移す（6）。README：入れ方と始め方
 - シミュレーション1 `simulations/morning-review/`（commit しない）：SG0〜SG3 を回し、`/morning-review` で動いた
