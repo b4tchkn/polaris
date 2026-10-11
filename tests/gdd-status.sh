@@ -5,7 +5,7 @@ W=$(mktemp -d "${TMPDIR:-/tmp}/status-test-XXXX"); cd "$W"
 mkdir -p gdd/subgoals/candidates gdd/subgoals/in-progress gdd/subgoals/in-review gdd/subgoals/done gdd/reviews src
 cat > gdd/goal.md <<'EOF'
 ---
-prefer: certainty
+mode: careful
 ---
 # Goal: t
 

@@ -39,7 +39,7 @@ In the repository where you want to get something done (new or existing):
 ```
 gdd/
   goal.md        your goal: acceptance scenarios and the definition of done, each with a Check line;
-                 frontmatter holds prefer (speed or certainty when in doubt)
+                 frontmatter holds mode (fast or careful when in doubt)
   subgoals/      one file per sub-goal under candidates/, in-progress/, in-review/ (pull request open), done/ (merged)
   state.md       the AI's one-page notes: now, built so far, uncertainties, rejected ideas, learnings
   adr/           one file per decision you made, with the options and your reasons
@@ -52,7 +52,7 @@ Every write to `goal.md` needs your approval.
 
 ```markdown
 ---
-prefer: certainty
+mode: careful
 ---
 # Goal: get tasks done without forgetting them
 

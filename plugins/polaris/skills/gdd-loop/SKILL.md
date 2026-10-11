@@ -16,7 +16,7 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 
 ## Files
 
-- `gdd/goal.md`: frontmatter `prefer` (speed or certainty when in doubt). Acceptance scenarios and the definition of done are `[id]` items, each with a `Check:` line. The `[gate]` item is the one command every sub-goal passes. Every write needs the human's approval (ask rule).
+- `gdd/goal.md`: frontmatter `mode`: `fast` or `careful` (which way to lean when in doubt). Acceptance scenarios and the definition of done are `[id]` items, each with a `Check:` line. The `[gate]` item is the one command every sub-goal passes. Every write needs the human's approval (ask rule).
 - `gdd/subgoals/{candidates,in-progress,in-review,done}/<slug>.md`: one file per sub-goal (`templates/subgoal.md`). `in-review` = pull request open, `done` = merged. Move files with `git mv`. `advances:` is required (the hook refuses a file without it).
 - `gdd/state.md`: Now / Built so far / Uncertainties (`- U<n> <question> | open`) / Rejected ideas / Learnings, rewritten every loop within one page. Never delete learnings.
 - `gdd/reviews/<slug>.md`: one review per sub-goal (`templates/review.md`).

@@ -1,5 +1,5 @@
 ---
-prefer: <speed | certainty>
+mode: <fast | careful>
 ---
 # Goal: <goal name>
 

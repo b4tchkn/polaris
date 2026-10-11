@@ -1,5 +1,5 @@
 ---
-prefer: certainty
+mode: careful
 ---
 # Goal: Goal Driven Development 基盤
 
