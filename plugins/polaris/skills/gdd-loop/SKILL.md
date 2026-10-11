@@ -17,7 +17,7 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 ## Files
 
 - `gdd/goal.md`: frontmatter `mode`: `fast` or `careful` (which way to lean when in doubt). Acceptance scenarios and the definition of done are `[id]` items, each with a `Check:` line. The `[gate]` item is the one command every sub-goal passes. Every write needs the human's approval (ask rule).
-- `gdd/subgoals/{candidates,in-progress,in-review,done}/<slug>.md`: one file per sub-goal (`templates/subgoal.md`). `in-review` = pull request open, `done` = merged. Move files with `git mv`. `advances:` is required (the hook refuses a file without it).
+- `gdd/subgoals/<slug>.md`: one file per sub-goal (`templates/subgoal.md`). `advances:` is required (the hook refuses a file without it). Its state is never written down: the pull request is the source of truth. A sub-goal's pull request has the line `Sub-goal: <path of the sub-goal file from the repository root>` at the top of its body, and the work commits carry the same line.
 - `gdd/state.md`: Now / Built so far / Uncertainties (`- U<n> <question> | open`) / Rejected ideas / Learnings, rewritten every loop within one page. Never delete learnings.
 - `gdd/reviews/<slug>.md`: one review per sub-goal (`templates/review.md`).
 - `gdd/adr/<YYYY-MM-DD>-<slug>.md`: one file per decision the human made (`templates/adr.md`). Never change one once written; a new decision gets a new file.
@@ -25,12 +25,12 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 Two scripts decide what needs no judgment. Use their answers; do not redo their work by hand.
 
 - `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-check.sh <gdd-dir> [<slug>] [--at <worktree>]` runs checks: without a slug, the goal's checks (`progress:`); with one, the sub-goal's Done when and the gate. `--at` runs them in the worker's worktree.
-- `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` says where the sub-goals stand: pull requests in review with their state, which candidates can start and which overlap, and whether to hold. Run `git fetch -q` first when the repository has a remote.
+- `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` says each sub-goal's state from its pull request (`todo`, `interrupted`, `in-review`, `merged`, `merged-not-pulled`, `closed`), which can start and which overlap, and whether to hold. Run `git fetch -q` first when the repository has a remote. If it says gh failed, tell the human to install the GitHub CLI and run `gh auth login`, and stop.
 
 ## Loop
 
 0. **Goal.** If `goal.md` is still the template (`<goal name>` remains) or the human asked to change the goal, follow `steps/set-goal.md` and stop.
-1. **Pull requests.** Run `gdd-status.sh`. For each sub-goal in `in-review/`: `MERGED` → `git mv` it to `done/`; `CLOSED` → delete it, add it to "Rejected ideas", set `overridden: true` in its review. Do not read or answer pull request comments; the human handles those.
+1. **Pull requests.** Run `gdd-status.sh`. For each sub-goal: `closed` → delete its file and add it to "Rejected ideas"; `merged-not-pulled` → ask the human to pull (sub-goals that depend on it wait); `interrupted` (work commits but no pull request or review) → tell the human its branch and ask: finish it yourself, or discard it by deleting the branch (it then becomes `todo` again); `in-review` with a branch but no pull request → open the pull request (`steps/finish.md` 2–3) when the repository has a remote, otherwise it waits for the human to merge the branch. Do not read or answer pull request comments; the human handles those.
 2. **Hold.** If `gdd-status.sh` says `hold: yes`, tell the human why and ask once: continue / change something / stop. Record the answer in `gdd/adr/`. Stop unless they say continue.
 3. **Plan.** Follow `steps/plan.md`: the goal-owner decides the next sub-goal(s); write their Done when with checks and hand them to workers.
 4. **Review.** Follow `steps/review.md` for each finished sub-goal: run its checks, the subgoal-verifier for the rest, retrospect.
@@ -38,7 +38,7 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
 
 ## Rules for every step
 
-- Work only on in-progress sub-goals. Do not re-propose anything in "Rejected ideas". Follow "Learnings".
+- Work only on the sub-goals the goal-owner chose. Do not re-propose anything in "Rejected ideas". Follow "Learnings".
 - Before deciding how to use outside data (APIs, logs, tickets) or a done condition that depends on it, try it on real data and confirm the data exists.
 - A Build sub-goal is done only when it works through its real entry point (`/<name>` for a skill, launching and using it for an app).
 - Stop and ask the human (three options with trade-offs via AskUserQuestion, then ask why and record it in `gdd/adr/`) on:

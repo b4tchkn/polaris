@@ -4,8 +4,8 @@ HOOK="$(cd "$(dirname "$0")/.." && pwd)/plugins/polaris/hooks/guard-gdd-writes.s
 W=$(mktemp -d "${TMPDIR:-/tmp}/guard-test-XXXX"); cd "$W"
 export TMPDIR="$W/tmp"; mkdir -p "$TMPDIR" gdd sub/gdd tests
 printf '# Goal: X\n' > gdd/goal.md
-mkdir -p gdd/subgoals/candidates gdd/subgoals/done
-printf -- '---\ntype: build\nadvances: scenario_1\n---\n# a\n' > gdd/subgoals/candidates/a.md
+mkdir -p gdd/subgoals
+printf -- '---\ntype: build\nadvances: scenario_1\n---\n# a\n' > gdd/subgoals/a.md
 printf '# Goal: Y\n' > sub/gdd/goal.md
 printf '# State\n\n## Now\n\n- a\n\n## Learnings\n\n- keep one\n- keep two\n' > gdd/state.md
 printf '# State\n\n## 現状\n\n- a\n\n## 学び\n\n- 学び一\n- 学び二\n' > gdd/state-ja.md
@@ -61,27 +61,27 @@ json Bash "" | bash "$HOOK" pre
 cat gdd/goal.md > /dev/null; echo x > gdd/state.md.tmp; echo y > notes.md
 json Bash "" | bash "$HOOK" post 2>/dev/null; check "bash: read-only / other files" 0 $?
 
-# --- sub-goal files: `advances:` is required; moves keep content and pass
+# --- sub-goal files: `advances:` is required; renames keep content and pass
 json Bash "" | bash "$HOOK" pre
-mv gdd/subgoals/candidates/a.md gdd/subgoals/done/a.md
-json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: move between dirs -> ok" 0 $?
+mv gdd/subgoals/a.md gdd/subgoals/a2.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: rename -> ok" 0 $?
 
 json Bash "" | bash "$HOOK" pre
-printf -- '---\ntype: build\n---\n# b\n' > gdd/subgoals/candidates/b.md
+printf -- '---\ntype: build\n---\n# b\n' > gdd/subgoals/b.md
 json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: bash new file without advances -> refused" 2 $?
-[ ! -f gdd/subgoals/candidates/b.md ] || { echo "FAIL subgoal: file without advances not removed"; fail=1; }
+[ ! -f gdd/subgoals/b.md ] || { echo "FAIL subgoal: file without advances not removed"; fail=1; }
 
 json Bash "" | bash "$HOOK" pre
-printf -- '---\ntype: build\nadvances: U1\n---\n# c\n' > gdd/subgoals/candidates/c.md
+printf -- '---\ntype: build\nadvances: U1\n---\n# c\n' > gdd/subgoals/c.md
 json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: bash new file with advances -> ok" 0 $?
 
-S="$W/gdd/subgoals/done/a.md"
+S="$W/gdd/subgoals/a2.md"
 json Edit "$S" | bash "$HOOK" pre
 printf -- '---\ntype: build\nadvances:\n---\n# a\n' > "$S"
 json Edit "$S" | bash "$HOOK" post 2>/dev/null; check "subgoal: edit empties advances -> refused" 2 $?
 grep -q "scenario_1" "$S" || { echo "FAIL subgoal: not restored"; fail=1; }
 
-S2="$W/gdd/subgoals/candidates/d.md"
+S2="$W/gdd/subgoals/d.md"
 json Write "$S2" | bash "$HOOK" pre
 printf '# d\n' > "$S2"
 json Write "$S2" | bash "$HOOK" post 2>/dev/null; check "subgoal: write without frontmatter -> refused" 2 $?

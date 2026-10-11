@@ -2,14 +2,12 @@
 subgoal: <slug>
 loop: <n>
 progress: <the progress line from gdd-check.sh>
-pr: <pull request URL, or none>
-overridden: false
 ---
 # Sub-goal review: <slug> <what it achieves>
 
 ## What was built and how to try it
 
-- <Deliverable, branch gdd/<slug>>
+- <Deliverable, and the branch it is on>
 - Demo: <link, recording, or how to run it>
 
 ## Checks
@@ -36,4 +34,4 @@ overridden: false
 
 ## Decision
 
-<!-- gdd-loop writes "Pull request opened: <URL>" here. A Decide sub-goal also records the option the human chose. -->
+<!-- A Decide sub-goal records the option the human chose and why. -->

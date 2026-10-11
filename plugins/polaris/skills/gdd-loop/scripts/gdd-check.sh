@@ -30,7 +30,7 @@ judge() { # spec -> met / not-met / observe / human
 }
 
 if [ -n "$slug" ]; then
-  f=$(ls "$dir"/subgoals/*/"$slug".md 2>/dev/null | head -1); [ -n "$f" ] || { echo "no sub-goal $slug" >&2; exit 1; }
+  f="$dir/subgoals/$slug.md"; [ -f "$f" ] || { echo "no sub-goal $slug" >&2; exit 1; }
   while IFS=$'\t' read -r id spec; do echo "$id: $(judge "$spec")  ($spec)"; done < <(checks "$f"; checks "$dir/goal.md" | grep '^gate	')
   exit 0
 fi

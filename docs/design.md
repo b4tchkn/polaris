@@ -53,12 +53,12 @@ gdd/                      状態（使う側のリポジトリに gdd-init が�
   goal.md                 GOAL：北極星、受け入れシナリオと完成の定義（どちらも [id] と Check: 付き）、前提。
                           frontmatter は AI の関わり方だけ：mode（fast：速さ優先 か careful：確実さ優先 か）
                           ※ 書き込みには毎回人間の承認が要る（permissions の ask で強制）
-  subgoals/{candidates,in-progress,in-review,done}/<slug>.md
-                          サブゴール1件1ファイル。置き場所が状態（in-review = PR 作成済み、done = マージ済み）。
+  subgoals/<slug>.md      サブゴール1件1ファイル。状態はファイルに持たず、PR を正とする（本文の先頭行
+                          `Sub-goal: <ファイルのパス>` で紐づける。PR が無ければ同じ行を持つコミットから判定）。
                           frontmatter に type / advances / depends_on / touches。本文の Done when に [id] と Check:
   state.md                AI が毎周、1ページ以内に書き直す
                           現状、出来たもの、未確定事項、却下された案（再提案を防ぐ）、学び
-  reviews/<slug>.md        サブゴールレビュー。frontmatter に progress / pr / overridden
+  reviews/<slug>.md        サブゴールレビュー。frontmatter に progress
   adr/<日付>-<slug>.md     人間の判断の記録を1判断1ファイルで（何を決めたか、出した案、選んだ案、理由）。
                           一度書いたら変えない（hook が戻す）。別ファイルなので複数のセッションや人が同時に書ける
   archive/                完了した GOAL
@@ -199,7 +199,9 @@ AI が案を出し、人間が承認または修正する。
 
 ## 7.1 並列化と PR
 
-- サブゴールは worker サブエージェントが専用の worktree（ブランチ `gdd/<slug>`）で作り、コミットする。依存が全部マージ済みで、`touches` が重ならない候補は同時に進める。
+- サブゴールは worker サブエージェントが専用の worktree で作り、コミットする（ブランチ名は Polaris が決めない）。依存が全部マージ済みかつ手元に pull 済みで、`touches` が重ならない候補は同時に進める。
+- サブゴールの状態は保存しない。PR の本文の先頭行 `Sub-goal: <パス>` で PR を探し、その状態（OPEN / MERGED / CLOSED）を正とする。作業中は会話の中にしか無いので、会話が途切れた作業は、同じ行を持つコミットから「中断」として見つけ、人間に続けるか捨てるかを聞く。複数のセッションが同時に同じ GOAL を回すと作業が重複しうる（1人がループを回す前提）。
+- Issue や Jira などの外部ツールとの連携は、本体に保存先を持たせず、ファイルを正として書き写す拡張で行う（今は作らない）。
 - worker は人間に質問できないので、止まる条件に当たったら質問を返して止まる。メインが人間に聞き、答えを渡して再開させる。
 - `gdd/` を更新するのはメインのセッションだけ。
 - サブゴールは種類によらず、完了したら PR を作る（push とマージは ask）。PR にはコード（あれば）、サブゴールのファイル、レビュー、関係する ADR を入れ、人間は PR レビューで何が起きたかを見る。done = マージ済みとして、依存するサブゴールはマージ後に着手する。

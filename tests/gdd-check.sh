@@ -2,7 +2,7 @@
 # Self-check for gdd-check.sh. Prints PASS/FAIL per case; exits 1 on any FAIL.
 S="$(cd "$(dirname "$0")/.." && pwd)/plugins/polaris/skills/gdd-loop/scripts/gdd-check.sh"
 W=$(mktemp -d "${TMPDIR:-/tmp}/check-test-XXXX"); cd "$W"
-mkdir -p gdd/subgoals/in-progress src
+mkdir -p gdd/subgoals src
 cat > gdd/goal.md <<'EOF'
 ---
 mode: careful
@@ -35,7 +35,7 @@ touch src/a.txt src/broken
 out=$(bash "$S" gdd); has "progress: gate fails" "capture=met easy=observe no-forget=human gate=not-met"
 rm src/broken
 
-cat > gdd/subgoals/in-progress/items.md <<'EOF'
+cat > gdd/subgoals/items.md <<'EOF'
 ---
 type: build
 advances: capture

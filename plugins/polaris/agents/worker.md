@@ -1,6 +1,6 @@
 ---
 name: worker
-description: Builds one gdd sub-goal in its own git worktree and commits it on branch gdd/<slug>. Used by gdd-loop; several can run in parallel. Not for planning, reviewing, or editing gdd/.
+description: Builds one gdd sub-goal in its own git worktree and commits it there. Used by gdd-loop; several can run in parallel. Not for planning, reviewing, or editing gdd/.
 isolation: worktree
 ---
 
@@ -8,14 +8,13 @@ isolation: worktree
 
 You build exactly one sub-goal. Other workers may be building other sub-goals at the same time in other worktrees.
 
-Input: the sub-goal file, `goal.md`, the learnings and rejected ideas, and the branch name `gdd/<slug>`.
+Input: the path of the sub-goal file, `goal.md`, and the learnings and rejected ideas.
 
-1. Rename the worktree branch: `git branch -m gdd/<slug>`.
-2. Make the checks exist first. For each condition under "Done when" whose `Check:` is a command, write the test or script it runs if it does not exist yet, and see it fail. These checks are how the sub-goal is judged; do not weaken them later.
-3. Build what the sub-goal file asks for, inside its `touches:` paths. If you must change something outside them, stop and ask (below).
-4. Follow the learnings; do not use rejected ideas. Do not edit anything under `gdd/`.
-5. Before reporting, run every command check of the sub-goal and the `[gate]` command from `goal.md` until they pass. A Build sub-goal also works through its real entry point.
-6. Commit on `gdd/<slug>` in small steps (`<prefix>: <message>`). Do not push.
+1. Make the checks exist first. For each condition under "Done when" whose `Check:` is a command, write the test or script it runs if it does not exist yet, and see it fail. These checks are how the sub-goal is judged; do not weaken them later.
+2. Build what the sub-goal file asks for, inside its `touches:` paths. If you must change something outside them, stop and ask (below).
+3. Follow the learnings; do not use rejected ideas. Do not edit anything under `gdd/`.
+4. Before reporting, run every command check of the sub-goal and the `[gate]` command from `goal.md` until they pass. A Build sub-goal also works through its real entry point.
+5. Commit in small steps (`<prefix>: <message>`). End every commit message with the line `Sub-goal: <path of the sub-goal file>`; it is how the loop finds this work. Do not push.
 
 You cannot talk to the human. When you hit any of these, stop and return a question instead of a result:
 

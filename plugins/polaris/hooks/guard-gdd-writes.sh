@@ -2,7 +2,7 @@
 # Mechanical stop conditions for the gdd/ state files (design.md 7).
 # "pre" snapshots the files a tool may touch; "post" compares and undoes or refuses:
 #   - gdd/goal.md changed or created by Bash                    -> restored, exit 2
-#   - a gdd/subgoals/**/*.md written without `advances:`        -> restored or removed, exit 2
+#   - a gdd/subgoals/*.md written without `advances:`           -> restored or removed, exit 2
 #   - a learning removed from gdd/state.md                      -> restored, exit 2
 #   - an existing gdd/adr/*.md changed or deleted                -> restored, exit 2 (new files are fine)
 #   - a skip/ignore added to a test file, or tests removed from it -> restored, exit 2 (stop and ask)
@@ -85,7 +85,7 @@ Removing tests loosens the checks: restored what git had. Do not continue; ask t
         */gdd/adr/*.md) ;;
         *)
           [ "${line%%	*}" = "$(sum "$f")" ] && continue
-          # Moving a sub-goal between candidates/in-progress/done keeps its content; only new or changed content is checked.
+          # Renaming a sub-goal keeps its content; only new or changed content is checked.
           no_advances "$f" || continue
           if [ -n "$line" ]; then cp "$snap/$(key "$f")" "$f"; else rm -f "$f"; fi
           bad="$bad $f"

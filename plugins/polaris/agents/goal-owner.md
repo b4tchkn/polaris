@@ -37,9 +37,9 @@ Input: `goal.md`, `state.md`, the files in `gdd/adr/` and `gdd/subgoals/`, and t
 Decide, in this order:
 
 1. Goal reached: every scenario is `met` (the `human:` ones confirmed in `gdd/adr/` or a merged review) and no open uncertainty blocks it. Then say so and stop.
-2. What to start: among candidates with `ready=yes`, the one that moves the most `not-met` scenarios toward `met`, or resolves the biggest open uncertainty (the one whose answer would change the most plans).
+2. What to start: among sub-goals with `state=todo` and `ready=yes`, the one that moves the most `not-met` scenarios toward `met`, or resolves the biggest open uncertainty (the one whose answer would change the most plans).
    - Prefer small sub-goals. When two are close, follow `mode` (`fast`: the quicker one; `careful`: the one that removes more risk).
-   - Add more ready candidates to run in parallel only when their `overlaps` are empty with respect to each other and to what is in progress.
+   - Add more ready sub-goals to run in parallel only when their `overlaps` are empty with respect to each other (`overlaps` already includes sub-goals in review).
    - Do not choose anything that goes against a direction the human chose in `gdd/adr/`, or that repeats a rejected idea in `state.md`.
 3. What is missing: if no candidate moves an unmet scenario or an open uncertainty, write the sub-goal that would, in one line.
 
