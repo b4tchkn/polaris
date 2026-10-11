@@ -4,13 +4,10 @@ set -e
 git init -q -b main .
 git config user.email eval@example.com
 git config user.name eval
-mkdir -p notes-test/gdd/subgoals/candidates notes-test/gdd/subgoals/in-progress notes-test/gdd/subgoals/done notes-test/gdd/reviews
+mkdir -p notes-test/gdd/subgoals/candidates notes-test/gdd/subgoals/in-progress notes-test/gdd/subgoals/in-review notes-test/gdd/subgoals/done notes-test/gdd/reviews notes-test/gdd/adr
+mkdir -p notes-test/gdd
 cat > notes-test/gdd/goal.md <<'EOF'
 ---
-scenario_1_check: node notes-test/notes.js add hello && node notes-test/notes.js list | grep -qx hello
-done_checks: none
-max_files: 5
-max_lines: 50
 prefer: certainty
 avoid: none
 ---
@@ -22,16 +19,19 @@ Notes survive a restart.
 
 ## Acceptance scenarios
 
-1. a note added in one process is listed by the next
+1. [persist] a note added in one process is listed by the next
+   - Check: `node notes-test/notes.js add hello && node notes-test/notes.js list | grep -qx hello`
 
 ## Definition of done
 
-- The files are committed on the sub-goal's branch.
+1. [gate] every sub-goal passes the project's checks
+   - Check: `true`
 
 ## Premises
 
 - None
 EOF
+mkdir -p notes-test/gdd
 cat > notes-test/gdd/state.md <<'EOF'
 # State
 
@@ -59,20 +59,26 @@ cat > notes-test/gdd/state.md <<'EOF'
 
 - None
 EOF
-mkdir -p notes-test/gdd/adr
+mkdir -p notes-test/gdd/subgoals/candidates
 cat > notes-test/gdd/subgoals/candidates/persist.md <<'EOF'
 ---
 type: build
-advances: scenario_1
+advances: persist
 depends_on: none
 touches: notes-test/
-criterion_1: list in a new process prints the note | quantitative | node notes-test/notes.js add hello && node notes-test/notes.js list | grep -qx hello
 ---
 # node notes-test/notes.js add hello, then a fresh node notes-test/notes.js list, prints hello
 
-- Done when: it works through its real entry point
-- What to show: the file's content
+## Done when
+
+1. [survives] list in a new process prints the note
+   - Check: `node notes-test/notes.js add hello && node notes-test/notes.js list | grep -qx hello`
+
+## What to show
+
+- the result
 EOF
+mkdir -p notes-test
 cat > notes-test/notes.js <<'EOF'
 // A tiny notes CLI. Notes are kept in memory for now.
 const notes = [];

@@ -4,15 +4,12 @@ set -e
 git init -q -b main .
 git config user.email eval@example.com
 git config user.name eval
-mkdir -p gdd/subgoals/candidates gdd/subgoals/in-progress gdd/subgoals/done gdd/reviews
+mkdir -p gdd/subgoals/candidates gdd/subgoals/in-progress gdd/subgoals/in-review gdd/subgoals/done gdd/reviews gdd/adr
+mkdir -p gdd
 cat > gdd/goal.md <<'EOF'
 ---
-scenario_1_check: <shell command that exits 0 when scenario 1 holds, run from the repository root; or "human" when only the human can judge it>
-done_checks: <shell command every sub-goal must pass (tests, lint), or "none">
-max_files: 10
-max_lines: 300
 prefer: <speed | certainty>
-avoid: <areas the AI must not touch, or "none">
+avoid: <paths the AI must not edit without asking, comma-separated, or none>
 ---
 # Goal: <goal name>
 
@@ -22,17 +19,25 @@ avoid: <areas the AI must not touch, or "none">
 
 ## Acceptance scenarios
 
-1. <A scenario that shows the goal is reached>
+> Outcomes of the whole goal, from the user's side: 3 to 5, at most 7. Keep one only if the goal would be unmet when it alone fails. Edge cases belong in a sub-goal's "Done when".
+> Each gets an `[id]` and a `Check:` line. Prefer a command (tests, scripts): `` Check: `<command>` ``. Otherwise `Check: observe: <what to look at>` or `Check: human: <why only a human can judge>`.
+
+1. [<id>] <An outcome that shows the goal is reached>
+   - Check: `<command that exits 0 when it holds>`
 
 ## Definition of done
 
-- <The quality bar every sub-goal meets (what done_checks runs, plus anything a command cannot check)>
+> The gate every sub-goal passes: one command that runs the project's formatter, linter, type check, build, and tests.
+
+1. [gate] <What every sub-goal must pass>
+   - Check: `<one command, e.g. npm run check>`
 
 ## Premises
 
 - None
 EOF
-cat > ./gdd/state.md <<'EOF'
+mkdir -p gdd
+cat > gdd/state.md <<'EOF'
 # State
 
 > The AI rewrites this every loop, within one page. Never delete learnings.
@@ -59,6 +64,5 @@ cat > ./gdd/state.md <<'EOF'
 
 - None
 EOF
-mkdir -p ./gdd/adr
 git add -A
 git commit -qm fixture

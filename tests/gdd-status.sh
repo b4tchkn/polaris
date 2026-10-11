@@ -69,6 +69,11 @@ has "check: gate included"    "gate: met"
 
 printf -- '---\ntype: build\nadvances: capture\npr: https://example.invalid/pr/1\n---\n# r\n' > gdd/subgoals/in-review/rev.md
 out=$(bash "$S" gdd); has "in-review: pull request listed" "rev type=build advances=capture pr=https://example.invalid/pr/1 state="
+git init -q -b main . && git -c user.email=a@b -c user.name=a commit -q --allow-empty -m init
+git switch -q -c gdd/rev && git -c user.email=a@b -c user.name=a commit -q --allow-empty -m rev && git switch -q main
+out=$(bash "$S" gdd); has "in-review: branch not merged" "state=unknown"
+git merge -q gdd/rev
+out=$(bash "$S" gdd); has "in-review: branch merged into main counts as merged" "state=MERGED"
 
 review r1 1 "p" false; review r2 2 "p" false
 out=$(bash "$S" gdd); has "two equal reviews: not stalled" "stalled: no"

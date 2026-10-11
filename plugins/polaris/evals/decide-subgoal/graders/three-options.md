@@ -5,4 +5,4 @@ flags: i
 match: contains
 ---
 
-The reply presents the options with their trade-offs so the human can choose.
+The reply presents three formats with their trade-offs so the human can choose.

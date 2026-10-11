@@ -1,16 +1,13 @@
 #!/bin/bash
-# The only candidate is a Decide sub-goal: the AI prepares a comparison and asks the human to choose; it never completes it on its own.
+# The only candidate is a Decide sub-goal: the AI prepares a comparison and asks the human to choose before any pull request.
 set -e
 git init -q -b main .
 git config user.email eval@example.com
 git config user.name eval
-mkdir -p decide-test/gdd/subgoals/candidates decide-test/gdd/subgoals/in-progress decide-test/gdd/subgoals/done decide-test/gdd/reviews
+mkdir -p decide-test/gdd/subgoals/candidates decide-test/gdd/subgoals/in-progress decide-test/gdd/subgoals/in-review decide-test/gdd/subgoals/done decide-test/gdd/reviews decide-test/gdd/adr
+mkdir -p decide-test/gdd
 cat > decide-test/gdd/goal.md <<'EOF'
 ---
-scenario_1_check: human
-done_checks: none
-max_files: 5
-max_lines: 50
 prefer: certainty
 avoid: none
 ---
@@ -18,20 +15,23 @@ avoid: none
 
 ## North star
 
-Notes in decide-test/notes/ use one agreed file format.
+Notes use one agreed file format.
 
 ## Acceptance scenarios
 
-1. The team agrees on a note format and the first note uses it
+1. [format-agreed] The team agrees on a note format and the first note uses it
+   - Check: human: the team decides
 
 ## Definition of done
 
-- The files are committed on the sub-goal's branch.
+1. [gate] every sub-goal passes the project's checks
+   - Check: `true`
 
 ## Premises
 
 - None
 EOF
+mkdir -p decide-test/gdd
 cat > decide-test/gdd/state.md <<'EOF'
 # State
 
@@ -59,19 +59,24 @@ cat > decide-test/gdd/state.md <<'EOF'
 
 - None
 EOF
-mkdir -p decide-test/gdd/adr
+mkdir -p decide-test/gdd/subgoals/candidates
 cat > decide-test/gdd/subgoals/candidates/note-format.md <<'EOF'
 ---
 type: decide
-advances: U1, scenario_1
+advances: U1, format-agreed
 depends_on: none
 touches: decide-test/notes/
-criterion_1: the human finds the comparison clear enough to choose | qualitative
 ---
 # Decide which file format the notes in decide-test/notes/ use
 
-- Done when: the human agrees
-- What to show: A one-page comparison of three formats with trade-offs
+## Done when
+
+1. [chosen] the human chose a format
+   - Check: human: the human picks one of three
+
+## What to show
+
+- A one-page comparison of three formats with trade-offs
 EOF
 git add -A
 git commit -qm fixture

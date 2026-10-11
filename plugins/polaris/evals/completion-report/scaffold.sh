@@ -1,16 +1,13 @@
 #!/bin/bash
-# done-txt is finished and every scenario is met. history.jsonl holds the AI asking whether to add sub-goals or write the report; the prompt is the human's answer.
+# done-txt is merged and every scenario is met. history.jsonl holds the AI asking whether to add sub-goals or write the report; the prompt is the human's answer.
 set -e
 git init -q -b main .
 git config user.email eval@example.com
 git config user.name eval
-mkdir -p done-test/gdd/subgoals/candidates done-test/gdd/subgoals/in-progress done-test/gdd/subgoals/done done-test/gdd/reviews
+mkdir -p done-test/gdd/subgoals/candidates done-test/gdd/subgoals/in-progress done-test/gdd/subgoals/in-review done-test/gdd/subgoals/done done-test/gdd/reviews done-test/gdd/adr
+mkdir -p done-test/gdd
 cat > done-test/gdd/goal.md <<'EOF'
 ---
-scenario_1_check: test "$(cat done-test/done.txt)" = done
-done_checks: none
-max_files: 5
-max_lines: 50
 prefer: certainty
 avoid: none
 ---
@@ -22,16 +19,19 @@ done.txt exists.
 
 ## Acceptance scenarios
 
-1. done-test/done.txt holds done
+1. [done-file] done-test/done.txt holds done
+   - Check: `test "$(cat done-test/done.txt)" = done`
 
 ## Definition of done
 
-- The files are committed on the sub-goal's branch.
+1. [gate] every sub-goal passes the project's checks
+   - Check: `true`
 
 ## Premises
 
 - None
 EOF
+mkdir -p done-test/gdd
 cat > done-test/gdd/state.md <<'EOF'
 # State
 
@@ -59,36 +59,41 @@ cat > done-test/gdd/state.md <<'EOF'
 
 - None
 EOF
-mkdir -p done-test/gdd/adr
+mkdir -p done-test/gdd/subgoals/done
 cat > done-test/gdd/subgoals/done/done-txt.md <<'EOF'
 ---
 type: build
-advances: scenario_1
+advances: done-file
 depends_on: none
 touches: done-test/done.txt
-criterion_1: done.txt is done | quantitative | test "$(cat done-test/done.txt)" = done
 ---
 # Create done-test/done.txt containing done
 
-- Done when: it works through its real entry point
-- What to show: the file's content
+## Done when
+
+1. [exact] done.txt is done
+   - Check: `test "$(cat done-test/done.txt)" = done`
+
+## What to show
+
+- the result
 EOF
+mkdir -p done-test/gdd/reviews
 cat > done-test/gdd/reviews/done-txt.md <<'EOF'
 ---
 subgoal: done-txt
 loop: 1
-progress: scenario_1=met open_uncertainties=0
-auto: false
+progress: done-file=met open_uncertainties=0
+pr: none
 overridden: false
-rework: none
 ---
 # Sub-goal review: done-txt
 
 
 ## Decision
 
-<!-- gdd-loop writes the outcome here: "Proceed (automatic). Next: <slug>", or the human's answer (OK / Change something with the comment / Stop). -->
-OK.
+<!-- gdd-loop writes "Pull request opened: <URL>" here. A Decide sub-goal also records the option the human chose. -->
+No pull request (no remote); branch gdd/done-txt
 EOF
 printf 'done\n' > done-test/done.txt
 git add -A

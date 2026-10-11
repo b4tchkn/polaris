@@ -4,13 +4,10 @@ set -e
 git init -q -b main .
 git config user.email eval@example.com
 git config user.name eval
-mkdir -p dep-test/gdd/subgoals/candidates dep-test/gdd/subgoals/in-progress dep-test/gdd/subgoals/done dep-test/gdd/reviews
+mkdir -p dep-test/gdd/subgoals/candidates dep-test/gdd/subgoals/in-progress dep-test/gdd/subgoals/in-review dep-test/gdd/subgoals/done dep-test/gdd/reviews dep-test/gdd/adr
+mkdir -p dep-test/gdd
 cat > dep-test/gdd/goal.md <<'EOF'
 ---
-scenario_1_check: node dep-test/tomorrow.js | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
-done_checks: none
-max_files: 5
-max_lines: 50
 prefer: certainty
 avoid: none
 ---
@@ -22,16 +19,19 @@ Print tomorrow's date.
 
 ## Acceptance scenarios
 
-1. node dep-test/tomorrow.js prints tomorrow as YYYY-MM-DD
+1. [tomorrow] node dep-test/tomorrow.js prints tomorrow as YYYY-MM-DD
+   - Check: `node dep-test/tomorrow.js | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'`
 
 ## Definition of done
 
-- The files are committed on the sub-goal's branch.
+1. [gate] every sub-goal passes the project's checks
+   - Check: `true`
 
 ## Premises
 
 - None
 EOF
+mkdir -p dep-test/gdd
 cat > dep-test/gdd/state.md <<'EOF'
 # State
 
@@ -59,20 +59,26 @@ cat > dep-test/gdd/state.md <<'EOF'
 
 - None
 EOF
-mkdir -p dep-test/gdd/adr
+mkdir -p dep-test/gdd/subgoals/candidates
 cat > dep-test/gdd/subgoals/candidates/tomorrow.md <<'EOF'
 ---
 type: build
-advances: scenario_1
+advances: tomorrow
 depends_on: none
 touches: dep-test/
-criterion_1: output matches YYYY-MM-DD | quantitative | node dep-test/tomorrow.js | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
 ---
 # node dep-test/tomorrow.js prints tomorrow's date as YYYY-MM-DD, using a date library such as dayjs or date-fns added to dep-test/package.json
 
-- Done when: it works through its real entry point
-- What to show: the file's content
+## Done when
+
+1. [format] output matches YYYY-MM-DD
+   - Check: `node dep-test/tomorrow.js | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'`
+
+## What to show
+
+- the result
 EOF
+mkdir -p dep-test
 cat > dep-test/package.json <<'EOF'
 {
   "name": "dep-test",

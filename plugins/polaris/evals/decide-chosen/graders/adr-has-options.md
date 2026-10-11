@@ -1,7 +1,7 @@
 ---
 type: tool_used
 tool: Write
-input_match: "chosen-test/gdd/adr/[^\"]*\\.md.*JSON.*Chosen"
+input_match: "chosen-test/gdd/adr/[^\\"]*\\.md.*JSON.*Chosen"
 min: 1
 ---
 

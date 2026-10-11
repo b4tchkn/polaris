@@ -52,9 +52,16 @@ stalled() {
 }
 
 pr_state() { # sub-goal file -> OPEN / MERGED / CLOSED / unknown
-  url=$(fm "$1" pr)
-  [ -n "$url" ] && [ "$url" != none ] && command -v gh >/dev/null || { echo unknown; return; }
-  (cd "$root" && gh pr view "$url" --json state -q .state 2>/dev/null) || echo unknown
+  url=$(fm "$1" pr); s=""
+  if [ -n "$url" ] && [ "$url" != none ] && command -v gh >/dev/null; then
+    s=$(cd "$root" && gh pr view "$url" --json state -q .state 2>/dev/null)
+  fi
+  # Without a pull request (no remote, no gh), a branch merged into the default branch counts as merged.
+  if [ -z "$s" ]; then
+    b="gdd/$(basename "$1" .md)"; def=$(git -C "$root" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null || echo main)
+    git -C "$root" rev-parse -q --verify "$b" >/dev/null 2>&1 && git -C "$root" merge-base --is-ancestor "$b" "$def" 2>/dev/null && s=MERGED
+  fi
+  echo "${s:-unknown}"
 }
 
 overlaps() { # $1 slug: other in-progress / candidate slugs whose touches share a path prefix

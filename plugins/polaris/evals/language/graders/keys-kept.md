@@ -7,4 +7,4 @@ target:
   path: lang-test/gdd/reviews/hello-txt.md
 ---
 
-Frontmatter keys stay as they are (the status script reads them).
+Frontmatter keys stay as they are (gdd-status.sh reads them).

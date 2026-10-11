@@ -7,4 +7,4 @@ target:
   path: gdd/goal.md
 ---
 
-gdd/goal.md was written from the template as it is, frontmatter included (the goal is decided later by gdd-loop).
+gdd/goal.md was written from the template as it is (the goal is decided later by gdd-loop).

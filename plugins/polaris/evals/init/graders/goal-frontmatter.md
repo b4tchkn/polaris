@@ -1,10 +1,10 @@
 ---
 type: regex
-pattern: "scenario_1_check:"
+pattern: "prefer:[\\s\\S]*avoid:"
 match: contains
 target:
   source: file
   path: gdd/goal.md
 ---
 
-The goal template carries the frontmatter the status script reads.
+The goal template's frontmatter holds only the AI's settings: prefer and avoid.

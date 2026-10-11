@@ -4,13 +4,10 @@ set -e
 git init -q -b main .
 git config user.email eval@example.com
 git config user.name eval
-mkdir -p goal-done/gdd/subgoals/candidates goal-done/gdd/subgoals/in-progress goal-done/gdd/subgoals/done goal-done/gdd/reviews
+mkdir -p goal-done/gdd/subgoals/candidates goal-done/gdd/subgoals/in-progress goal-done/gdd/subgoals/in-review goal-done/gdd/subgoals/done goal-done/gdd/reviews goal-done/gdd/adr
+mkdir -p goal-done/gdd
 cat > goal-done/gdd/goal.md <<'EOF'
 ---
-scenario_1_check: test "$(cat goal-done/done.txt)" = done
-done_checks: none
-max_files: 5
-max_lines: 50
 prefer: certainty
 avoid: none
 ---
@@ -22,16 +19,19 @@ done.txt exists.
 
 ## Acceptance scenarios
 
-1. goal-done/done.txt holds done
+1. [done-file] goal-done/done.txt holds done
+   - Check: `test "$(cat goal-done/done.txt)" = done`
 
 ## Definition of done
 
-- The files are committed on the sub-goal's branch.
+1. [gate] every sub-goal passes the project's checks
+   - Check: `true`
 
 ## Premises
 
 - None
 EOF
+mkdir -p goal-done/gdd
 cat > goal-done/gdd/state.md <<'EOF'
 # State
 
@@ -59,19 +59,24 @@ cat > goal-done/gdd/state.md <<'EOF'
 
 - None
 EOF
-mkdir -p goal-done/gdd/adr
+mkdir -p goal-done/gdd/subgoals/candidates
 cat > goal-done/gdd/subgoals/candidates/done-txt.md <<'EOF'
 ---
 type: build
-advances: scenario_1
+advances: done-file
 depends_on: none
 touches: goal-done/done.txt
-criterion_1: done.txt is done | quantitative | test "$(cat goal-done/done.txt)" = done
 ---
 # Create goal-done/done.txt containing done
 
-- Done when: it works through its real entry point
-- What to show: the file's content
+## Done when
+
+1. [exact] done.txt is done
+   - Check: `test "$(cat goal-done/done.txt)" = done`
+
+## What to show
+
+- the result
 EOF
 git add -A
 git commit -qm fixture

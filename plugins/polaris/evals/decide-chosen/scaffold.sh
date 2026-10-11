@@ -1,16 +1,13 @@
 #!/bin/bash
-# A Decide sub-goal with its comparison written; the Decision section is empty. history.jsonl holds the AI's question; the prompt is the human's choice with a reason.
+# A Decide sub-goal with its comparison prepared. history.jsonl holds the AI's question; the prompt is the human's choice with a reason.
 set -e
 git init -q -b main .
 git config user.email eval@example.com
 git config user.name eval
-mkdir -p chosen-test/gdd/subgoals/candidates chosen-test/gdd/subgoals/in-progress chosen-test/gdd/subgoals/done chosen-test/gdd/reviews
+mkdir -p chosen-test/gdd/subgoals/candidates chosen-test/gdd/subgoals/in-progress chosen-test/gdd/subgoals/in-review chosen-test/gdd/subgoals/done chosen-test/gdd/reviews chosen-test/gdd/adr
+mkdir -p chosen-test/gdd
 cat > chosen-test/gdd/goal.md <<'EOF'
 ---
-scenario_1_check: human
-done_checks: none
-max_files: 5
-max_lines: 50
 prefer: certainty
 avoid: none
 ---
@@ -18,20 +15,23 @@ avoid: none
 
 ## North star
 
-Notes in chosen-test/notes/ use one agreed file format.
+Notes use one agreed file format.
 
 ## Acceptance scenarios
 
-1. The team agrees on a note format and the first note uses it
+1. [format-agreed] The team agrees on a note format and the first note uses it
+   - Check: human: the team decides
 
 ## Definition of done
 
-- The files are committed on the sub-goal's branch.
+1. [gate] every sub-goal passes the project's checks
+   - Check: `true`
 
 ## Premises
 
 - None
 EOF
+mkdir -p chosen-test/gdd
 cat > chosen-test/gdd/state.md <<'EOF'
 # State
 
@@ -59,62 +59,34 @@ cat > chosen-test/gdd/state.md <<'EOF'
 
 - None
 EOF
-mkdir -p chosen-test/gdd/adr
+mkdir -p chosen-test/gdd/subgoals/in-progress
 cat > chosen-test/gdd/subgoals/in-progress/note-format.md <<'EOF'
 ---
 type: decide
-advances: U1, scenario_1
+advances: U1, format-agreed
 depends_on: none
 touches: chosen-test/notes/
-criterion_1: the human finds the comparison clear enough to choose | qualitative
 ---
 # Decide which file format the notes use
 
-- Done when: the human agrees
-- What to show: the file's content
+## Done when
+
+1. [chosen] the human chose a format
+   - Check: human: the human picks one of three
+
+## What to show
+
+- the result
 EOF
-cat > chosen-test/gdd/subgoals/candidates/first-note.md <<'EOF'
----
-type: build
-advances: scenario_1
-depends_on: note-format
-touches: chosen-test/notes/
-criterion_1: a note file exists | quantitative | ls chosen-test/notes/* >/dev/null
----
-# Write the first note in the chosen format
-
-- Done when: it works through its real entry point
-- What to show: the file's content
-EOF
-cat > chosen-test/gdd/reviews/note-format.md <<'EOF'
----
-subgoal: note-format
-loop: 1
-progress: scenario_1=human open_uncertainties=1
-auto: false
-overridden: false
-rework: none
----
-# Sub-goal review: note-format
-
-## What was built and how to try it
-
-- Comparison below.
+mkdir -p chosen-test/docs
+cat > chosen-test/docs/note-format.md <<'EOF'
+# Note format
 
 | Option | Format | Trade-off |
 |---|---|---|
 | A | Markdown | Readable as plain text, renders on GitHub; no structure for metadata |
 | B | Plain text | Simplest; no headings or links |
 | C | JSON | Structured; hard to write by hand |
-
-## Next
-
-- Next: first-note: uses the chosen format
-- Next-reviewer: agrees
-
-## Decision
-
-<!-- gdd-loop writes the outcome here: "Proceed (automatic). Next: <slug>", or the human's answer (OK / Change something with the comment / Stop). -->
 EOF
 git add -A
 git commit -qm fixture

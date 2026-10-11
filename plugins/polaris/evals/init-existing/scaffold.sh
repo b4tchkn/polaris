@@ -1,11 +1,12 @@
 #!/bin/bash
 # gdd/ already holds real state. gdd-init must ask before overwriting, and must not touch the files without an answer.
 set -e
-mkdir -p gdd/subgoals/candidates
+mkdir -p gdd/subgoals/candidates gdd/adr
+mkdir -p gdd
 cat > gdd/goal.md <<'EOF'
 ---
-scenario_1_check: human
-done_checks: none
+prefer: certainty
+avoid: none
 ---
 # Goal: keep me
 
@@ -15,8 +16,10 @@ An existing goal that must not be overwritten without asking.
 
 ## Acceptance scenarios
 
-1. This file survives a `/polaris:gdd-init` run that nobody confirmed.
+1. [kept] This file survives a `/polaris:gdd-init` run that nobody confirmed.
+   - Check: human: look at the file
 EOF
+mkdir -p ./gdd
 cat > ./gdd/state.md <<'EOF'
 # State
 
@@ -24,11 +27,11 @@ cat > ./gdd/state.md <<'EOF'
 
 ## Now
 
-- Mid-goal.
+- None
 
 ## Built so far
 
-- Something valuable.
+- None
 
 ## Uncertainties
 
@@ -42,6 +45,5 @@ cat > ./gdd/state.md <<'EOF'
 
 ## Learnings
 
-- Keep this learning.
+- None
 EOF
-mkdir -p ./gdd/adr
