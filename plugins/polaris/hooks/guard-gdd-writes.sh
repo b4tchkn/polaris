@@ -5,7 +5,9 @@
 #   - a gdd/subgoals/**/*.md written without `advances:`        -> restored or removed, exit 2
 #   - a learning removed from gdd/state.md                      -> restored, exit 2
 #   - an existing gdd/adr/*.md changed or deleted                -> restored, exit 2 (new files are fine)
-#   - a skip/ignore added to a test file                         -> exit 2 (stop and ask)
+#   - a skip/ignore added to a test file, or tests removed from it -> restored, exit 2 (stop and ask)
+#   - test files deleted by Bash (fewer than before)             -> restored from git, exit 2
+#   - an Edit/Write to a path listed in `avoid:` of gdd/goal.md   -> permission prompt (pre)
 # Needs bash, grep, sed, awk, shasum, find. No jq.
 # ponytail: the Bash snapshot runs `find` over the repo on every command; prune more dirs if it gets slow.
 
@@ -39,11 +41,36 @@ gdd_files() {
     -o \( -path '*/gdd/goal.md' -o -path '*/gdd/subgoals/*.md' -o -path '*/gdd/adr/*.md' \) -print 2>/dev/null
 }
 refuse() { printf '%s\n' "$1" >&2; exit 2; }
+is_test() { printf '%s' "$1" | grep -Eqi '(^|/)(tests?|spec|__tests__|androidTest)(/|$)|[._]test\.|[._]spec\.|(^|/)test_[^/]*\.py$|Tests?\.[a-z]+$'; }
+test_files() {
+  find . \( -name .git -o -name node_modules -o -name build -o -name .gradle -o -path ./.claude/worktrees \) -prune \
+    -o -type f -print 2>/dev/null | while IFS= read -r f; do is_test "$f" && printf '%s\n' "$f"; done | sort
+}
+ask() { # PreToolUse: show the human a permission prompt with this reason
+  r=$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"%s"}}\n' "$r"
+  exit 0
+}
+avoided() { # $1 absolute path -> prints the avoid: entry of the nearest gdd/goal.md it falls under
+  d=$(dirname "$1")
+  while :; do
+    if [ -f "$d/gdd/goal.md" ]; then
+      for a in $(sed -n '1{/^---$/!q;};2,/^---$/p' "$d/gdd/goal.md" | sed -n 's/^avoid:[[:space:]]*//p' | tr ',' ' '); do
+        [ "$a" = none ] && continue
+        case "$1" in "$d/${a#./}"*) printf '%s' "$a"; return 0 ;; esac
+      done
+      return 1
+    fi
+    [ "$d" = / ] || [ "$d" = . ] && return 1
+    d=$(dirname "$d")
+  done
+}
 # A sub-goal must say which acceptance scenario or uncertainty it advances.
 no_advances() { ! sed -n '1{/^---$/!q;};2,/^---$/p' "$1" | grep -Eq '^advances:[[:space:]]*[^[:space:]]'; }
 
 case "$mode:$tool" in
   pre:Bash)
+    test_files > "$snap/tests.list"
     : > "$snap/bash.manifest"
     while IFS= read -r f; do
       cp "$f" "$snap/$(key "$f")"
@@ -53,6 +80,16 @@ case "$mode:$tool" in
 
   post:Bash)
     [ -f "$snap/bash.manifest" ] || exit 0
+    if [ -f "$snap/tests.list" ]; then
+      now=$(test_files)
+      if [ "$(printf '%s' "$now" | grep -c .)" -lt "$(grep -c . "$snap/tests.list")" ]; then
+        gone=$(printf '%s\n' "$now" | comm -13 - "$snap/tests.list")
+        printf '%s\n' "$gone" | while IFS= read -r f; do [ -n "$f" ] && git checkout -q HEAD -- "$f" 2>/dev/null; done
+        refuse "Test files were deleted:
+$gone
+Removing tests loosens the checks: restored what git had. Do not continue; ask the human with three options first."
+      fi
+    fi
     changed=""; bad=""
     while IFS=$'\t' read -r s f; do
       case "$f" in */gdd/goal.md|*/gdd/adr/*.md) ;; *) continue ;; esac
@@ -83,6 +120,8 @@ case "$mode:$tool" in
     [ -n "$file" ] || exit 0
     rm -f "$snap/$(key "$file")"
     [ -f "$file" ] && cp "$file" "$snap/$(key "$file")"
+    case "$file" in /*) abs="$file" ;; *) abs="$PWD/$file" ;; esac
+    a=$(avoided "$abs") && ask "$file is under avoid: $a in gdd/goal.md. The human decided the AI must not change it without asking."
     ;;
 
   post:Edit|post:Write)
@@ -108,10 +147,13 @@ $missing"; }
           { cp "$old" "$file"; refuse "Restored $file: an ADR is never changed once written. Record a new decision in a new file in gdd/adr/."; }
         ;;
       *)
-        if printf '%s' "$file" | grep -Eqi '(^|/)(tests?|spec|__tests__|androidTest)(/|$)|[._]test\.|[._]spec\.|Tests?\.[a-z]+$'; then
+        if is_test "$file"; then
           pat='@pytest\.mark\.skip|pytest\.skip\(|unittest\.skip|\.skip\(|\bxit\(|\bxdescribe\(|\bxtest\(|@Ignore|@Disabled|t\.Skip\(|#\[ignore\]'
           before=$(grep -Ec "$pat" "$old"); after=$(grep -Ec "$pat" "$file")
-          [ "$after" -le "$before" ] || refuse "This edit adds a skip/ignore to a test file ($before -> $after). Loosening tests is a stop condition: do not continue; ask the human with three options first."
+          [ "$after" -le "$before" ] || { cp "$old" "$file"; refuse "Restored $file: the edit added a skip/ignore ($before -> $after). Loosening tests is a stop condition: do not continue; ask the human with three options first."; }
+          tp='^[[:space:]]*(async[[:space:]]+)?def[[:space:]]+test|(^|[^.[:alnum:]_])(it|test)(\.each[^(]*)?[[:space:]]*\(|func[[:space:]]+Test|@Test|#\[test\]'
+          before=$(grep -Ec "$tp" "$old"); after=$(grep -Ec "$tp" "$file")
+          [ "$after" -ge "$before" ] || { cp "$old" "$file"; refuse "Restored $file: the edit removed tests ($before -> $after). Removing tests loosens the checks: do not continue; ask the human with three options first."; }
         fi
         ;;
     esac
