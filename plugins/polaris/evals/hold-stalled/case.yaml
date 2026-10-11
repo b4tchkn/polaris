@@ -1,4 +1,0 @@
-schema_version: "1.1"
-name: hold-stalled
-context:
-  scaffold_script: scaffold.sh

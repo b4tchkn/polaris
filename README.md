@@ -96,8 +96,8 @@ The AI replies in the language you use.
 
 ## Testing the skills
 
-`plugins/polaris/evals/` holds eval cases for `claude plugin eval`: each case scaffolds a small git repository with a `gdd/`, runs `/polaris:gdd-loop` on it, and checks the files, reviews, and subagent calls it leaves behind. `tests/check.sh` runs this repository's own gate without a model: the hook tests, the `gdd-status.sh` tests, and `claude plugin validate`. Run them from the repository root (each case is one real Claude session, so it costs tokens):
+`tests/check.sh` runs this repository's own gate: the hook tests, the `gdd-status.sh` tests, and `claude plugin validate`.
 
 ```
-claude plugin eval plugins/polaris --scaffold --allow-tools Bash Write Edit Agent --ablation none --runs 1 --no-publish
+bash tests/check.sh
 ```

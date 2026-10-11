@@ -2,6 +2,3 @@ CLAUDE.local.md
 simulations/
 .claude/settings.local.json
 .claude/worktrees/
-plugins/polaris/evals/results/
-plugins/polaris/evals/*/*.jsonl
-!plugins/polaris/evals/*/history.jsonl
