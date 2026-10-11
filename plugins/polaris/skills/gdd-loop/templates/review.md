@@ -2,9 +2,8 @@
 subgoal: <slug>
 loop: <n>
 progress: <the progress line from gdd-status.sh>
-auto: false
+pr: <pull request URL, or none>
 overridden: false
-rework: none
 ---
 # Sub-goal review: <slug> <what it achieves>
 
@@ -13,25 +12,25 @@ rework: none
 - <Deliverable, branch gdd/<slug>>
 - Demo: <link, recording, or how to run it>
 
-## Evaluation against the criteria
+## Checks
 
-| Criterion | Quantitative / qualitative | Result | Met? |
+| Condition | Check | Result | By |
 |---|---|---|---|
-| <criterion> | | | <Met / Not met / Partly / Not checked / empty for qualitative> |
+| <id> <condition> | <command / observe / human> | <met / not-met / partial / not checked / for the human> | <gdd-status.sh / evaluator / human> |
 
 ## Distance to the goal
 
-- <Each acceptance scenario: met / not-met / judged by the human, and what changed in this loop>
+- <Each acceptance scenario and the gate: met / not-met / observe / human, and what changed in this loop>
 - <Open uncertainties, and which were resolved>
 
-## Least confident decision
+## Least confident
 
-- <The decision and why>
+- <file:line: what is uncertain and how to check it (each becomes a line comment on the pull request)>
 
 ## Retrospective
 
 - Keep: <what worked>
-- Problems: <rework, where the human stepped in, why something was rejected>
+- Problems: <rework, what needed the evaluator or the human that a check could have caught>
 - Learnings added: <to state.md, or none>
 - Candidates added: <slugs, or none>
 
@@ -42,4 +41,4 @@ rework: none
 
 ## Decision
 
-<!-- gdd-loop writes the outcome here: "Proceed (automatic). Next: <slug>", or the human's answer (OK / Change something with the comment / Stop). -->
+<!-- gdd-loop writes "Pull request opened: <URL>" here. A Decide sub-goal also records the option the human chose. -->

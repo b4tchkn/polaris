@@ -1,10 +1,11 @@
 #!/bin/bash
-# Mechanical part of gdd-loop: reads the frontmatter of gdd/ files and reports what can be decided without judgment.
-#   gdd-status.sh <gdd-dir> [--at <dir>]              goal distance, stall, streak, sub-goals and whether each candidate is ready
-#   gdd-status.sh <gdd-dir> gate <slug> [--at <dir>]  "auto" or "ask: <reasons>" for continuing after <slug> without the human
-# --at runs the scenario and done checks in <dir> (a worker's worktree) instead of the repository that holds <gdd-dir>.
-# Frontmatter is flat `key: value`, one per line. Needs bash, git, sed, grep, awk. gh is used when present.
-# ponytail: scenario and done checks rerun on every call; cache them if a project's checks get slow.
+# Mechanical part of gdd-loop: everything that can be decided without judgment, so the AI does not decide it.
+#   gdd-status.sh <gdd-dir> [--at <dir>]               progress toward the goal, pull requests, what can start, whether to hold
+#   gdd-status.sh <gdd-dir> check <slug> [--at <dir>]  runs a sub-goal's "Done when" checks and the gate
+# Checks are the "Check:" lines under each [id] item in goal.md and the sub-goal files: a `command` runs here
+# (exit 0 = met); "observe:" is left to the evaluator, "human:" to the human. --at runs commands in <dir>
+# (the worker's worktree) instead of the repository that holds <gdd-dir>. Needs bash, sed, grep, awk; gh when present.
+# ponytail: checks rerun on every call; cache them if a project's checks get slow.
 
 at=""; args=()
 while [ $# -gt 0 ]; do case "$1" in --at) at="$2"; shift 2 ;; *) args+=("$1"); shift ;; esac; done
@@ -13,28 +14,29 @@ dir="${args[0]:-gdd}"; cmd="${args[1]}"; slug="${args[2]}"
 root=$(cd "$dir/.." && pwd)
 checks_root="${at:-$root}"
 STALL_N=3   # identical progress in this many latest reviews = stalled
-TRUST_N=3   # this many latest reviews not overridden and without rework = trusted
 
 fm() { sed -n '1{/^---$/!q;};2,/^---$/p' "$1" | sed -n "s/^$2:[[:space:]]*//p" | head -1; }
-fm_keys() { sed -n '1{/^---$/!q;};2,/^---$/p' "$1" | sed -n "s/^\($2\):.*/\1/p"; }
-run() { (cd "$checks_root" && bash -c "$1") >/dev/null 2>&1; }
 file_of() { ls "$dir"/subgoals/*/"$1".md 2>/dev/null | head -1; }
-state_of() { f=$(file_of "$1"); [ -n "$f" ] && basename "$(dirname "$f")"; }
-default_ref() { git -C "$root" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null || echo main; }
 
-merged() { # a done sub-goal counts as merged when it has no branch, or its PR / branch is in the default branch
-  git -C "$root" rev-parse -q --verify "gdd/$1" >/dev/null || return 0
-  if command -v gh >/dev/null && [ "$(cd "$root" && gh pr view "gdd/$1" --json state -q .state 2>/dev/null)" = MERGED ]; then return 0; fi
-  git -C "$root" merge-base --is-ancestor "gdd/$1" "$(default_ref)" 2>/dev/null
+checks() { # file -> "id<TAB>spec" for every [id] item followed by a Check: line
+  awk '
+    match($0, /^[[:space:]]*[0-9]+\.[[:space:]]*\[[A-Za-z0-9_-]+\]/) { s = substr($0, RSTART, RLENGTH); sub(/^[^[]*\[/, "", s); sub(/\].*/, "", s); id = s; next }
+    id != "" && /^[[:space:]]*-[[:space:]]*Check:/ { sub(/^[[:space:]]*-[[:space:]]*Check:[[:space:]]*/, ""); print id "\t" $0; id = "" }
+  ' "$1"
+}
+
+judge() { # spec -> met / not-met / observe / human
+  case "$1" in
+    '`'*) c=${1#\`}; c=${c%\`*}
+          if (cd "$checks_root" && bash -c "$c") >/dev/null 2>&1; then echo met; else echo not-met; fi ;;
+    observe:*) echo observe ;;
+    *) echo human ;;
+  esac
 }
 
 progress() {
   out=""
-  for k in $(fm_keys "$dir/goal.md" 'scenario_[0-9]*_check'); do
-    c=$(fm "$dir/goal.md" "$k"); n=${k%_check}
-    if [ "$c" = human ]; then r=human; elif run "$c"; then r=met; else r=not-met; fi
-    out="$out $n=$r"
-  done
+  while IFS=$'\t' read -r id spec; do out="$out $id=$(judge "$spec")"; done < <(checks "$dir/goal.md")
   open=$(awk '/^## /{p=($0 ~ /Uncertainties|未確定/)} p && /^- / && /\| *open *$/' "$dir/state.md" 2>/dev/null | wc -l | tr -d ' ')
   echo "${out# } open_uncertainties=$open"
 }
@@ -49,16 +51,13 @@ stalled() {
   [ "$(for f in $latest; do fm "$f" progress; done | sort -u | wc -l | tr -d ' ')" = 1 ]
 }
 
-streak() {
-  n=0
-  for f in $(reviews_latest); do
-    [ "$(fm "$f" overridden)" = false ] && [ "$(fm "$f" rework)" = none ] || break
-    n=$((n+1))
-  done
-  echo $n
+pr_state() { # sub-goal file -> OPEN / MERGED / CLOSED / unknown
+  url=$(fm "$1" pr)
+  [ -n "$url" ] && [ "$url" != none ] && command -v gh >/dev/null || { echo unknown; return; }
+  (cd "$root" && gh pr view "$url" --json state -q .state 2>/dev/null) || echo unknown
 }
 
-overlaps() { # $1 slug: other in-progress / ready slugs whose touches share a path prefix
+overlaps() { # $1 slug: other in-progress / candidate slugs whose touches share a path prefix
   mine=$(fm "$(file_of "$1")" touches | tr ',' ' ')
   for f in "$dir"/subgoals/in-progress/*.md "$dir"/subgoals/candidates/*.md; do
     [ -f "$f" ] || continue; s=$(basename "$f" .md); [ "$s" = "$1" ] && continue
@@ -69,50 +68,35 @@ overlaps() { # $1 slug: other in-progress / ready slugs whose touches share a pa
   done | sort -u | tr '\n' ' '
 }
 
-ready() { # prints "yes" or "no (<reason>)"
-  f=$(file_of "$1"); why=""
-  for d in $(fm "$f" depends_on | tr ',' ' '); do
+ready() { # prints "yes" or "no (<reason>)": every dependency must be merged (in done/)
+  why=""
+  for d in $(fm "$(file_of "$1")" depends_on | tr ',' ' '); do
     [ "$d" = none ] && continue
-    [ "$(state_of "$d")" = done ] || { why="$why $d not done"; continue; }
-    merged "$d" || why="$why $d not merged"
+    [ -f "$dir/subgoals/done/$d.md" ] || why="$why $d not merged"
   done
   [ -z "$why" ] && echo yes || echo "no ($why )"
 }
 
-if [ "$cmd" = gate ]; then
+if [ "$cmd" = check ]; then
   f=$(file_of "$slug"); [ -n "$f" ] || { echo "no sub-goal $slug" >&2; exit 1; }
-  why=""
-  [ "$(fm "$f" type)" = build ] || why="$why decide-type;"
-  for k in $(fm_keys "$f" 'criterion_[0-9]*'); do
-    case "$(fm "$f" "$k")" in *"| qualitative"*) why="$why qualitative criterion;"; break ;; esac
-  done
-  dc=$(fm "$dir/goal.md" done_checks)
-  [ -z "$dc" ] || [ "$dc" = none ] || run "$dc" || why="$why done_checks fail;"
-  if git -C "$root" rev-parse -q --verify "gdd/$slug" >/dev/null; then
-    base=$(git -C "$root" merge-base "$(default_ref)" "gdd/$slug" 2>/dev/null)
-    stat=$(git -C "$root" diff --numstat "$base" "gdd/$slug" -- . ':(exclude)gdd' ':(exclude)*/gdd' 2>/dev/null)
-    files=$(printf '%s\n' "$stat" | grep -c .); lines=$(printf '%s\n' "$stat" | awk '{s+=$1+$2} END{print s+0}')
-    mf=$(fm "$dir/goal.md" max_files); ml=$(fm "$dir/goal.md" max_lines)
-    [ -z "$mf" ] || [ "$files" -le "$mf" ] || why="$why $files files > max_files $mf;"
-    [ -z "$ml" ] || [ "$lines" -le "$ml" ] || why="$why $lines lines > max_lines $ml;"
-  fi
-  stalled && why="$why stalled for $STALL_N reviews;"
-  s=$(streak); [ "$s" -ge $TRUST_N ] || why="$why only $s of $TRUST_N latest reviews kept without override or rework;"
-  [ -z "$why" ] && echo auto || echo "ask:$why"
+  while IFS=$'\t' read -r id spec; do echo "$id: $(judge "$spec")  ($spec)"; done < <(checks "$f"; checks "$dir/goal.md" | grep '^gate	')
   exit 0
 fi
 
 echo "progress: $(progress)"
-dc=$(fm "$dir/goal.md" done_checks)
-if [ -z "$dc" ] || [ "$dc" = none ]; then echo "done_checks: none"; elif run "$dc"; then echo "done_checks: pass"; else echo "done_checks: fail"; fi
 stalled && echo "stalled: yes ($STALL_N latest reviews show the same progress)" || echo "stalled: no"
-echo "streak: $(streak) (latest reviews kept without override or rework; $TRUST_N needed to continue without asking)"
-for st in in-progress candidates done; do
+hold=""
+stalled && hold="$hold stalled;"
+latest=$(reviews_latest | head -1)
+[ -n "$latest" ] && [ "$(fm "$latest" overridden)" = true ] && hold="$hold the latest pull request was closed;"
+for st in in-review in-progress candidates done; do
   echo "$st:"
   for f in "$dir"/subgoals/$st/*.md; do
     [ -f "$f" ] || continue; s=$(basename "$f" .md)
     line="  $s type=$(fm "$f" type) advances=$(fm "$f" advances)"
+    [ "$st" = in-review ] && line="$line pr=$(fm "$f" pr) state=$(pr_state "$f")"
     [ "$st" = candidates ] && line="$line ready=$(ready "$s") overlaps=[$(overlaps "$s")]"
     echo "$line"
   done
 done
+[ -z "$hold" ] && echo "hold: no" || echo "hold: yes ($hold ) - ask the human before starting new sub-goals"
