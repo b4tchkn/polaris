@@ -40,6 +40,7 @@ plugins/polaris/          エンジン（Claude Code の plugin として配る�
   skills/gdd-init/        状態ファイルと承認ルールを作る
   skills/gdd-loop/        次のサブゴールを選び、ワーカーに作らせ、レビューと振り返りをして、続けるか人間に聞く
     scripts/gdd-check.sh  チェックを実行する。ゴールまでの距離、またはサブゴールの Done when と gate
+    scripts/gdd-lint.sh   サブゴールとレビューの書き方を確かめる（frontmatter、[id] ごとの Check:）。hook が書き込みのたびに呼ぶ
     scripts/gdd-status.sh サブゴールの状況。PR の状態、着手できる候補、並列にできるか、
                           止まるべきか（停滞、PR のクローズ）を機械的に判定する
     steps/                手順の詳細（ゴール設定、計画、レビュー、判断）

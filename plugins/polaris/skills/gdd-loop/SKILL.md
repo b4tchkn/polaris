@@ -26,6 +26,7 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
 
 - `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-check.sh <gdd-dir> [<slug>] [--at <worktree>]` runs checks: without a slug, the goal's checks (`progress:`); with one, the sub-goal's Done when and the gate. `--at` runs them in the worker's worktree.
 - `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` says each sub-goal's state from its pull request (`todo`, `interrupted`, `in-review`, `merged`, `merged-not-pulled`, `closed`), which can start and which overlap, and whether to hold. Run `git fetch -q` first when the repository has a remote. If it says gh failed, tell the human to install the GitHub CLI and run `gh auth login`, and stop.
+- `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-lint.sh <gdd-dir>` checks the format of the sub-goal and review files (the hook also runs it on every write). Fix what it reports before committing `gdd/`.
 
 ## Loop
 

@@ -78,6 +78,7 @@ mode: careful
 
 - Two skills, `/polaris:gdd-init` and `/polaris:gdd-loop`, and three subagents that gdd-loop calls, each in a separate context: `goal-owner` is responsible for the goal: it checks a draft goal (outcomes, size, checks that could be deterministic) and decides which sub-goals to start next from the check and status results; `worker` writes a sub-goal's checks and then builds it in its own worktree, `subgoal-verifier` says whether each command check really tests its condition and judges the `observe:` items.
 - `gdd-check.sh` runs the checks: the goal's (progress toward the goal) or one sub-goal's plus the gate.
+- `gdd-lint.sh` checks the format of sub-goal and review files (frontmatter, and a `Check:` for every `[id]`); the hook runs it on every write, and it runs on its own too.
 - `gdd-status.sh` says where the sub-goals stand: lists pull requests and whether they were merged, says which candidates can start and which can run in parallel, and holds when progress stalls or a pull request was closed.
 - Approval rules for hard-to-reverse actions, written by `gdd-init` into `.claude/settings.json`: adding a dependency, changing migrations, `git push`, merging a PR, rewriting history, and editing the rules themselves. They prompt you whatever the AI thinks, also when a worker running in the background triggers them.
 - One hook on Bash, Edit, and Write. It restores a `gdd/goal.md` written by a shell command, a sub-goal file without an `advances:` line, a learning removed from `gdd/state.md`, and a changed or deleted ADR in `gdd/adr/`. It restores test files when an edit adds a skip or removes tests, or a shell command deletes them, and tells the AI to ask you first. Each subagent and each worktree is checked on its own. It needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
@@ -98,7 +99,7 @@ The AI replies in the language you use.
 
 ## Testing the skills
 
-`tests/check.sh` runs this repository's own gate: the hook tests, the `gdd-check.sh` and `gdd-status.sh` tests, and `claude plugin validate`.
+`tests/check.sh` runs this repository's own gate: the hook tests, the `gdd-check.sh`, `gdd-status.sh`, and `gdd-lint.sh` tests, and `claude plugin validate`.
 
 ```
 bash tests/check.sh

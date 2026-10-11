@@ -2,7 +2,7 @@
 # Mechanical stop conditions for the gdd/ state files (design.md 7).
 # "pre" snapshots the files a tool may touch; "post" compares and undoes or refuses:
 #   - gdd/goal.md changed or created by Bash                    -> restored, exit 2
-#   - a gdd/subgoals/*.md written without `advances:`           -> restored or removed, exit 2
+#   - a gdd/subgoals/*.md or gdd/reviews/*.md that fails gdd-lint.sh -> restored or removed, exit 2
 #   - a learning removed from gdd/state.md                      -> restored, exit 2
 #   - an existing gdd/adr/*.md changed or deleted                -> restored, exit 2 (new files are fine)
 #   - a skip/ignore added to a test file, or tests removed from it -> restored, exit 2 (stop and ask)
@@ -11,6 +11,7 @@
 # ponytail: the Bash snapshot runs `find` over the repo on every command; prune more dirs if it gets slow.
 
 mode="$1"
+lint="$(cd "$(dirname "$0")/.." && pwd)/skills/gdd-loop/scripts/gdd-lint.sh"
 input=$(cat)
 
 field() { printf '%s' "$input" | sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" | head -1; }
@@ -37,7 +38,7 @@ sum() { shasum < "$1" | cut -c1-40; }
 gdd_files() {
   # Other worktrees under .claude/worktrees/ have their own guard (their own root); a worker creating one mid-command is not a write.
   find . \( -name .git -o -name node_modules -o -name build -o -name .gradle -o -path ./.claude/worktrees \) -prune \
-    -o \( -path '*/gdd/goal.md' -o -path '*/gdd/subgoals/*.md' -o -path '*/gdd/adr/*.md' \) -print 2>/dev/null
+    -o \( -path '*/gdd/goal.md' -o -path '*/gdd/subgoals/*.md' -o -path '*/gdd/reviews/*.md' -o -path '*/gdd/adr/*.md' \) -print 2>/dev/null
 }
 refuse() { printf '%s\n' "$1" >&2; exit 2; }
 is_test() { printf '%s' "$1" | grep -Eqi '(^|/)(tests?|spec|__tests__|androidTest)(/|$)|[._]test\.|[._]spec\.|(^|/)test_[^/]*\.py$|Tests?\.[a-z]+$'; }
@@ -45,8 +46,8 @@ test_files() {
   find . \( -name .git -o -name node_modules -o -name build -o -name .gradle -o -path ./.claude/worktrees \) -prune \
     -o -type f -print 2>/dev/null | while IFS= read -r f; do is_test "$f" && printf '%s\n' "$f"; done | sort
 }
-# A sub-goal must say which acceptance scenario or uncertainty it advances.
-no_advances() { ! sed -n '1{/^---$/!q;};2,/^---$/p' "$1" | grep -Eq '^advances:[[:space:]]*[^[:space:]]'; }
+# Sub-goal and review files must keep their format (gdd-lint.sh prints what is wrong).
+misformed() { problems=$(bash "$lint" "${1%/gdd/*}/gdd" "$1") && return 1; printf '%s\n' "$problems"; }
 
 case "$mode:$tool" in
   pre:Bash)
@@ -86,14 +87,16 @@ Removing tests loosens the checks: restored what git had. Do not continue; ask t
         *)
           [ "${line%%	*}" = "$(sum "$f")" ] && continue
           # Renaming a sub-goal keeps its content; only new or changed content is checked.
-          no_advances "$f" || continue
+          p=$(misformed "$f") || continue
           if [ -n "$line" ]; then cp "$snap/$(key "$f")" "$f"; else rm -f "$f"; fi
-          bad="$bad $f"
+          bad="$bad
+$p"
           ;;
       esac
     done < <(gdd_files)
     [ -z "$changed" ] || refuse "Reverted Bash changes to:$changed. Do not write gdd/goal.md from Bash (use the Edit tool so the human approves it), and never change or delete an existing ADR in gdd/adr/ (add a new file instead)."
-    [ -z "$bad" ] || refuse "Reverted sub-goal files without an \`advances:\` line in the frontmatter:$bad. Every sub-goal must name the acceptance scenario or uncertainty it advances."
+    [ -z "$bad" ] || refuse "Reverted sub-goal or review files with format problems:$bad
+Fix them in the shape of templates/subgoal.md or templates/review.md and write them again."
     ;;
 
   pre:Edit|pre:Write)
@@ -106,10 +109,12 @@ Removing tests loosens the checks: restored what git had. Do not continue; ask t
     [ -n "$file" ] || exit 0
     old="$snap/$(key "$file")"
     case "$file" in
-      */gdd/subgoals/*.md)
-        [ -f "$file" ] && no_advances "$file" || exit 0
+      */gdd/subgoals/*.md|*/gdd/reviews/*.md)
+        [ -f "$file" ] && p=$(misformed "$file") || exit 0
         if [ -f "$old" ]; then cp "$old" "$file"; else rm -f "$file"; fi
-        refuse "Reverted $file: a sub-goal needs an \`advances:\` line in its frontmatter naming the acceptance scenario ids (e.g. capture) or uncertainties (e.g. U1) it moves forward."
+        refuse "Reverted $file:
+$p
+Fix it in the shape of templates/subgoal.md or templates/review.md and write it again. A sub-goal's advances: names the acceptance scenario ids (e.g. capture) or uncertainties (e.g. U1) it moves forward."
         ;;
     esac
     [ -f "$old" ] && [ -f "$file" ] || exit 0

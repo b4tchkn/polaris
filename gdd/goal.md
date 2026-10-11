@@ -27,7 +27,7 @@ Goal Driven Development の基盤を作り、Claude Code の plugin として提
 
 ## 完成の定義
 
-1. [gate] hook のテスト、gdd-check.sh と gdd-status.sh のテスト、plugin の検証が通る
+1. [gate] hook のテスト、gdd-check.sh、gdd-status.sh、gdd-lint.sh のテスト、plugin の検証が通る
    - Check: `bash tests/check.sh`
 
 ## 前提
