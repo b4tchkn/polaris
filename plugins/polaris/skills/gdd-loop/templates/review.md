@@ -34,11 +34,6 @@ overridden: false
 - Learnings added: <to state.md, or none>
 - Candidates added: <slugs, or none>
 
-## Next
-
-- Next: <slug>: <why it moves the goal or an uncertainty the most>
-- Next-reviewer: <agrees / objects: reason>
-
 ## Decision
 
 <!-- gdd-loop writes "Pull request opened: <URL>" here. A Decide sub-goal also records the option the human chose. -->

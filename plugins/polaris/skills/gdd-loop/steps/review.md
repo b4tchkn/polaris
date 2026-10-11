@@ -19,11 +19,6 @@ Do this for each finished sub-goal. When several finished together, review all o
 - Update "Uncertainties" in `state.md`: mark resolved ones `| resolved: <answer>`, add new ones.
 - Rewrite `state.md` within one page: Now / Built so far / Uncertainties / Rejected ideas / Learnings.
 
-## Choose what comes next
-
-- Choose the next sub-goal as in `steps/plan.md` step 2 (do not move it yet).
-- Run the Agent tool with `subagent_type: "polaris:next-reviewer"`, giving it `goal.md`, the Uncertainties, the files in `gdd/adr/`, the candidates, and your choice with its reason. Put its verdict in the review. If it objects, take its alternative or keep yours and say why in the review.
-
 ## Write the review
 
 - Write `gdd/reviews/<slug>.md` in the shape of `templates/review.md`. `loop:` is one more than the highest `loop:` in `gdd/reviews/`.

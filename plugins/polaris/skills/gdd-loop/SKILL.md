@@ -32,8 +32,8 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
 0. **Goal.** If `goal.md` is still the template (`<goal name>` remains) or the human asked to change the goal, follow `steps/set-goal.md` and stop.
 1. **Pull requests.** Run `gdd-status.sh`. For each sub-goal in `in-review/`: `MERGED` → `git mv` it to `done/`; `CLOSED` → delete it, add it to "Rejected ideas", set `overridden: true` in its review. Do not read or answer pull request comments; the human handles those.
 2. **Hold.** If `gdd-status.sh` says `hold: yes`, tell the human why and ask once: continue / change something / stop. Record the answer in `gdd/adr/`. Stop unless they say continue.
-3. **Plan.** Follow `steps/plan.md`: choose the next sub-goal(s), write their Done when with checks, hand them to workers.
-4. **Review.** Follow `steps/review.md` for each finished sub-goal: run its checks, the evaluator for the rest, retrospect, choose what comes next.
+3. **Plan.** Follow `steps/plan.md`: the goal-owner decides the next sub-goal(s); write their Done when with checks and hand them to workers.
+4. **Review.** Follow `steps/review.md` for each finished sub-goal: run its checks, the evaluator for the rest, retrospect.
 5. **Finish.** Follow `steps/finish.md`: open the pull request with line comments where the AI is unsure. Then go back to 1, or stop when nothing is ready or the goal looks reached.
 
 ## Rules for every step
