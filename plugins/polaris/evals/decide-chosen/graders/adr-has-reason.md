@@ -1,7 +1,7 @@
 ---
 type: tool_used
 tool: Write
-input_match: "chosen-test/gdd/adr/[^\\"]*\\.md.*already writes Markdown"
+input_match: 'chosen-test/gdd/adr/[^"]*\.md.*already writes Markdown'
 min: 1
 ---
 

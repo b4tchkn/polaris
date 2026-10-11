@@ -1,6 +1,6 @@
 ---
 type: regex
-pattern: "^---\\nprefer:[^\\n]*\\n---"
+pattern: "^-{3}\\nprefer:[^\\n]*\\n-{3}"
 match: contains
 target:
   source: file
