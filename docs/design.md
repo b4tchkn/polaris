@@ -61,6 +61,7 @@ gdd/                      状態（使う側のリポジトリに gdd-init が�
   reviews/<slug>.md        サブゴールレビュー。frontmatter に progress
   adr/<日付>-<slug>.md     人間の判断の記録を1判断1ファイルで（何を決めたか、出した案、選んだ案、理由）。
                           一度書いたら変えない（hook が戻す）。別ファイルなので複数のセッションや人が同時に書ける
+  archive/subgoals/       完了したサブゴール。PR がファイルをここへ移すので、マージして pull すると subgoals/ から消える
   archive/                完了した GOAL
 docs/design.md            この設計
 ```

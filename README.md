@@ -40,7 +40,8 @@ In the repository where you want to get something done (new or existing):
 gdd/
   goal.md        your goal: acceptance scenarios and the definition of done, each with a Check line;
                  frontmatter holds mode (fast or careful when in doubt)
-  subgoals/      one file per sub-goal; its state comes from its pull request, not from the file
+  subgoals/      one file per open sub-goal; its state comes from its pull request, not from the file
+  archive/       sub-goals whose pull request was merged (the pull request moves the file here)
   state.md       the AI's one-page notes: now, built so far, uncertainties, rejected ideas, learnings
   adr/           one file per decision you made, with the options and your reasons
   reviews/       one review per sub-goal

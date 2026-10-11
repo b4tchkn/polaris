@@ -17,7 +17,7 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 ## Files
 
 - `gdd/goal.md`: frontmatter `mode`: `fast` or `careful` (which way to lean when in doubt). Acceptance scenarios and the definition of done are `[id]` items, each with a `Check:` line. The `[gate]` item is the one command every sub-goal passes. Every write needs the human's approval (ask rule).
-- `gdd/subgoals/<slug>.md`: one file per sub-goal (`templates/subgoal.md`). `advances:` is required (the hook refuses a file without it). Its state is never written down: the pull request is the source of truth. A sub-goal's pull request has the line `Sub-goal: <path of the sub-goal file from the repository root>` at the top of its body, and the work commits carry the same line.
+- `gdd/subgoals/<slug>.md`: one file per sub-goal (`templates/subgoal.md`). `advances:` is required (the hook refuses a file without it). Its state is never written down: the pull request is the source of truth. Each pull request moves its sub-goal file to `gdd/archive/subgoals/`, so once merged and pulled it leaves `gdd/subgoals/`. A sub-goal's pull request has the line `Sub-goal: <path of the sub-goal file from the repository root>` at the top of its body, and the work commits carry the same line.
 - `gdd/state.md`: Now / Built so far / Uncertainties (`- U<n> <question> | open`) / Rejected ideas / Learnings, rewritten every loop within one page. Never delete learnings.
 - `gdd/reviews/<slug>.md`: one review per sub-goal (`templates/review.md`).
 - `gdd/adr/<YYYY-MM-DD>-<slug>.md`: one file per decision the human made (`templates/adr.md`). Never change one once written; a new decision gets a new file.

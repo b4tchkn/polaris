@@ -65,6 +65,8 @@ ready() { # prints "yes" or "no (<reason>)": every dependency must be merged and
   why=""
   for d in $(fm "$dir/subgoals/$1.md" depends_on | tr ',' ' '); do
     [ "$d" = none ] && continue
+    # A pull request moves its sub-goal to archive/subgoals/, so once pulled it is there.
+    [ -f "$dir/archive/subgoals/$d.md" ] && continue
     s=$(st "$d"); [ "$s" = merged ] || why="$why $d ${s:-missing}"
   done
   [ -z "$why" ] && echo yes || echo "no ($why )"

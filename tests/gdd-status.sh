@@ -37,6 +37,11 @@ has "ready: dependency merged"                     "dep state=todo type=build ad
 has "ready: dependency not merged"                 "ready=no ( cur interrupted )"
 has "overlap: shared path prefix"                  "clash state=todo type=build advances=capture ready=yes overlaps=[cur ]"
 has "no hold"                                      "hold: no"
+mkdir -p gdd/archive/subgoals && printf -- '---\ntype: build\nadvances: capture\n---\n# old\n' > gdd/archive/subgoals/old.md
+sg after-old old src/o/; out=$(bash "$S" gdd)
+has "ready: dependency archived"                   "after-old state=todo type=build advances=capture ready=yes"
+has "archived sub-goals are not listed"            "sub-goals:"
+printf '%s\n' "$out" | grep -q '^  old ' && { echo "FAIL archived sub-goal listed"; fail=1; }
 
 # With a remote, states come from pull requests found by their "Sub-goal:" line (gh is faked).
 git remote add origin https://example.invalid/r.git
