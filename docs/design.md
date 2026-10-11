@@ -50,7 +50,7 @@ plugins/polaris/          エンジン（Claude Code の plugin として配る�
 .claude/settings.json     使う側のリポジトリの制約（gdd-init が承認ルールを書く）
 gdd/                      状態（使う側のリポジトリに gdd-init が作る）
   goal.md                 GOAL：北極星、受け入れシナリオと完成の定義（どちらも [id] と Check: 付き）、前提。
-                          frontmatter は AI の関わり方だけ：prefer（速さか確実さか）、avoid（触るなら聞くパス）
+                          frontmatter は AI の関わり方だけ：prefer（速さか確実さか）
                           ※ 書き込みには毎回人間の承認が要る（permissions の ask で強制）
   subgoals/{candidates,in-progress,in-review,done}/<slug>.md
                           サブゴール1件1ファイル。置き場所が状態（in-review = PR 作成済み、done = マージ済み）。

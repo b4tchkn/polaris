@@ -1,6 +1,5 @@
 ---
 prefer: <speed | certainty>
-avoid: <paths the AI must not edit without asking, comma-separated, or none>
 ---
 # Goal: <goal name>
 

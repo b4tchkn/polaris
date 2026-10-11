@@ -9,7 +9,6 @@ mkdir -p decide-test/gdd
 cat > decide-test/gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: notes format
 

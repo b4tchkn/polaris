@@ -21,7 +21,7 @@ You cannot talk to the human. When you hit any of these, stop and return a quest
 
 - a hard-to-reverse decision (data model, external service, billing, authentication, adding a dependency)
 - a change that loosens acceptance scenarios, the gate, or tests (the hook also refuses these)
-- a change outside `touches:` (paths under `avoid:` prompt the human through the hook)
+- a change outside `touches:`
 
 Question format: what you need decided, three options each with a one-line trade-off, and your recommendation. You will be resumed with the answer.
 

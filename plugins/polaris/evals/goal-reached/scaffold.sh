@@ -9,7 +9,6 @@ mkdir -p goal-done/gdd
 cat > goal-done/gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: goal reached test
 

@@ -9,7 +9,6 @@ mkdir -p done-test/gdd
 cat > done-test/gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: completion test
 

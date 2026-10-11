@@ -9,7 +9,6 @@ mkdir -p notes-test/gdd
 cat > notes-test/gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: notes survive
 

@@ -9,7 +9,6 @@ mkdir -p dep-test/gdd
 cat > dep-test/gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: tomorrow
 

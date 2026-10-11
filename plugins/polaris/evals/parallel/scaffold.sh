@@ -9,7 +9,6 @@ mkdir -p par-test/gdd
 cat > par-test/gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: parallel test
 

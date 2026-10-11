@@ -1,6 +1,5 @@
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: Goal Driven Development 基盤
 

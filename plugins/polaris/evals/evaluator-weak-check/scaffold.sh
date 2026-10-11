@@ -9,7 +9,6 @@ mkdir -p ev-test/gdd
 cat > ev-test/gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: ev test
 

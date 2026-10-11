@@ -6,7 +6,6 @@ mkdir -p gdd/subgoals/candidates gdd/subgoals/in-progress gdd/subgoals/in-review
 cat > gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: t
 

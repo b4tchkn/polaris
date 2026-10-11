@@ -6,7 +6,6 @@ mkdir -p gdd
 cat > gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: keep me
 

@@ -1,10 +1,10 @@
 ---
 type: regex
-pattern: "prefer:[\\s\\S]*avoid:"
+pattern: "^---\\nprefer:[^\\n]*\\n---"
 match: contains
 target:
   source: file
   path: gdd/goal.md
 ---
 
-The goal template's frontmatter holds only the AI's settings: prefer and avoid.
+The goal template's frontmatter holds only the AI's setting: prefer.

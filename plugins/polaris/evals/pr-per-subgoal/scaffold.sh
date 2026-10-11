@@ -9,7 +9,6 @@ mkdir -p pr-test/gdd
 cat > pr-test/gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: three files
 

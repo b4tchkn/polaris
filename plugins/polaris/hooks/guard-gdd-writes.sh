@@ -7,7 +7,6 @@
 #   - an existing gdd/adr/*.md changed or deleted                -> restored, exit 2 (new files are fine)
 #   - a skip/ignore added to a test file, or tests removed from it -> restored, exit 2 (stop and ask)
 #   - test files deleted by Bash (fewer than before)             -> restored from git, exit 2
-#   - an Edit/Write to a path listed in `avoid:` of gdd/goal.md   -> permission prompt (pre)
 # Needs bash, grep, sed, awk, shasum, find. No jq.
 # ponytail: the Bash snapshot runs `find` over the repo on every command; prune more dirs if it gets slow.
 
@@ -45,25 +44,6 @@ is_test() { printf '%s' "$1" | grep -Eqi '(^|/)(tests?|spec|__tests__|androidTes
 test_files() {
   find . \( -name .git -o -name node_modules -o -name build -o -name .gradle -o -path ./.claude/worktrees \) -prune \
     -o -type f -print 2>/dev/null | while IFS= read -r f; do is_test "$f" && printf '%s\n' "$f"; done | sort
-}
-ask() { # PreToolUse: show the human a permission prompt with this reason
-  r=$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')
-  printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"%s"}}\n' "$r"
-  exit 0
-}
-avoided() { # $1 absolute path -> prints the avoid: entry of the nearest gdd/goal.md it falls under
-  d=$(dirname "$1")
-  while :; do
-    if [ -f "$d/gdd/goal.md" ]; then
-      for a in $(sed -n '1{/^---$/!q;};2,/^---$/p' "$d/gdd/goal.md" | sed -n 's/^avoid:[[:space:]]*//p' | tr ',' ' '); do
-        [ "$a" = none ] && continue
-        case "$1" in "$d/${a#./}"*) printf '%s' "$a"; return 0 ;; esac
-      done
-      return 1
-    fi
-    [ "$d" = / ] || [ "$d" = . ] && return 1
-    d=$(dirname "$d")
-  done
 }
 # A sub-goal must say which acceptance scenario or uncertainty it advances.
 no_advances() { ! sed -n '1{/^---$/!q;};2,/^---$/p' "$1" | grep -Eq '^advances:[[:space:]]*[^[:space:]]'; }
@@ -120,8 +100,6 @@ Removing tests loosens the checks: restored what git had. Do not continue; ask t
     [ -n "$file" ] || exit 0
     rm -f "$snap/$(key "$file")"
     [ -f "$file" ] && cp "$file" "$snap/$(key "$file")"
-    case "$file" in /*) abs="$file" ;; *) abs="$PWD/$file" ;; esac
-    a=$(avoided "$abs") && ask "$file is under avoid: $a in gdd/goal.md. The human decided the AI must not change it without asking."
     ;;
 
   post:Edit|post:Write)

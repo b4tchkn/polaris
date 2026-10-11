@@ -9,7 +9,6 @@ mkdir -p lang-test/gdd
 cat > lang-test/gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: greeting
 

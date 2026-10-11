@@ -9,7 +9,6 @@ mkdir -p merged-test/gdd
 cat > merged-test/gdd/goal.md <<'EOF'
 ---
 prefer: certainty
-avoid: none
 ---
 # Goal: two files
 

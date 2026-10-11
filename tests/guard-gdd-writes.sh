@@ -176,14 +176,6 @@ json Bash "" | bash "$HOOK" pre
 mkdir -p tests/unit && git mv tests/test_a.py tests/unit/test_a.py
 json Bash "" | bash "$HOOK" post 2>/dev/null; check "test: bash move -> ok" 0 $?
 
-# --- avoid: in goal.md asks before editing those paths
-mkdir -p "$W/av/gdd" "$W/av/src/billing" "$W/av/src/ok"
-printf -- '---\nprefer: certainty\navoid: src/billing/, infra/\n---\n# Goal: av\n' > "$W/av/gdd/goal.md"
-out=$(json Edit "$W/av/src/billing/pay.ts" | bash "$HOOK" pre)
-printf '%s' "$out" | grep -q '"permissionDecision":"ask"' && echo "PASS avoid: edit under avoid asks" || { echo "FAIL avoid: no ask ($out)"; fail=1; }
-out=$(json Edit "$W/av/src/ok/a.ts" | bash "$HOOK" pre)
-[ -z "$out" ] && echo "PASS avoid: other paths pass" || { echo "FAIL avoid: unexpected output ($out)"; fail=1; }
-
 # non-test file with 'skip' word must pass
 N="$W/notes.md"; json Edit "$N" | bash "$HOOK" pre; echo "it.skip(" > "$N"
 json Edit "$N" | bash "$HOOK" post 2>/dev/null; check "non-test file -> ok" 0 $?

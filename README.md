@@ -14,7 +14,7 @@ You set a goal. The AI decides what to do next by which acceptance scenarios are
 
 Human-on-the-loop, as polaris means it: the AI proceeds by default. You are called in to set the goal, for Decide sub-goals and decisions that are hard to reverse, when the loop stalls, and in every pull request; you can stop or overturn it at any time. This matches the "Approver" level (L4) in [Levels of Autonomy for AI Agents](https://arxiv.org/abs/2506.12469) by Feng, McDonald, and Zhang (2025).
 
-Guardrails first: whether something is done is decided by deterministic, repeatable checks (tests, linters, type checks, builds, scripts, hooks) wherever one can decide it, in the spirit of [Harness engineering for coding agent users](https://martinfowler.com/articles/harness-engineering.html). An AI judges only what no check can decide, and you only what is subjective.
+Guardrails first: whether something is done is decided by deterministic, repeatable checks (tests, linters, type checks, builds, scripts, hooks) wherever one can decide it. An AI judges only what no check can decide, and you only what is subjective.
 
 ## Install
 
@@ -39,7 +39,7 @@ In the repository where you want to get something done (new or existing):
 ```
 gdd/
   goal.md        your goal: acceptance scenarios and the definition of done, each with a Check line;
-                 frontmatter holds prefer (speed or certainty) and avoid (paths to ask about)
+                 frontmatter holds prefer (speed or certainty when in doubt)
   subgoals/      one file per sub-goal under candidates/, in-progress/, in-review/ (pull request open), done/ (merged)
   state.md       the AI's one-page notes: now, built so far, uncertainties, rejected ideas, learnings
   adr/           one file per decision you made, with the options and your reasons
@@ -53,7 +53,6 @@ Every write to `goal.md` needs your approval.
 ```markdown
 ---
 prefer: certainty
-avoid: src/billing/
 ---
 # Goal: get tasks done without forgetting them
 
@@ -79,7 +78,7 @@ avoid: src/billing/
 - Two skills, `/polaris:gdd-init` and `/polaris:gdd-loop`, and four subagents that gdd-loop calls, each in a separate context: `goal-reviewer` checks a draft goal (outcomes, size, checks that could be deterministic), `worker` writes a sub-goal's checks and then builds it in its own worktree, `evaluator` says whether each command check really tests its condition and judges the `observe:` items, and `next-reviewer` checks the AI's choice of what comes next.
 - `gdd-status.sh`, the loop's manager: runs the checks, reports progress toward the goal, lists pull requests and whether they were merged, says which candidates can start and which can run in parallel, and holds when progress stalls or a pull request was closed.
 - Approval rules for hard-to-reverse actions, written by `gdd-init` into `.claude/settings.json`: adding a dependency, changing migrations, `git push`, merging a PR, rewriting history, and editing the rules themselves. They prompt you whatever the AI thinks, also when a worker running in the background triggers them.
-- One hook on Bash, Edit, and Write. It restores a `gdd/goal.md` written by a shell command, a sub-goal file without an `advances:` line, a learning removed from `gdd/state.md`, and a changed or deleted ADR in `gdd/adr/`. It restores test files when an edit adds a skip or removes tests, or a shell command deletes them, and tells the AI to ask you first. It asks you before an edit under a path in `avoid:`. Each subagent and each worktree is checked on its own. It needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
+- One hook on Bash, Edit, and Write. It restores a `gdd/goal.md` written by a shell command, a sub-goal file without an `advances:` line, a learning removed from `gdd/state.md`, and a changed or deleted ADR in `gdd/adr/`. It restores test files when an edit adds a skip or removes tests, or a shell command deletes them, and tells the AI to ask you first. Each subagent and each worktree is checked on its own. It needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
 
 ## How a loop works
 
