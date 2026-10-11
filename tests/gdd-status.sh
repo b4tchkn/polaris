@@ -2,31 +2,10 @@
 # Self-check for gdd-status.sh. Prints PASS/FAIL per case; exits 1 on any FAIL.
 S="$(cd "$(dirname "$0")/.." && pwd)/plugins/polaris/skills/gdd-loop/scripts/gdd-status.sh"
 W=$(mktemp -d "${TMPDIR:-/tmp}/status-test-XXXX"); cd "$W"
-mkdir -p gdd/subgoals/candidates gdd/subgoals/in-progress gdd/subgoals/in-review gdd/subgoals/done gdd/reviews src
-cat > gdd/goal.md <<'EOF'
----
-mode: careful
----
-# Goal: t
-
-## Acceptance scenarios
-
-1. [capture] a task can be added
-   - Check: `test -f src/a.txt`
-2. [easy] adding needs no explanation
-   - Check: observe: open the app and add a task
-3. [no-forget] the family forgets less
-   - Check: human: only the family can tell
-
-## Definition of done
-
-1. [gate] the checks pass
-   - Check: `test ! -f src/broken`
-EOF
-printf '# State\n\n## Uncertainties\n\n- U1 a? | open\n- U2 b? | resolved: yes\n\n## Learnings\n\n- x\n' > gdd/state.md
-sg() { # dir slug depends touches [done-when items]
-  printf -- '---\ntype: build\nadvances: capture\ndepends_on: %s\ntouches: %s\n---\n# %s\n\n## Done when\n\n%s\n' "$3" "$4" "$2" "${5:-1. [ok] fine
-   - Check: \`true\`}" > "gdd/subgoals/$1/$2.md"
+mkdir -p gdd/subgoals/candidates gdd/subgoals/in-progress gdd/subgoals/in-review gdd/subgoals/done gdd/reviews
+printf -- '---\nmode: careful\n---\n# Goal: t\n' > gdd/goal.md
+sg() { # dir slug depends touches
+  printf -- '---\ntype: build\nadvances: capture\ndepends_on: %s\ntouches: %s\n---\n# %s\n' "$3" "$4" "$2" > "gdd/subgoals/$1/$2.md"
 }
 review() { # slug loop progress overridden
   printf -- '---\nsubgoal: %s\nloop: %s\nprogress: %s\npr: none\noverridden: %s\n---\n' "$1" "$2" "$3" "$4" > "gdd/reviews/$1.md"
@@ -41,30 +20,11 @@ sg candidates dep base src/x/
 sg candidates waits cur src/y/
 sg candidates clash none src/cur/sub/
 out=$(bash "$S" gdd)
-has "progress: command, observe, human, gate"  "capture=not-met easy=observe no-forget=human gate=met open_uncertainties=1"
 has "ready: no deps"                           "indep type=build advances=capture ready=yes"
 has "ready: dependency merged"                 "dep type=build advances=capture ready=yes"
 has "ready: dependency not merged"             "ready=no ( cur not merged )"
 has "overlap: shared path prefix"              "clash type=build advances=capture ready=yes overlaps=[cur ]"
 has "no hold without reviews"                  "hold: no"
-
-mkdir -p wt/src && touch wt/src/a.txt
-out=$(bash "$S" gdd --at "$W/wt"); has "progress: checks run where --at points" "capture=met"
-touch src/a.txt src/broken
-out=$(bash "$S" gdd); has "progress: gate fails" "capture=met easy=observe no-forget=human gate=not-met"
-rm src/broken
-
-sg in-progress items none src/i/ "1. [adds] it adds
-   - Check: \`true\`
-2. [rejects-empty] empty titles are refused
-   - Check: \`false\`
-3. [feels] it feels right
-   - Check: human: taste"
-out=$(bash "$S" gdd check items)
-has "check: passing command"  "adds: met"
-has "check: failing command"  "rejects-empty: not-met"
-has "check: human item"       "feels: human"
-has "check: gate included"    "gate: met"
 
 printf -- '---\ntype: build\nadvances: capture\npr: https://example.invalid/pr/1\n---\n# r\n' > gdd/subgoals/in-review/rev.md
 out=$(bash "$S" gdd); has "in-review: pull request listed" "rev type=build advances=capture pr=https://example.invalid/pr/1 state="

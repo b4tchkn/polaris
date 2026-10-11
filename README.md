@@ -76,7 +76,8 @@ mode: careful
 ## What the plugin adds to Claude Code
 
 - Two skills, `/polaris:gdd-init` and `/polaris:gdd-loop`, and four subagents that gdd-loop calls, each in a separate context: `goal-reviewer` checks a draft goal (outcomes, size, checks that could be deterministic), `worker` writes a sub-goal's checks and then builds it in its own worktree, `evaluator` says whether each command check really tests its condition and judges the `observe:` items, and `next-reviewer` checks the AI's choice of what comes next.
-- `gdd-status.sh`, the loop's manager: runs the checks, reports progress toward the goal, lists pull requests and whether they were merged, says which candidates can start and which can run in parallel, and holds when progress stalls or a pull request was closed.
+- `gdd-check.sh` runs the checks: the goal's (progress toward the goal) or one sub-goal's plus the gate.
+- `gdd-status.sh` says where the sub-goals stand: lists pull requests and whether they were merged, says which candidates can start and which can run in parallel, and holds when progress stalls or a pull request was closed.
 - Approval rules for hard-to-reverse actions, written by `gdd-init` into `.claude/settings.json`: adding a dependency, changing migrations, `git push`, merging a PR, rewriting history, and editing the rules themselves. They prompt you whatever the AI thinks, also when a worker running in the background triggers them.
 - One hook on Bash, Edit, and Write. It restores a `gdd/goal.md` written by a shell command, a sub-goal file without an `advances:` line, a learning removed from `gdd/state.md`, and a changed or deleted ADR in `gdd/adr/`. It restores test files when an edit adds a skip or removes tests, or a shell command deletes them, and tells the AI to ask you first. Each subagent and each worktree is checked on its own. It needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
 
@@ -85,7 +86,7 @@ mode: careful
 1. **Pull requests.** The AI checks the pull requests it opened: merged ones move to `done/` and unblock the sub-goals that depend on them; closed ones become rejected ideas. It does not read or answer comments; that is yours.
 2. **Plan.** It picks the candidate that moves the most unmet scenarios or resolves the biggest open uncertainty, writes its "Done when" with checks, and moves it to `in-progress/`. Independent candidates that touch different paths are picked together.
 3. **Work.** A worker writes the checks, builds the sub-goal on branch `gdd/<slug>` in its own worktree, runs the checks and the gate, and commits. When it hits a decision that is hard to reverse (data model, external services, authentication, new dependencies) or would loosen a check, it stops; the AI asks you three options and passes your answer back.
-4. **Review.** `gdd-status.sh` runs the checks on the worker's branch; the evaluator covers what no command can; the AI looks back (learnings go into `state.md`, work becomes new candidates) and picks what comes next, which the next-reviewer checks.
+4. **Review.** `gdd-check.sh` runs the checks on the worker's branch; the evaluator covers what no command can; the AI looks back (learnings go into `state.md`, work becomes new candidates) and picks what comes next, which the next-reviewer checks.
 5. **Finish.** The AI opens the pull request without asking, with its code, checks, sub-goal file, review, and decisions, and posts what it is unsure of as line comments. You review, have it fixed in any session, and merge or close it.
 
 A Decide sub-goal asks you to choose among three options before its pull request. When the goal's progress has not moved for three reviews, or a pull request was closed, the loop holds and asks you before starting anything new.
@@ -96,7 +97,7 @@ The AI replies in the language you use.
 
 ## Testing the skills
 
-`tests/check.sh` runs this repository's own gate: the hook tests, the `gdd-status.sh` tests, and `claude plugin validate`.
+`tests/check.sh` runs this repository's own gate: the hook tests, the `gdd-check.sh` and `gdd-status.sh` tests, and `claude plugin validate`.
 
 ```
 bash tests/check.sh

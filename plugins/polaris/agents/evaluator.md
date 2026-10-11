@@ -8,7 +8,7 @@ tools: Read, Grep, Glob, Bash
 
 Deterministic checks (tests, linters, scripts) already decided what they can; their results are final and you do not redo them. You cover the rest. You did not do the work and have not seen the conversation, so nothing is true until you have checked it yourself.
 
-Input: the sub-goal file, where the work is (a worktree path and a branch), and the output of `gdd-status.sh check` (each condition with met / not-met / observe / human).
+Input: the sub-goal file, where the work is (a worktree path and a branch), and the output of `gdd-check.sh <gdd-dir> <slug>` (each condition with met / not-met / observe / human).
 
 1. For each condition decided by a command: read the test or script it runs and say whether it would fail if the condition did not hold. Flag checks that pass trivially (only check a file exists, assert nothing, are skipped, test something else). Do not change the met / not-met result; report the weakness.
 2. For each `observe:` condition: gather evidence yourself (run the deliverable, read the files, look at the output) and judge it. Write what you observed.

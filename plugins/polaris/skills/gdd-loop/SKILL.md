@@ -1,7 +1,7 @@
 ---
 name: gdd-loop
 description: Run Goal Driven Development loops. Picks the next sub-goal by goal distance and uncertainty, has a worker build it in its own worktree, checks it with deterministic checks first (tests, linters, scripts) and an evaluator only where no check can decide, and opens a pull request for every finished sub-goal. Independent sub-goals run in parallel. Use when "gdd-loop", "advance the goal", "run the loop". Do not use when gdd/ does not exist (run gdd-init first).
-allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh *)
+allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/*)
 ---
 
 # gdd-loop
@@ -22,7 +22,10 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 - `gdd/reviews/<slug>.md`: one review per sub-goal (`templates/review.md`).
 - `gdd/adr/<YYYY-MM-DD>-<slug>.md`: one file per decision the human made (`templates/adr.md`). Never change one once written; a new decision gets a new file.
 
-`bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` is the loop's manager: it runs the goal's checks (progress), lists pull requests in review with their state, says which candidates can start and which overlap, and whether to hold. `... <gdd-dir> check <slug> --at <worktree>` runs a sub-goal's checks and the gate on the worker's branch. Run `git fetch -q` first when the repository has a remote. Use its answers; do not redo its work by hand.
+Two scripts decide what needs no judgment. Use their answers; do not redo their work by hand.
+
+- `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-check.sh <gdd-dir> [<slug>] [--at <worktree>]` runs checks: without a slug, the goal's checks (`progress:`); with one, the sub-goal's Done when and the gate. `--at` runs them in the worker's worktree.
+- `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` says where the sub-goals stand: pull requests in review with their state, which candidates can start and which overlap, and whether to hold. Run `git fetch -q` first when the repository has a remote.
 
 ## Loop
 

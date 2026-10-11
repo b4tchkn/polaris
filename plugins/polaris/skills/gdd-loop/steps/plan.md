@@ -1,7 +1,7 @@
 # Plan and hand out work
 
 1. If a sub-goal is already in `in-progress/` without a review, hand it out again (step 4) instead of choosing a new one.
-2. Choose among candidates with `ready=yes` in `gdd-status.sh`:
+2. Run `gdd-check.sh <gdd-dir>` for progress. Choose among candidates with `ready=yes` in `gdd-status.sh`:
    - First the one that moves the most acceptance scenarios from `not-met` toward `met`, or resolves the biggest open uncertainty (the one that would change the most plans if answered differently).
    - Prefer small sub-goals. Follow `mode:` in `goal.md` when two are close (`fast`: the quicker one; `careful`: the one that removes more risk).
    - Add more ready candidates to work in parallel only when their `overlaps` are empty with respect to each other and to what is in progress.

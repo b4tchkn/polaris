@@ -4,10 +4,10 @@ Do this for each finished sub-goal. When several finished together, review all o
 
 ## Check
 
-- Run `gdd-status.sh <gdd-dir> check <slug> --at <worktree path>`: it runs every command check of the sub-goal and the gate on the worker's branch. Its results are final for those conditions; put them in the review's Checks table with "gdd-status.sh" as the source.
+- Run `gdd-check.sh <gdd-dir> <slug> --at <worktree path>`: it runs every command check of the sub-goal and the gate on the worker's branch. Its results are final for those conditions; put them in the review's Checks table with "gdd-check.sh" as the source.
 - Run the Agent tool with `subagent_type: "polaris:evaluator"`, giving it only the sub-goal file, the worktree path and branch, and the output of the step above. Do not pass your own view of the result. It reports whether each command check really tests its condition, and judges the `observe:` conditions. Add its rows to the table unchanged; if you disagree, say so under "Least confident".
 - `human:` conditions stay "for the human"; they become line comments on the pull request.
-- Run `gdd-status.sh <gdd-dir> --at <worktree path>` and copy its `progress:` line into the review's frontmatter.
+- Run `gdd-check.sh <gdd-dir> --at <worktree path>` and copy its `progress:` line into the review's frontmatter.
 - A failing command check or gate means the sub-goal is not done: resume the worker with SendMessage to fix it, then check again. Do not loosen the check.
 
 ## Retrospect

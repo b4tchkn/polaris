@@ -1,7 +1,7 @@
 ---
 subgoal: <slug>
 loop: <n>
-progress: <the progress line from gdd-status.sh>
+progress: <the progress line from gdd-check.sh>
 pr: <pull request URL, or none>
 overridden: false
 ---
@@ -16,7 +16,7 @@ overridden: false
 
 | Condition | Check | Result | By |
 |---|---|---|---|
-| <id> <condition> | <command / observe / human> | <met / not-met / partial / not checked / for the human> | <gdd-status.sh / evaluator / human> |
+| <id> <condition> | <command / observe / human> | <met / not-met / partial / not checked / for the human> | <gdd-check.sh / evaluator / human> |
 
 ## Distance to the goal
 
