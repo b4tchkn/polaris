@@ -1,12 +1,4 @@
 ---
-scenario_1_check: human
-scenario_2_check: human
-scenario_3_check: human
-scenario_4_check: human
-scenario_5_check: claude plugin validate plugins/polaris
-done_checks: bash tests/guard-gdd-writes.sh >/dev/null && bash tests/gdd-status.sh >/dev/null && claude plugin validate plugins/polaris >/dev/null
-max_files: 15
-max_lines: 600
 prefer: certainty
 avoid: none
 ---
@@ -23,11 +15,21 @@ Goal Driven Development の基盤を作り、Claude Code の plugin として提
 
 ## 受け入れシナリオ
 
-1. 新規リポジトリに plugin と init で導入し、小さな新規アプリのサブゴールを3つ以上回せる。
-2. 既存のリポジトリに plugin と init で導入し、サブゴールを1つ以上回せる。
-3. 各サブゴールの完了時に、人間がコードを読まずに、サブゴール完了報告とデモだけで「次へ進む / 方向転換 / やめる」を判断できる。
-4. 振り返りの「変えること」が実際に次のループに反映され、同じ手戻りが再発しない。
-5. GitHub 上で plugin として公開され、誰でも `/plugin install` で入れられる。
+1. [new-repo] 新規リポジトリに plugin と init で導入し、小さな新規アプリのサブゴールを3つ以上回せる。
+   - Check: human: 実際の新規リポジトリで回した結果を人間が確かめる
+2. [existing-repo] 既存のリポジトリに plugin と init で導入し、サブゴールを1つ以上回せる。
+   - Check: human: 実際の既存リポジトリで回した結果を人間が確かめる
+3. [judge-without-code] 各サブゴールの完了時に、人間がコードを読まずに、サブゴール完了報告とデモだけで「次へ進む / 方向転換 / やめる」を判断できる。
+   - Check: human: 判断できたかは人間にしか分からない
+4. [retro-reflected] 振り返りの「変えること」が実際に次のループに反映され、同じ手戻りが再発しない。
+   - Check: observe: レビューの Problems と state.md の Learnings を並べ、同じ問題が2回出ていないか
+5. [published] GitHub 上で plugin として公開され、誰でも `/plugin install` で入れられる。
+   - Check: `gh repo view b4tchkn/polaris --json visibility -q .visibility | grep -qx PUBLIC && claude plugin validate plugins/polaris >/dev/null`
+
+## 完成の定義
+
+1. [gate] hook のテスト、gdd-status.sh のテスト、plugin の検証が通る
+   - Check: `bash tests/check.sh`
 
 ## 前提
 

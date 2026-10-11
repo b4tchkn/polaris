@@ -39,23 +39,25 @@ GOAL ◀── サブゴール ◀── サブゴール ◀── サブゴー�
 plugins/polaris/          エンジン（Claude Code の plugin として配る。英語で書き、返す言葉は使う人に合わせる）
   skills/gdd-init/        状態ファイルと承認ルールを作る
   skills/gdd-loop/        次のサブゴールを選び、ワーカーに作らせ、レビューと振り返りをして、続けるか人間に聞く
-    scripts/gdd-status.sh frontmatter を読み、ゴールまでの距離・着手できる候補・続けてよいかを機械的に判定する
+    scripts/gdd-status.sh ループの進行役。チェックを実行してゴールまでの距離を出し、PR の状態、着手できる候補、
+                          並列にできるか、止まるべきか（停滞、PR のクローズ）を機械的に判定する
     steps/                手順の詳細（ゴール設定、計画、レビュー、判断）
   agents/                 goal-reviewer（ゴールの審査）、next-reviewer（次の選択の審査）、
-                          worker（worktree でサブゴールを作る）、evaluator（採点）
+                          worker（チェックを先に書き、worktree でサブゴールを作る）、
+                          evaluator（コマンドのチェックが本当に条件を確かめているかと、observe: の判定だけ）
   hooks/                  Bash からの goal.md 書き込み、advances の無いサブゴール、学びの削除などを戻す
 .claude-plugin/           マーケットプレイス（/plugin marketplace add b4tchkn/polaris）
 .claude/settings.json     使う側のリポジトリの制約（gdd-init が承認ルールを書く）
 gdd/                      状態（使う側のリポジトリに gdd-init が作る）
-  goal.md                 GOAL：北極星、受け入れシナリオ、完成の定義、前提。frontmatter にシナリオごとの
-                          確かめ方（コマンドか human）、done_checks、大きさの上限、人間の優先と避ける領域
+  goal.md                 GOAL：北極星、受け入れシナリオと完成の定義（どちらも [id] と Check: 付き）、前提。
+                          frontmatter は AI の関わり方だけ：prefer（速さか確実さか）、avoid（触るなら聞くパス）
                           ※ 書き込みには毎回人間の承認が要る（permissions の ask で強制）
-  subgoals/{candidates,in-progress,done}/<slug>.md
-                          サブゴール1件1ファイル。置き場所が状態。frontmatter に type / advances /
-                          depends_on / touches / 評価基準（定量はコマンド付き）
+  subgoals/{candidates,in-progress,in-review,done}/<slug>.md
+                          サブゴール1件1ファイル。置き場所が状態（in-review = PR 作成済み、done = マージ済み）。
+                          frontmatter に type / advances / depends_on / touches。本文の Done when に [id] と Check:
   state.md                AI が毎周、1ページ以内に書き直す
                           現状、出来たもの、未確定事項、却下された案（再提案を防ぐ）、学び
-  reviews/<slug>.md        サブゴールレビュー。frontmatter に progress / auto / overridden / rework
+  reviews/<slug>.md        サブゴールレビュー。frontmatter に progress / pr / overridden
   adr/<日付>-<slug>.md     人間の判断の記録を1判断1ファイルで（何を決めたか、出した案、選んだ案、理由）。
                           一度書いたら変えない（hook が戻す）。別ファイルなので複数のセッションや人が同時に書ける
   archive/                完了した GOAL
@@ -102,7 +104,7 @@ docs/design.md            この設計
 | SG3 | コア体験1本を端から端まで動かす | 作る | walking skeleton のデモ |
 | SG4〜 | ユーザーストーリーを1つずつ実現する | 作る | ストーリーごとのデモ |
 
-役割分担：次のサブゴールは AI が決める。基準は「受け入れシナリオを一番前に進めるもの、一番大きな未確定事項を潰すもの」。人間が並べた順に消化する方式にはしない。AI の選択は next-reviewer が別のコンテキストで審査し、人間はレビューの1問で「OK / 変える / やめる」を答える。人間が覆したとき（`overridden: true`）と、決める系の案や途中で止まって聞く判断（3案、トレードオフ付き）を選んだときだけ理由を聞き、人間の言葉で `gdd/adr/` に1ファイルとして残す。
+役割分担：次のサブゴールは AI が決める。基準は「受け入れシナリオを一番前に進めるもの、一番大きな未確定事項を潰すもの」。人間が並べた順に消化する方式にはしない。AI の選択は next-reviewer が別のコンテキストで審査する。サブゴールが終わったら AI が PR を作り、人間は PR レビューで判断する（コメント、修正の依頼、マージ、クローズ）。決める系の案や途中で止まって聞く判断（3案、トレードオフ付き）を選んだときは理由を聞き、人間の言葉で `gdd/adr/` に1ファイルとして残す。
 
 ## 4. 人間が介入する条件（Human-on-the-loop）
 
@@ -112,7 +114,7 @@ docs/design.md            この設計
 |---|---|---|
 | 1 | GOAL を設定・変更するとき | AI が案を出し、goal-reviewer が審査し、人間が確定する（`goal.md` への書き込みは ask で必ず承認） |
 | 2 | 判断結果が GOAL / サブゴールの達成に影響するとき | 止まって人間を待つ。AI の自己申告だけに頼らず、セクション7 の機械的なトリガーと併用する |
-| 3 | サブゴールが完了したとき | 次の全部がそろえば聞かずに進む：作る系、定性の評価基準が無い、評価が全部達成、done_checks が通る、大きさが上限内、停滞していない、直近3件のレビューで覆されず手戻りも無い、next-reviewer が異議なし（`gdd-status.sh gate`）。それ以外はレビューの1問で人間が判断する |
+| 3 | サブゴールが完了したとき | AI が聞かずに PR を作る。不安な箇所は PR の該当行にコメントし、人間が PR レビューで判断する。停滞（直近3件の progress が同じ）や PR のクローズがあれば、新しいサブゴールに着手する前に人間に聞く（`gdd-status.sh` の hold） |
 | 4 | Loop のレトロスペクティブをするとき | 3 と同じタイミングでまとめて行う |
 
 これ以外（作業の進め方、サブゴールの中での細かい判断など）は AI に任せ、結果をサブゴールレビューに載せる。
@@ -205,7 +207,9 @@ AI が案を出し、人間が承認または修正する。
 ## 8. 検証
 
 - 受け入れシナリオは人間が確定する。AI は人間の承認なしに書き換えられない（ask）。
-- AI の自己採点は甘くなるので、評価は別の役（evaluator）か E2E で行う。
+- 達成の確認はガードレール（テスト、lint、型チェック、ビルド、スクリプト、hook など確定的で再現できるチェック）を優先する。確かめ方は `[id]` ごとの `Check:` に書き、コマンドは `gdd-status.sh` が実行する。完成の定義の `[gate]` は全サブゴールが通る1つのコマンドで、CI でも回す。
+- AI の判断（evaluator）は、コマンドのチェックが本当に条件を確かめているかの確認と、コマンドにできない `observe:` の判定だけに使う。作業した AI とは別のコンテキストで行い、自己採点はしない。人間が判断するのは `human:` の主観的なものだけ。
+- チェックを緩める変更（skip の追加、テストの削除）は hook が戻す。
 
 ## 9. 借りる既存手法
 
@@ -215,6 +219,8 @@ AI が案を出し、人間が承認または修正する。
 | 進捗ファイル、状態を持ち越さないループ | Anthropic「Effective harnesses for long-running agents」 https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents 、Ralph loop |
 | planner / generator / evaluator | https://www.anthropic.com/engineering/harness-design-long-running-apps |
 | Markdown 過多への警告 | https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html |
+| 確定的なチェック（computational）を優先し、推論的なチェック（inferential）は補助に使う | Böckeler「Harness engineering for coding agent users」 https://martinfowler.com/articles/harness-engineering.html |
+| ガードレール（成果物への柵と行動への柵、1コマンドの門） | kinopeee「ハーネス設計入門」 https://speakerdeck.com/kinopeee/hanesu-sekkei-nyuumon-kontekisuto-no-tsugi |
 
 ※ 本文を確認したのは Anthropic の2本と Fowler の1本だけ。Spec Kit / Kiro / Ralph は未確認。
 

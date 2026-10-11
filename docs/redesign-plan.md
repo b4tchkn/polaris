@@ -197,3 +197,12 @@ rework: false
 - 並列化は1セッション内で行う：worker サブエージェント（`isolation: worktree`）がブランチ `gdd/<slug>` で作ってコミットし、メインが統合する。`gdd-init` は `worktree.baseRef: "head"` を書く。
 - ゴールまでの距離は worker の worktree で測る（`gdd-status.sh --at <worktree>`）。メインのチェックアウトにはマージ前の成果が無いため。
 - 段階1〜6は1つのブランチで順にコミットした。この環境では eval を流せないため、段階ごとに eval で確かめる手順は、最後にまとめて人間が流す形にした。
+
+## 12. 2026-10-11 の変更
+
+- **確かめ方はガードレールを優先する**（Fowler の computational / inferential、kinopeee のガードレールに倣う）。受け入れシナリオ、完成の定義、サブゴールの Done when は `[id]` と `Check:` の組で本文に書く。`Check:` はコマンドを原則にし、`gdd-status.sh` が実行する。evaluator は、コマンドのチェックが本当に条件を確かめているかと `observe:` だけを判定する。`human:` は主観的なものだけ。
+- **完成の定義は `[gate]`**：フォーマッタ、lint、型チェック、ビルド、テストをまとめた1コマンド。worker が報告前に通し、CI でも回す。門が無いプロジェクトでは最初の候補で作る。
+- **`goal.md` の frontmatter は `prefer` と `avoid` だけ**。`scenario_<n>_check`、`done_checks`、`max_files`、`max_lines` は廃止。シナリオは番号ではなく ID で `advances:` と結ぶ。シナリオはゴール単位の成果を 3〜5 個にし、エッジケースはサブゴールの Done when に書く。
+- **サブゴール完了時の1問は廃止**。AI が終わったと判断したら PR を作り、不安な箇所は該当行のコメントにする。コメントへの返信、修正、マージは人間が行い、ループは PR がマージされたかクローズされたかだけを読む（`in-review/` → `done/`）。停滞や PR のクローズでは、新しいサブゴールの前に人間に聞く。決める系のサブゴールは、3案から人間が選んでから PR にする。
+- **hook**：`avoid:` のパスへの編集は許可プロンプトを出す。テストの skip 追加・テストの削除（編集でも Bash でも）は戻す。
+- **このリポジトリの門**は `tests/check.sh`（hook のテスト、`gdd-status.sh` のテスト、`claude plugin validate`）。

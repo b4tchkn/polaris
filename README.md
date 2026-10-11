@@ -10,9 +10,11 @@
 
 Goal Driven Development (GDD) for Claude Code.
 
-You set a goal. The AI decides what to do next by how far each acceptance scenario still is and what is still unknown, builds sub-goals in their own worktrees (in parallel when they are independent), and opens a pull request for every finished sub-goal. After a sub-goal it either continues on its own or asks you one question. You decide the direction; you do not have to read the code or approve every step.
+You set a goal. The AI decides what to do next by which acceptance scenarios are still unmet and what is still unknown, builds sub-goals in their own worktrees (in parallel when they are independent), checks them with deterministic checks first, and opens a pull request for every finished sub-goal. You review, fix, and merge in the pull requests. You decide the direction; you do not have to approve every step.
 
-Human-on-the-loop, as polaris means it: the AI proceeds by default. You are called in when a sub-goal is done and when a mechanical stop condition fires (a decision that is hard to reverse), and you can stop or overturn it at any time. This matches the "Approver" level (L4) in [Levels of Autonomy for AI Agents](https://arxiv.org/abs/2506.12469) by Feng, McDonald, and Zhang (2025), where the user is involved only when the agent hits a blocker it cannot resolve on its own. The AI continues without you only when a script and two reviewers agree it is safe (see "When the AI continues on its own"); everything else stops for your decision.
+Human-on-the-loop, as polaris means it: the AI proceeds by default. You are called in to set the goal, for Decide sub-goals and decisions that are hard to reverse, when the loop stalls, and in every pull request; you can stop or overturn it at any time. This matches the "Approver" level (L4) in [Levels of Autonomy for AI Agents](https://arxiv.org/abs/2506.12469) by Feng, McDonald, and Zhang (2025).
+
+Guardrails first: whether something is done is decided by deterministic, repeatable checks (tests, linters, type checks, builds, scripts, hooks) wherever one can decide it, in the spirit of [Harness engineering for coding agent users](https://martinfowler.com/articles/harness-engineering.html). An AI judges only what no check can decide, and you only what is subjective.
 
 ## Install
 
@@ -30,14 +32,15 @@ In the repository where you want to get something done (new or existing):
 1. `/polaris:gdd-init` — creates `gdd/` and the approval rules in `.claude/settings.json`.
 2. Accept the trust prompt for the new rules (restart Claude Code if it does not appear).
 3. `/polaris:gdd-loop` — the AI asks a few questions, drafts your goal, has it reviewed, and writes it with your approval.
-4. `/polaris:gdd-loop` again to advance. It keeps going until it needs you, then asks one question.
+4. `/polaris:gdd-loop` again to advance. It keeps going, opening a pull request per sub-goal, until it needs you or nothing is ready.
 
 ## What you get in your repository
 
 ```
 gdd/
-  goal.md        your goal, acceptance scenarios, definition of done; frontmatter holds a check per scenario
-  subgoals/      one file per sub-goal under candidates/, in-progress/, done/
+  goal.md        your goal: acceptance scenarios and the definition of done, each with a Check line;
+                 frontmatter holds prefer (speed or certainty) and avoid (paths to ask about)
+  subgoals/      one file per sub-goal under candidates/, in-progress/, in-review/ (pull request open), done/ (merged)
   state.md       the AI's one-page notes: now, built so far, uncertainties, rejected ideas, learnings
   adr/           one file per decision you made, with the options and your reasons
   reviews/       one review per sub-goal
@@ -45,24 +48,48 @@ gdd/
 
 Every write to `goal.md` needs your approval.
 
+## Goals and checks
+
+```markdown
+---
+prefer: certainty
+avoid: src/billing/
+---
+# Goal: get tasks done without forgetting them
+
+## Acceptance scenarios
+1. [capture] A task can be added right after opening the app
+   - Check: `npm run e2e -- capture`
+2. [easy] Adding needs no explanation
+   - Check: observe: open the app and add a task
+3. [no-forget] The family forgets fewer tasks
+   - Check: human: only the family can tell
+
+## Definition of done
+1. [gate] Formatter, linter, type check, build, and tests pass
+   - Check: `npm run check`
+```
+
+- Acceptance scenarios are outcomes of the whole goal from the user's side, 3 to 5. Keep one only if the goal would be unmet when it alone fails; edge cases go into a sub-goal's "Done when", which uses the same `[id]` and `Check:` form.
+- A `Check:` in backticks is a command that exits 0 when the item holds; it is the default. `observe:` is judged by the evaluator, `human:` by you.
+- `[gate]` is the one command every sub-goal passes. It runs before each pull request and should run in your CI too.
+
 ## What the plugin adds to Claude Code
 
-- Two skills: `/polaris:gdd-init` and `/polaris:gdd-loop`, and four subagents that gdd-loop calls, each in a separate context: `goal-reviewer` checks a draft goal, `worker` builds one sub-goal in its own worktree, `evaluator` scores it, and `next-reviewer` checks the AI's choice of what comes next.
-- `gdd-status.sh` (inside gdd-loop): reads the frontmatter and runs the scenario checks to report goal progress, which candidates are ready, whether the loop has stalled, and whether it may continue without you.
+- Two skills, `/polaris:gdd-init` and `/polaris:gdd-loop`, and four subagents that gdd-loop calls, each in a separate context: `goal-reviewer` checks a draft goal (outcomes, size, checks that could be deterministic), `worker` writes a sub-goal's checks and then builds it in its own worktree, `evaluator` says whether each command check really tests its condition and judges the `observe:` items, and `next-reviewer` checks the AI's choice of what comes next.
+- `gdd-status.sh`, the loop's manager: runs the checks, reports progress toward the goal, lists pull requests and whether they were merged, says which candidates can start and which can run in parallel, and holds when progress stalls or a pull request was closed.
 - Approval rules for hard-to-reverse actions, written by `gdd-init` into `.claude/settings.json`: adding a dependency, changing migrations, `git push`, merging a PR, rewriting history, and editing the rules themselves. They prompt you whatever the AI thinks, also when a worker running in the background triggers them.
-- One hook on Bash, Edit, and Write (PreToolUse and PostToolUse). It snapshots the `gdd/` state files before a tool runs and checks them after: a `gdd/goal.md` changed or created by a shell command is restored, a sub-goal file without an `advances:` line is reverted, a learning removed from `gdd/state.md` is restored, a changed or deleted ADR in `gdd/adr/` is restored, and an edit that adds a skip or ignore to a test file is refused with an instruction to ask you first. Each subagent and each worktree is checked on its own. It runs in every repository where the plugin is installed, needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
+- One hook on Bash, Edit, and Write. It restores a `gdd/goal.md` written by a shell command, a sub-goal file without an `advances:` line, a learning removed from `gdd/state.md`, and a changed or deleted ADR in `gdd/adr/`. It restores test files when an edit adds a skip or removes tests, or a shell command deletes them, and tells the AI to ask you first. It asks you before an edit under a path in `avoid:`. Each subagent and each worktree is checked on its own. It needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
 
 ## How a loop works
 
-1. **Plan.** The AI picks the candidate that moves the most acceptance scenarios or resolves the biggest open uncertainty, writes its done condition and criteria (with a command wherever a command can tell), and moves it to `in-progress/`. Independent candidates that touch different paths are picked together.
-2. **Work.** A worker builds each one on branch `gdd/<slug>` in its own worktree and commits. When it hits a decision that is hard to reverse (data model, external services, authentication, new dependencies) or would loosen the acceptance criteria, it stops; the AI asks you three options and passes your answer back.
-3. **Review.** The evaluator scores the criteria from evidence it gathers itself, the scenario checks run on the worker's branch, and the AI looks back: learnings go into `state.md` at once, anything that needs work becomes a new candidate. It picks what comes next and the next-reviewer checks that choice.
-4. **Decide.** If the gate allows it, the loop continues. Otherwise you get one question: "Done, next is X because Y. OK / Change something / Stop". If you change its plan, it asks why and records your reason in `gdd/adr/`.
-5. **Finish.** Every finished sub-goal becomes a pull request with its code (if any), its sub-goal file, its review, and the decisions behind it, so you can see what happened in the pull request review. Sub-goals that depend on it start once it is merged.
+1. **Pull requests.** The AI checks the pull requests it opened: merged ones move to `done/` and unblock the sub-goals that depend on them; closed ones become rejected ideas. It does not read or answer comments; that is yours.
+2. **Plan.** It picks the candidate that moves the most unmet scenarios or resolves the biggest open uncertainty, writes its "Done when" with checks, and moves it to `in-progress/`. Independent candidates that touch different paths are picked together.
+3. **Work.** A worker writes the checks, builds the sub-goal on branch `gdd/<slug>` in its own worktree, runs the checks and the gate, and commits. When it hits a decision that is hard to reverse (data model, external services, authentication, new dependencies) or would loosen a check, it stops; the AI asks you three options and passes your answer back.
+4. **Review.** `gdd-status.sh` runs the checks on the worker's branch; the evaluator covers what no command can; the AI looks back (learnings go into `state.md`, work becomes new candidates) and picks what comes next, which the next-reviewer checks.
+5. **Finish.** The AI opens the pull request without asking, with its code, checks, sub-goal file, review, and decisions, and posts what it is unsure of as line comments. You review, have it fixed in any session, and merge or close it.
 
-### When the AI continues on its own
-
-All of these must hold, checked by `gdd-status.sh` and the two reviewers: a Build sub-goal (Decide sub-goals always ask you), no qualitative criterion, every evaluator row Met, `done_checks` pass, the change within `max_files` / `max_lines`, the goal's progress not stuck for 3 reviews, the last 3 reviews kept without you overturning them or later rework, and the next-reviewer agrees. So it asks you often at first and less as it earns your trust in that repository. Changing the goal and the stop conditions always come to you.
+A Decide sub-goal asks you to choose among three options before its pull request. When the goal's progress has not moved for three reviews, or a pull request was closed, the loop holds and asks you before starting anything new.
 
 When every scenario is met and nothing is left, the AI tells you the goal looks reached and asks whether to add sub-goals or write a goal completion report (`gdd/reviews/GOAL.md`: acceptance scenarios and their results, what was left undone, candidates for the next goal). Archiving a finished goal and starting the next one is not automated yet.
 
@@ -70,8 +97,8 @@ The AI replies in the language you use.
 
 ## Testing the skills
 
-`plugins/polaris/evals/` holds eval cases for `claude plugin eval`: each case scaffolds a small git repository with a `gdd/`, runs `/polaris:gdd-loop` on it, and checks the files, reviews, and subagent calls it leaves behind. `tests/guard-gdd-writes.sh` and `tests/gdd-status.sh` check the hook and the status script without a model. Run them from the repository root (each case is one real Claude session, so it costs tokens):
+`plugins/polaris/evals/` holds eval cases for `claude plugin eval`: each case scaffolds a small git repository with a `gdd/`, runs `/polaris:gdd-loop` on it, and checks the files, reviews, and subagent calls it leaves behind. `tests/check.sh` runs this repository's own gate without a model: the hook tests, the `gdd-status.sh` tests, and `claude plugin validate`. Run them from the repository root (each case is one real Claude session, so it costs tokens):
 
 ```
-claude plugin eval plugins/polaris --scaffold --allow-tools Bash Write Edit --ablation none --runs 1 --no-publish
+claude plugin eval plugins/polaris --scaffold --allow-tools Bash Write Edit Agent --ablation none --runs 1 --no-publish
 ```
