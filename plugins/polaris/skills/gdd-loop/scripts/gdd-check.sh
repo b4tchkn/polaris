@@ -3,7 +3,7 @@
 #   gdd-check.sh <gdd-dir> [--at <dir>]         progress toward the goal: each check in goal.md, and open uncertainties
 #   gdd-check.sh <gdd-dir> <slug> [--at <dir>]  a sub-goal's "Done when" checks and the gate
 # Checks are the "Check:" lines under each [id] item: a `command` runs here (exit 0 = met); "observe:" is left
-# to the evaluator, "human:" to the human. --at runs commands in <dir> (the worker's worktree) instead of the
+# to the subgoal-verifier, "human:" to the human. --at runs commands in <dir> (the worker's worktree) instead of the
 # repository that holds <gdd-dir>. Needs bash, sed, awk.
 # ponytail: checks rerun on every call; cache them if a project's checks get slow.
 

@@ -70,12 +70,12 @@ mode: careful
 ```
 
 - Acceptance scenarios are outcomes of the whole goal from the user's side, 3 to 5. Keep one only if the goal would be unmet when it alone fails; edge cases go into a sub-goal's "Done when", which uses the same `[id]` and `Check:` form.
-- A `Check:` in backticks is a command that exits 0 when the item holds; it is the default. `observe:` is judged by the evaluator, `human:` by you.
+- A `Check:` in backticks is a command that exits 0 when the item holds; it is the default. `observe:` is judged by the subgoal-verifier, `human:` by you.
 - `[gate]` is the one command every sub-goal passes. It runs before each pull request and should run in your CI too.
 
 ## What the plugin adds to Claude Code
 
-- Two skills, `/polaris:gdd-init` and `/polaris:gdd-loop`, and three subagents that gdd-loop calls, each in a separate context: `goal-owner` is responsible for the goal: it checks a draft goal (outcomes, size, checks that could be deterministic) and decides which sub-goals to start next from the check and status results; `worker` writes a sub-goal's checks and then builds it in its own worktree, `evaluator` says whether each command check really tests its condition and judges the `observe:` items.
+- Two skills, `/polaris:gdd-init` and `/polaris:gdd-loop`, and three subagents that gdd-loop calls, each in a separate context: `goal-owner` is responsible for the goal: it checks a draft goal (outcomes, size, checks that could be deterministic) and decides which sub-goals to start next from the check and status results; `worker` writes a sub-goal's checks and then builds it in its own worktree, `subgoal-verifier` says whether each command check really tests its condition and judges the `observe:` items.
 - `gdd-check.sh` runs the checks: the goal's (progress toward the goal) or one sub-goal's plus the gate.
 - `gdd-status.sh` says where the sub-goals stand: lists pull requests and whether they were merged, says which candidates can start and which can run in parallel, and holds when progress stalls or a pull request was closed.
 - Approval rules for hard-to-reverse actions, written by `gdd-init` into `.claude/settings.json`: adding a dependency, changing migrations, `git push`, merging a PR, rewriting history, and editing the rules themselves. They prompt you whatever the AI thinks, also when a worker running in the background triggers them.
@@ -86,7 +86,7 @@ mode: careful
 1. **Pull requests.** The AI checks the pull requests it opened: merged ones move to `done/` and unblock the sub-goals that depend on them; closed ones become rejected ideas. It does not read or answer comments; that is yours.
 2. **Plan.** The goal-owner picks the candidate that moves the most unmet scenarios or resolves the biggest open uncertainty, writes its "Done when" with checks, and moves it to `in-progress/`. Independent candidates that touch different paths are picked together.
 3. **Work.** A worker writes the checks, builds the sub-goal on branch `gdd/<slug>` in its own worktree, runs the checks and the gate, and commits. When it hits a decision that is hard to reverse (data model, external services, authentication, new dependencies) or would loosen a check, it stops; the AI asks you three options and passes your answer back.
-4. **Review.** `gdd-check.sh` runs the checks on the worker's branch; the evaluator covers what no command can; the AI looks back (learnings go into `state.md`, work becomes new candidates).
+4. **Review.** `gdd-check.sh` runs the checks on the worker's branch; the subgoal-verifier covers what no command can; the AI looks back (learnings go into `state.md`, work becomes new candidates).
 5. **Finish.** The AI opens the pull request without asking, with its code, checks, sub-goal file, review, and decisions, and posts what it is unsure of as line comments. You review, have it fixed in any session, and merge or close it.
 
 A Decide sub-goal asks you to choose among three options before its pull request. When the goal's progress has not moved for three reviews, or a pull request was closed, the loop holds and asks you before starting anything new.

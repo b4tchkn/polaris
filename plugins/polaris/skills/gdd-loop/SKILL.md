@@ -1,6 +1,6 @@
 ---
 name: gdd-loop
-description: Run Goal Driven Development loops. Picks the next sub-goal by goal distance and uncertainty, has a worker build it in its own worktree, checks it with deterministic checks first (tests, linters, scripts) and an evaluator only where no check can decide, and opens a pull request for every finished sub-goal. Independent sub-goals run in parallel. Use when "gdd-loop", "advance the goal", "run the loop". Do not use when gdd/ does not exist (run gdd-init first).
+description: Run Goal Driven Development loops. Picks the next sub-goal by goal distance and uncertainty, has a worker build it in its own worktree, checks it with deterministic checks first (tests, linters, scripts) and the subgoal-verifier only where no check can decide, and opens a pull request for every finished sub-goal. Independent sub-goals run in parallel. Use when "gdd-loop", "advance the goal", "run the loop". Do not use when gdd/ does not exist (run gdd-init first).
 allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/*)
 ---
 
@@ -8,7 +8,7 @@ allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/*)
 
 The AI decides what to do next and proceeds by default. It finishes a sub-goal by opening a pull request; the human reviews, comments, fixes (in any session), and merges. The human is also called in for direction (the goal, Decide sub-goals), when a stop condition fires (ask rules, hook), and when `gdd-status.sh` says hold.
 
-Check with guardrails first: whether something is done is decided by deterministic, repeatable checks (tests, linters, type checks, builds, scripts, hooks) wherever one can decide it. The evaluator (an AI judging) covers only what no check can decide, and the human only what is subjective.
+Check with guardrails first: whether something is done is decided by deterministic, repeatable checks (tests, linters, type checks, builds, scripts, hooks) wherever one can decide it. The subgoal-verifier (an AI judging) covers only what no check can decide, and the human only what is subjective.
 
 Talk to the human, write reviews, and ask questions in the language the human uses. Keep template headings, `[id]` markers, `Check:` lines, and frontmatter keys as they are.
 
@@ -33,7 +33,7 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
 1. **Pull requests.** Run `gdd-status.sh`. For each sub-goal in `in-review/`: `MERGED` → `git mv` it to `done/`; `CLOSED` → delete it, add it to "Rejected ideas", set `overridden: true` in its review. Do not read or answer pull request comments; the human handles those.
 2. **Hold.** If `gdd-status.sh` says `hold: yes`, tell the human why and ask once: continue / change something / stop. Record the answer in `gdd/adr/`. Stop unless they say continue.
 3. **Plan.** Follow `steps/plan.md`: the goal-owner decides the next sub-goal(s); write their Done when with checks and hand them to workers.
-4. **Review.** Follow `steps/review.md` for each finished sub-goal: run its checks, the evaluator for the rest, retrospect.
+4. **Review.** Follow `steps/review.md` for each finished sub-goal: run its checks, the subgoal-verifier for the rest, retrospect.
 5. **Finish.** Follow `steps/finish.md`: open the pull request with line comments where the AI is unsure. Then go back to 1, or stop when nothing is ready or the goal looks reached.
 
 ## Rules for every step

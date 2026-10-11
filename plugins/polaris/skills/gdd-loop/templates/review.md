@@ -16,7 +16,7 @@ overridden: false
 
 | Condition | Check | Result | By |
 |---|---|---|---|
-| <id> <condition> | <command / observe / human> | <met / not-met / partial / not checked / for the human> | <gdd-check.sh / evaluator / human> |
+| <id> <condition> | <command / observe / human> | <met / not-met / partial / not checked / for the human> | <gdd-check.sh / subgoal-verifier / human> |
 
 ## Distance to the goal
 
@@ -30,7 +30,7 @@ overridden: false
 ## Retrospective
 
 - Keep: <what worked>
-- Problems: <rework, what needed the evaluator or the human that a check could have caught>
+- Problems: <rework, what needed the subgoal-verifier or the human that a check could have caught>
 - Learnings added: <to state.md, or none>
 - Candidates added: <slugs, or none>
 
