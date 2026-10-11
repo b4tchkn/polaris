@@ -15,6 +15,7 @@ Object when any of these holds:
 - It does not move an acceptance scenario that is not yet met, nor an open uncertainty, while another candidate does.
 - Another candidate would resolve a bigger uncertainty first (one whose answer would change more of the plan).
 - It goes against a direction the human chose in `gdd/adr/`, or against `prefer` / `avoid` in `goal.md`.
+- Its Done when relies on `observe:` or `human:` checks that a test or script could decide.
 - It depends on something not done yet, or is too big to throw away if it misses.
 
 Return one line: `agrees` or `objects: <reason>. Alternative: <slug or a one-line new sub-goal>`.

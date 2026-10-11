@@ -131,7 +131,7 @@ Removing tests loosens the checks: restored what git had. Do not continue; ask t
       */gdd/subgoals/*.md)
         [ -f "$file" ] && no_advances "$file" || exit 0
         if [ -f "$old" ]; then cp "$old" "$file"; else rm -f "$file"; fi
-        refuse "Reverted $file: a sub-goal needs an \`advances:\` line in its frontmatter naming the acceptance scenario (e.g. scenario_1) or uncertainty (e.g. U1) it moves forward."
+        refuse "Reverted $file: a sub-goal needs an \`advances:\` line in its frontmatter naming the acceptance scenario ids (e.g. capture) or uncertainties (e.g. U1) it moves forward."
         ;;
     esac
     [ -f "$old" ] && [ -f "$file" ] || exit 0
