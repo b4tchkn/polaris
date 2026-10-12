@@ -42,9 +42,11 @@ Decide, in this order:
    - Add more ready sub-goals to run in parallel only when their `overlaps` are empty with respect to each other (`overlaps` already includes sub-goals in review).
    - Do not choose anything that goes against a direction the human chose in `gdd/adr/`, or that repeats a rejected idea in `state.md`.
 3. What is missing: if no candidate moves an unmet scenario or an open uncertainty, write the sub-goal that would, in one line.
+4. Waiting: if nothing can start now (what is left waits for a merge or a pull), say what it waits for.
 
 Return, in the language the goal is written in:
 
 - `reached: <why>`, or
+- `wait: <what it waits for>`, or
 - `start: <slug>[, <slug>...]: <why these move the goal the most>`, and
 - `new: <one-line sub-goal>, advances: <ids or U<n>>` for each candidate to add (or `new: none`).

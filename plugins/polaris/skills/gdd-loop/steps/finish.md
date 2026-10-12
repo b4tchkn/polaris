@@ -11,4 +11,4 @@ Every sub-goal, Build or Decide, ends as a pull request. The AI decides it is do
 
 ## Goal reached
 
-When `progress:` shows every scenario `met` (scenarios marked `human` need the human's yes) and no candidate advances anything open, do not plan more. Ask: "The goal looks reached. Add sub-goals and continue / Write the goal completion report". For the report, write `gdd/reviews/GOAL.md` with each acceptance scenario and its result, what was left undone, and two or three candidates for the next goal, then stop.
+When the goal-owner answers `reached:` (`steps/plan.md`), do not plan more. Show its reason and ask: "The goal looks reached. Add sub-goals and continue / Write the goal completion report". For the report, write `gdd/reviews/GOAL.md` with each acceptance scenario and its result, what was left undone, and two or three candidates for the next goal, then stop.

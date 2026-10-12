@@ -44,7 +44,7 @@ plugins/polaris/          エンジン（Claude Code の plugin として配る�
     scripts/gdd-status.sh サブゴールの状況。PR の状態、着手できる候補、並列にできるか、
                           止まるべきか（停滞、PR のクローズ）を機械的に判定する
     steps/                手順の詳細（ゴール設定、計画、レビュー、判断）
-  agents/                 goal-owner（ゴールに責任を持つ。ゴールの審査と、次に着手するサブゴールの決定）、
+  agents/                 goal-owner（ゴールに責任を持つ。ゴールの審査、次に着手するサブゴール、待つか、到達したかの判断）、
                           worker（チェックを先に書き、worktree でサブゴールを作る）、
                           subgoal-verifier（コマンドのチェックが本当に条件を確かめているかと、observe: の判定だけ）
   hooks/                  Bash からの goal.md 書き込み、advances の無いサブゴール、学びの削除などを戻す

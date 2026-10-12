@@ -76,7 +76,7 @@ mode: careful
 
 ## What the plugin adds to Claude Code
 
-- Two skills, `/polaris:gdd-init` and `/polaris:gdd-loop`, and three subagents that gdd-loop calls, each in a separate context: `goal-owner` is responsible for the goal: it checks a draft goal (outcomes, size, checks that could be deterministic) and decides which sub-goals to start next from the check and status results; `worker` writes a sub-goal's checks and then builds it in its own worktree, `subgoal-verifier` says whether each command check really tests its condition and judges the `observe:` items.
+- Two skills, `/polaris:gdd-init` and `/polaris:gdd-loop`, and three subagents that gdd-loop calls, each in a separate context: `goal-owner` is responsible for the goal: it checks a draft goal (outcomes, size, checks that could be deterministic) and decides from the check and status results which sub-goals to start next, when to wait, and whether the goal is reached; `worker` writes a sub-goal's checks and then builds it in its own worktree, `subgoal-verifier` says whether each command check really tests its condition and judges the `observe:` items.
 - `gdd-check.sh` runs the checks: the goal's (progress toward the goal) or one sub-goal's plus the gate.
 - `gdd-lint.sh` checks the format of sub-goal and review files (frontmatter, and a `Check:` for every `[id]`); the hook runs it on every write, and it runs on its own too.
 - `gdd-status.sh` says where the sub-goals stand: lists pull requests and whether they were merged, says which candidates can start and which can run in parallel, and holds when progress stalls or a pull request was closed.

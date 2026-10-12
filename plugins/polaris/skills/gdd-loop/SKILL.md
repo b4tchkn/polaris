@@ -6,7 +6,7 @@ allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/*)
 
 # gdd-loop
 
-The AI decides what to do next and proceeds by default. It finishes a sub-goal by opening a pull request; the human reviews, comments, fixes (in any session), and merges. The human is also called in for direction (the goal, Decide sub-goals), when a stop condition fires (ask rules, hook), and when `gdd-status.sh` says hold.
+The goal-owner subagent is responsible for the goal: what to work on next, when to wait, and whether the goal is reached. Do not decide these yourself; ask it and follow its answer. The AI proceeds by default. It finishes a sub-goal by opening a pull request; the human reviews, comments, fixes (in any session), and merges. The human is also called in for direction (the goal, Decide sub-goals), when a stop condition fires (ask rules, hook), and when `gdd-status.sh` says hold.
 
 Check with guardrails first: whether something is done is decided by deterministic, repeatable checks (tests, linters, type checks, builds, scripts, hooks) wherever one can decide it. The subgoal-verifier (an AI judging) covers only what no check can decide, and the human only what is subjective.
 
@@ -35,7 +35,7 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
 2. **Hold.** If `gdd-status.sh` says `hold: yes`, tell the human why and ask once: continue / change something / stop. Record the answer in `gdd/adr/`. Stop unless they say continue.
 3. **Plan.** Follow `steps/plan.md`: the goal-owner decides the next sub-goal(s); write their Done when with checks and hand them to workers.
 4. **Review.** Follow `steps/review.md` for each finished sub-goal: run its checks, the subgoal-verifier for the rest, retrospect.
-5. **Finish.** Follow `steps/finish.md`: open the pull request with line comments where the AI is unsure. Then go back to 1, or stop when nothing is ready or the goal looks reached.
+5. **Finish.** Follow `steps/finish.md`: open the pull request with line comments where the AI is unsure. Then go back to 1. The loop stops only on the goal-owner's `wait:` or `reached:`, a hold, or a question for the human.
 
 ## Rules for every step
 
