@@ -3,7 +3,7 @@
 # "pre" snapshots the files a tool may touch; "post" compares and undoes or refuses:
 #   - gdd/goal.md changed or created by Bash                    -> restored, exit 2
 #   - gdd/state.md, gdd/subgoals/*.md, gdd/reviews/*.md failing gdd-lint.sh -> restored or removed, exit 2
-#   - a learning removed from gdd/state.md                      -> restored, exit 2
+#   - a learning removed from gdd/state.md, or state.md deleted (Edit/Write or Bash) -> restored, exit 2
 #   - an existing gdd/adr/*.md changed or deleted                -> restored, exit 2 (new files are fine)
 #   - a skip/ignore added to a test file, or tests removed from it -> restored, exit 2 (stop and ask)
 #   - test files deleted by Bash (fewer than before)             -> restored from git, exit 2
@@ -48,6 +48,11 @@ test_files() {
 }
 # Sub-goal and review files must keep their format (gdd-lint.sh prints what is wrong).
 misformed() { problems=$(bash "$lint" "${1%/gdd/*}/gdd" "$1") && return 1; printf '%s\n' "$problems"; }
+# Learnings in state.md are never deleted: prints the ones in $1 (before) that are missing from $2 (after).
+lost_learnings() {
+  awk '/^## /{p=($0 ~ /Learnings/ || index($0,"学び")>0)} p && /^- /{print}' "$1" |
+    while IFS= read -r l; do grep -qF -- "$l" "$2" 2>/dev/null || printf '%s\n' "$l"; done
+}
 
 case "$mode:$tool" in
   pre:Bash)
@@ -71,9 +76,17 @@ $gone
 Removing tests loosens the checks: restored what git had. Do not continue; ask the human with three options first."
       fi
     fi
-    changed=""; bad=""
+    changed=""; bad=""; lost=""
     while IFS=$'\t' read -r s f; do
-      case "$f" in */gdd/goal.md|*/gdd/adr/*.md) ;; *) continue ;; esac
+      case "$f" in
+        */gdd/state.md)
+          m=$(lost_learnings "$snap/$(key "$f")" "$f")
+          if [ ! -f "$f" ] || [ -n "$m" ]; then cp "$snap/$(key "$f")" "$f"; lost="$lost${m:+
+$m}"; changed="$changed $f"; fi
+          continue ;;
+        */gdd/goal.md|*/gdd/adr/*.md) ;;
+        *) continue ;;
+      esac
       if [ ! -f "$f" ] || [ "$(sum "$f")" != "$s" ]; then
         mkdir -p "$(dirname "$f")"; cp "$snap/$(key "$f")" "$f"
         changed="$changed $f"
@@ -94,7 +107,7 @@ $p"
           ;;
       esac
     done < <(gdd_files)
-    [ -z "$changed" ] || refuse "Reverted Bash changes to:$changed. Do not write gdd/goal.md from Bash (use the Edit tool so the human approves it), and never change or delete an existing ADR in gdd/adr/ (add a new file instead)."
+    [ -z "$changed" ] || refuse "Reverted Bash changes to:$changed. Do not write gdd/goal.md from Bash (use the Edit tool so the human approves it), never change or delete an existing ADR in gdd/adr/ (add a new file instead), and never delete gdd/state.md or a learning in it (keep its text and append to it instead).${lost:+ Learnings that were removed:$lost}"
     [ -z "$bad" ] || refuse "Reverted gdd files with format problems:$bad
 Fix them as the messages say (sub-goals and reviews follow templates/subgoal.md and templates/review.md) and write them again."
     ;;
@@ -121,8 +134,7 @@ Fix it as the messages say and write it again (sub-goals and reviews follow temp
     [ -f "$old" ] && [ -f "$file" ] || exit 0
     case "$file" in
       */gdd/state.md)
-        missing=$(awk '/^## /{p=($0 ~ /Learnings/ || index($0,"学び")>0)} p && /^- /{print}' "$old" |
-          while IFS= read -r l; do grep -qF -- "$l" "$file" || printf '%s\n' "$l"; done)
+        missing=$(lost_learnings "$old" "$file")
         [ -z "$missing" ] || { cp "$old" "$file"; refuse "Restored gdd/state.md: these learnings were removed. Never delete a learning; keep its text and append to it instead:
 $missing"; }
         ;;

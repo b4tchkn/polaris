@@ -152,6 +152,20 @@ printf '# State\n\n## Uncertainties\n\n- U1 a? | opened\n\n## Learnings\n\n- kee
 json Bash "" | bash "$HOOK" post 2>/dev/null; check "state: bash write with a bad uncertainty -> refused" 2 $?
 grep -qx -- "- U1 a? | open" gdd/state.md || { echo "FAIL state: bash write not restored"; fail=1; }
 
+json Bash "" | bash "$HOOK" pre
+printf '# State\n\n## Uncertainties\n\n- U1 a? | open\n\n## Learnings\n\n- other\n' > gdd/state.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "state: bash removes a learning -> refused" 2 $?
+grep -qx -- "- keep one" gdd/state.md || { echo "FAIL state: bash-removed learning not restored"; fail=1; }
+
+json Bash "" | bash "$HOOK" pre
+rm gdd/state.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "state: bash deletes state.md -> refused" 2 $?
+[ -f gdd/state.md ] || { echo "FAIL state: deleted state.md not restored"; fail=1; }
+
+json Bash "" | bash "$HOOK" pre
+printf '# State\n\n## Now\n\n- moved on\n\n## Uncertainties\n\n- U1 a? | resolved: yes\n\n## Learnings\n\n- keep one → hardened: hook\n- new two\n' > gdd/state.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "state: bash rewrite keeping learnings -> ok" 0 $?
+
 # --- gdd/adr/: new files are fine, existing ones never change
 A="$W/gdd/adr/2026-01-02-y.md"
 json Write "$A" | bash "$HOOK" pre
