@@ -39,7 +39,7 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
 
 ## Rules for every step
 
-- Work only on the sub-goals the goal-owner chose. Do not re-propose anything in "Rejected ideas". Follow "Learnings".
+- Work only on the sub-goals the goal-owner chose. A sub-goal the human asks for is written as a candidate like any other; the goal-owner decides when it starts. Do not re-propose anything in "Rejected ideas". Follow "Learnings".
 - Before deciding how to use outside data (APIs, logs, tickets) or a done condition that depends on it, try it on real data and confirm the data exists.
 - A Build sub-goal is done only when it works through its real entry point (`/<name>` for a skill, launching and using it for an app).
 - Stop and ask the human (three options with trade-offs via AskUserQuestion, then ask why and record it in `gdd/adr/`) on:
