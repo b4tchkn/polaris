@@ -46,4 +46,4 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
   - hard-to-reverse decisions: data model, external service, billing, authentication, adding a dependency
   - changes that loosen acceptance scenarios, the gate, or tests
 - When an instruction from the human can be read more than one way (a number, a scope, where to write it), offer three readings and let them choose before writing.
-- Commit `gdd/` changes on the current branch at the end of each loop (`docs(gdd): <slug> <what happened>`). Push only with the human's approval.
+- Commit `gdd/` changes on the current branch at the end of each loop, and only them: `git add gdd/ && git commit -m "docs(gdd): <slug> <what happened>" -- gdd/` (the trailing `-- gdd/` leaves anything else the human staged out of the commit). Push only with the human's approval.
