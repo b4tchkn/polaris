@@ -2,7 +2,7 @@
 # Mechanical stop conditions for the gdd/ state files (design.md 7).
 # "pre" snapshots the files a tool may touch; "post" compares and undoes or refuses:
 #   - gdd/goal.md changed or created by Bash                    -> restored, exit 2
-#   - a gdd/subgoals/*.md or gdd/reviews/*.md that fails gdd-lint.sh -> restored or removed, exit 2
+#   - gdd/state.md, gdd/subgoals/*.md, gdd/reviews/*.md failing gdd-lint.sh -> restored or removed, exit 2
 #   - a learning removed from gdd/state.md                      -> restored, exit 2
 #   - an existing gdd/adr/*.md changed or deleted                -> restored, exit 2 (new files are fine)
 #   - a skip/ignore added to a test file, or tests removed from it -> restored, exit 2 (stop and ask)
@@ -38,7 +38,7 @@ sum() { shasum < "$1" | cut -c1-40; }
 gdd_files() {
   # Other worktrees under .claude/worktrees/ have their own guard (their own root); a worker creating one mid-command is not a write.
   find . \( -name .git -o -name node_modules -o -name build -o -name .gradle -o -path ./.claude/worktrees \) -prune \
-    -o \( -path '*/gdd/goal.md' -o -path '*/gdd/subgoals/*.md' -o -path '*/gdd/reviews/*.md' -o -path '*/gdd/adr/*.md' \) -print 2>/dev/null
+    -o \( -path '*/gdd/goal.md' -o -path '*/gdd/state.md' -o -path '*/gdd/subgoals/*.md' -o -path '*/gdd/reviews/*.md' -o -path '*/gdd/adr/*.md' \) -print 2>/dev/null
 }
 refuse() { printf '%s\n' "$1" >&2; exit 2; }
 is_test() { printf '%s' "$1" | grep -Eqi '(^|/)(tests?|spec|__tests__|androidTest)(/|$)|[._]test\.|[._]spec\.|(^|/)test_[^/]*\.py$|Tests?\.[a-z]+$'; }
@@ -95,8 +95,8 @@ $p"
       esac
     done < <(gdd_files)
     [ -z "$changed" ] || refuse "Reverted Bash changes to:$changed. Do not write gdd/goal.md from Bash (use the Edit tool so the human approves it), and never change or delete an existing ADR in gdd/adr/ (add a new file instead)."
-    [ -z "$bad" ] || refuse "Reverted sub-goal or review files with format problems:$bad
-Fix them in the shape of templates/subgoal.md or templates/review.md and write them again."
+    [ -z "$bad" ] || refuse "Reverted gdd files with format problems:$bad
+Fix them as the messages say (sub-goals and reviews follow templates/subgoal.md and templates/review.md) and write them again."
     ;;
 
   pre:Edit|pre:Write)
@@ -109,12 +109,13 @@ Fix them in the shape of templates/subgoal.md or templates/review.md and write t
     [ -n "$file" ] || exit 0
     old="$snap/$(key "$file")"
     case "$file" in
-      */gdd/subgoals/*.md|*/gdd/reviews/*.md)
-        [ -f "$file" ] && p=$(misformed "$file") || exit 0
-        if [ -f "$old" ]; then cp "$old" "$file"; else rm -f "$file"; fi
-        refuse "Reverted $file:
+      */gdd/state.md|*/gdd/subgoals/*.md|*/gdd/reviews/*.md)
+        if [ -f "$file" ] && p=$(misformed "$file"); then
+          if [ -f "$old" ]; then cp "$old" "$file"; else rm -f "$file"; fi
+          refuse "Reverted $file:
 $p
-Fix it in the shape of templates/subgoal.md or templates/review.md and write it again. A sub-goal's advances: names the acceptance scenario ids (e.g. capture) or uncertainties (e.g. U1) it moves forward."
+Fix it as the messages say and write it again (sub-goals and reviews follow templates/subgoal.md and templates/review.md). A sub-goal's advances: names the acceptance scenario ids (e.g. capture) or uncertainties (e.g. U1) it moves forward."
+        fi
         ;;
     esac
     [ -f "$old" ] && [ -f "$file" ] || exit 0

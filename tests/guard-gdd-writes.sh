@@ -140,6 +140,18 @@ json Edit "$W/gdd/state.md" | bash "$HOOK" pre
 printf '# State\n\n## 現状\n\n- b\n\n## 学び\n\n- 学び一\n' > "$W/gdd/state.md"
 json Edit "$W/gdd/state.md" | bash "$HOOK" post 2>/dev/null; check "state(ja): 学び removed -> refused" 2 $?
 
+U='# State\n\n## Uncertainties\n\n- U1 a? | open\n\n## Learnings\n\n- keep one\n'
+printf "$U" > "$P"
+json Edit "$P" | bash "$HOOK" pre
+printf '# State\n\n## Uncertainties\n\n- U1 a? | open (half done)\n\n## Learnings\n\n- keep one\n' > "$P"
+json Edit "$P" | bash "$HOOK" post 2>/dev/null; check "state: edit with a note after open -> refused" 2 $?
+grep -qx -- "- U1 a? | open" "$P" || { echo "FAIL state: uncertainty not restored"; fail=1; }
+
+json Bash "" | bash "$HOOK" pre
+printf '# State\n\n## Uncertainties\n\n- U1 a? | opened\n\n## Learnings\n\n- keep one\n' > gdd/state.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "state: bash write with a bad uncertainty -> refused" 2 $?
+grep -qx -- "- U1 a? | open" gdd/state.md || { echo "FAIL state: bash write not restored"; fail=1; }
+
 # --- gdd/adr/: new files are fine, existing ones never change
 A="$W/gdd/adr/2026-01-02-y.md"
 json Write "$A" | bash "$HOOK" pre
