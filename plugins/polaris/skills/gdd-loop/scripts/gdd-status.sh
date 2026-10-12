@@ -1,9 +1,10 @@
 #!/bin/bash
 # Where the sub-goals stand, decided without judgment so the AI does not decide it.
 #   gdd-status.sh <gdd-dir>   each sub-goal's state, what can start, what overlaps, whether to hold
-# A state is never stored; it is read from the pull request whose body has the line
-# "Sub-goal: <path of the sub-goal file from the repository root>", and without one from the commits that carry
-# the same line. It runs no checks; gdd-check.sh does. Needs bash, sed, awk, git; gh when there is a remote.
+# A state is never stored. The commit that moves a finished sub-goal to archive/subgoals/ and its pull request's
+# body both carry the line "Sub-goal: <archived path from the repository root>"; the state is read from that pull
+# request, or without one from that commit. It runs no checks; gdd-check.sh does. Needs bash, sed, awk, git; gh when
+# there is a remote.
 
 dir="${1:-gdd}"
 [ -f "$dir/goal.md" ] || { echo "no $dir/goal.md" >&2; exit 1; }
@@ -12,7 +13,7 @@ prefix=$(git -C "$root" rev-parse --show-prefix 2>/dev/null)
 STALL_N=3   # identical progress in this many latest reviews = stalled
 
 fm() { sed -n '1{/^---$/!q;};2,/^---$/p' "$1" | sed -n "s/^$2:[[:space:]]*//p" | head -1; }
-path_of() { echo "${prefix}$(basename "$dir")/subgoals/$1.md"; }
+path_of() { echo "${prefix}$(basename "$dir")/archive/subgoals/$1.md"; }
 
 prs=""; remote=""
 if [ -n "$(git -C "$root" remote 2>/dev/null)" ]; then
@@ -23,7 +24,7 @@ if [ -n "$(git -C "$root" remote 2>/dev/null)" ]; then
     || { echo "gh failed: install the GitHub CLI (https://cli.github.com) and run 'gh auth login'" >&2; exit 1; }
 fi
 
-state_of() { # slug -> "<state> [<pull request URL or branch>]": todo / interrupted / in-review / merged / merged-not-pulled / closed
+state_of() { # slug -> "<state> [<pull request URL or branch>]": todo / in-review / merged / merged-not-pulled / closed
   p=$(path_of "$1")
   for s in MERGED OPEN CLOSED; do
     row=$(printf '%s\n' "$prs" | awk -F'\t' -v p="$p" -v s="$s" '$1 == p && $2 == s' | head -1)
@@ -36,11 +37,10 @@ state_of() { # slug -> "<state> [<pull request URL or branch>]": todo / interrup
     esac
     return
   done
-  # No pull request: the worker's commits carry the same line.
+  # No pull request (no remote, or not pushed yet): the archiving commit carries the same line.
   if [ -n "$(git -C "$root" log HEAD --format=%H -1 --grep="^Sub-goal: $p\$" 2>/dev/null)" ]; then echo merged
   elif c=$(git -C "$root" log --all --format=%H -1 --grep="^Sub-goal: $p\$" 2>/dev/null) && [ -n "$c" ]; then
-    b=$(git -C "$root" for-each-ref --contains "$c" --format='%(refname:short)' refs/heads | head -1)
-    [ -f "$dir/reviews/$1.md" ] && echo "in-review $b" || echo "interrupted $b"
+    echo "in-review $(git -C "$root" for-each-ref --contains "$c" --format='%(refname:short)' refs/heads | head -1)"
   else echo todo; fi
 }
 
@@ -53,7 +53,7 @@ overlaps() { # $1 slug: other unmerged sub-goals whose touches share a path pref
   mine=$(fm "$dir/subgoals/$1.md" touches | tr ',' ' ')
   for f in "$dir"/subgoals/*.md; do
     s=$(basename "$f" .md); [ "$s" = "$1" ] && continue
-    case $(st "$s") in todo|interrupted|in-review) ;; *) continue ;; esac
+    case $(st "$s") in todo|in-review) ;; *) continue ;; esac
     for a in $mine; do for b in $(fm "$f" touches | tr ',' ' '); do
       case "$a" in "$b"*) echo "$s"; break 2 ;; esac
       case "$b" in "$a"*) echo "$s"; break 2 ;; esac

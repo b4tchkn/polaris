@@ -85,9 +85,9 @@ mode: careful
 
 ## How a loop works
 
-1. **Pull requests.** The AI checks the pull requests it opened (each one's body starts with `Sub-goal: <path of the sub-goal file>`): merged ones unblock the sub-goals that depend on them once you have pulled; closed ones become rejected ideas. It does not read or answer comments; that is yours.
+1. **Pull requests.** The AI checks the pull requests it opened (each one's body starts with `Sub-goal: gdd/archive/subgoals/<slug>.md`, where the pull request moves the sub-goal file): merged ones unblock the sub-goals that depend on them once you have pulled; closed ones become rejected ideas. It does not read or answer comments; that is yours.
 2. **Plan.** The goal-owner picks the candidate that moves the most unmet scenarios or resolves the biggest open uncertainty, and the AI writes its "Done when" with checks. Independent candidates that touch different paths are picked together.
-3. **Work.** A worker writes the checks, builds the sub-goal in its own worktree, runs the checks and the gate, and commits with the same `Sub-goal:` line. When it hits a decision that is hard to reverse (data model, external services, authentication, new dependencies) or would loosen a check, it stops; the AI asks you three options and passes your answer back.
+3. **Work.** A worker writes the checks, builds the sub-goal in its own worktree, runs the checks and the gate, and commits. When it hits a decision that is hard to reverse (data model, external services, authentication, new dependencies) or would loosen a check, it stops; the AI asks you three options and passes your answer back.
 4. **Review.** `gdd-check.sh` runs the checks on the worker's branch; the subgoal-verifier covers what no command can; the AI looks back (learnings go into `state.md`, work becomes new candidates).
 5. **Finish.** The AI opens the pull request without asking, with its code, checks, sub-goal file, review, and decisions, and posts what it is unsure of as line comments. You review, have it fixed in any session, and merge or close it.
 

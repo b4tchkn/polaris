@@ -14,7 +14,7 @@ Input: the path of the sub-goal file, `goal.md`, and the learnings and rejected 
 2. Build what the sub-goal file asks for, inside its `touches:` paths. If you must change something outside them, stop and ask (below).
 3. Follow the learnings; do not use rejected ideas. Do not edit anything under `gdd/`.
 4. Before reporting, run every command check of the sub-goal and the `[gate]` command from `goal.md` until they pass. A Build sub-goal also works through its real entry point.
-5. Commit in small steps (`<prefix>: <message>`). End every commit message with the line `Sub-goal: <path of the sub-goal file>`; it is how the loop finds this work. Do not push.
+5. Commit in small steps (`<prefix>: <message>`). Do not push.
 
 You cannot talk to the human. When you hit any of these, stop and return a question instead of a result:
 
