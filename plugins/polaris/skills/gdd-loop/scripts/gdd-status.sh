@@ -85,8 +85,8 @@ stalled() {
 stalled && echo "stalled: yes ($STALL_N latest reviews show the same progress)" || echo "stalled: no"
 hold=""
 stalled && hold="$hold stalled;"
-latest=$(reviews_latest | head -1)
-[ -n "$latest" ] && [ "$(state_of "$(fm "$latest" subgoal)" | cut -d' ' -f1)" = closed ] && hold="$hold the latest pull request was closed;"
+# A closed pull request's sub-goal stays listed until the loop deletes it, so the hold lasts until then.
+printf '%s' "$states" | awk '$2 == "closed"' | grep -q . && hold="$hold a pull request was closed;"
 echo "sub-goals:"
 printf '%s' "$states" | while read -r s state url; do
   [ -n "$s" ] || continue

@@ -67,10 +67,10 @@ out=$(bash "$S" gdd); has "two equal reviews: not stalled" "stalled: no"
 review r3 4 p
 out=$(bash "$S" gdd); has "three equal reviews: stalled" "stalled: yes"
 has "stall holds" "hold: yes ( stalled; )"
-review gone 5 q
-out=$(bash "$S" gdd); has "closed pull request holds" "hold: yes ( the latest pull request was closed; )"
-review r6 6 z
-out=$(bash "$S" gdd); has "a newer review releases the hold" "hold: no"
+review r4 5 q; sg gone none src/gone/
+out=$(bash "$S" gdd); has "closed pull request holds" "hold: yes ( a pull request was closed; )"
+rm gdd/subgoals/gone.md
+out=$(bash "$S" gdd); has "deleting the closed sub-goal releases the hold" "hold: no"
 
 echo "workdir: $W"
 exit $fail
