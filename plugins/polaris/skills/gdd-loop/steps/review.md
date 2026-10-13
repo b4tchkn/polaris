@@ -1,6 +1,6 @@
 # Review and retrospect
 
-Do this for each finished sub-goal. When several finished together, review all of them before `steps/finish.md`.
+Do this for each finished sub-goal. When several finished together, review all of them before `steps/finish.md`. Write every `gdd/` file below (`state.md`, candidates, the review) on the sub-goal's branch (in the worker's worktree), not in the main checkout; its pull request carries them.
 
 ## Check
 

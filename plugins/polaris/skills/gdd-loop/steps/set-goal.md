@@ -1,6 +1,6 @@
 # Set or change the goal
 
-The goal is the yardstick for every later decision, so it is checked by a reviewer before the human approves it.
+The goal is the yardstick for every later decision, so it is checked by a reviewer before the human approves it. Everything below goes out as one pull request (`steps/finish.md`, "A pull request of gdd/ files alone"): make its branch from the main branch first and write every file on it.
 
 1. Ask the human with AskUserQuestion, avoiding jargon and giving a recommended option first:
    - who it is for and what success looks like
@@ -15,5 +15,5 @@ The goal is the yardstick for every later decision, so it is checked by a review
 3. List what is still unknown about reaching the goal as `- U<n> <question> | open` under "Uncertainties" in `state.md`.
 4. Run the Agent tool with `subagent_type: "polaris:goal-owner"`, giving it only the draft `goal.md` and the uncertainties. Fix what it flags and run it again (at most twice). If you disagree with a finding, tell the human.
 5. Write `goal.md` (the ask rule makes the human approve). Before they approve, show them the reviewer's table and any finding you did not fix.
-6. Write one to three candidate sub-goals into `gdd/subgoals/` from `templates/subgoal.md`: small, each with `advances:` naming the scenario ids or uncertainties it moves. Rough is fine; `steps/plan.md` details them when they are chosen. If the gate or the scenarios' checks do not exist yet, one candidate creates them.
-7. Record the human's answers from 1 as one file in `gdd/adr/`, then stop. The next run plans the first sub-goal.
+6. Write one to three candidate sub-goals into `gdd/subgoals/` from `templates/subgoal.md`: small, each with `advances:` naming the scenario ids or uncertainties it moves, `depends_on`, `touches` (paths it will change), What to show, and Done when: 1 to 5 `[id]` conditions, edge cases included, each with a `Check:`. Make each check a command (a test or script that exits 0 when the condition holds) unless a command cannot decide it. If the gate or the scenarios' checks do not exist yet, one candidate creates them.
+7. Record the human's answers from 1 as one file in `gdd/adr/`. Commit, push, and open the pull request. Tell the human to merge it and pull before the next run, then stop.

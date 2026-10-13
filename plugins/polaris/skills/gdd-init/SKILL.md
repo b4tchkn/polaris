@@ -16,8 +16,8 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 1. If `gdd/` already has `goal.md`, `state.md`, `subgoals/`, or `adr/`, ask the human before overwriting. Stop if they decline.
 2. Write `goal.md` and `state.md` from this skill's `templates/` into `gdd/` as they are, using the Write tool (a Bash copy of `goal.md` is reverted by the hook). Create the empty directories `gdd/subgoals/`, `gdd/reviews/`, and `gdd/adr/`.
 3. Add these rules to `.claude/settings.json`:
-   - `permissions.ask`: `Edit(/gdd/goal.md)`
-   - `permissions.allow`: `Edit(/gdd/state.md)`, `Edit(/gdd/subgoals/**)`, `Edit(/gdd/reviews/**)` (every sub-goal ends as a pull request, so the human reviews these there)
+   - `permissions.ask`: `Edit(/gdd/goal.md)`, `Edit(/.claude/worktrees/*/gdd/goal.md)`
+   - `permissions.allow`: `Edit(/gdd/**)`, `Edit(/.claude/worktrees/*/gdd/**)` (gdd-loop writes `gdd/` on branches, in this checkout or in worktrees, and every change reaches the main branch as a pull request, so the human reviews them there)
    - `permissions.ask`, hard-to-reverse actions, so the human approves them whatever the AI thinks:
      - Adding a dependency: `Bash(npm install *)`, `Bash(npm i *)`, `Bash(yarn add *)`, `Bash(pnpm add *)`, `Bash(pip install *)`, `Bash(pip3 install *)`, `Bash(uv add *)`, `Bash(poetry add *)`, `Bash(go get *)`, `Bash(cargo add *)`, `Bash(gem install *)`, `Bash(bundle add *)`, `Edit(/package.json)`, `Edit(**/build.gradle)`, `Edit(**/build.gradle.kts)`, `Edit(**/libs.versions.toml)`, `Edit(/requirements*.txt)`, `Edit(/pyproject.toml)`, `Edit(/go.mod)`, `Edit(/Cargo.toml)`, `Edit(/Gemfile)`
      - Changing the data model: `Edit(**/migrations/**)`, `Edit(**/migration/**)`, `Edit(**/*.sql)`
