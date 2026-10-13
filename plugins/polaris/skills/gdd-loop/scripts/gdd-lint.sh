@@ -38,10 +38,11 @@ items() { # every [id] item needs a Check: line before the next item or heading,
 
 subgoal() {
   head -1 "$1" | grep -qx -- '---' || { say "$1" 1 "needs frontmatter (see templates/subgoal.md)"; return; }
+  need "$1" status && case "$val" in todo|done|cancelled) ;; *) say "$1" "$at" "status: must be todo, done, or cancelled" ;; esac
   need "$1" type && case "$val" in build|decide) ;; *) say "$1" "$at" "type: must be build or decide" ;; esac
   need "$1" advances
   need "$1" depends_on && [ -n "$whole" ] && for d in $(printf '%s' "$val" | tr ',' ' '); do
-    [ "$d" = none ] || [ -f "$dir/subgoals/$d.md" ] || [ -f "$dir/archive/subgoals/$d.md" ] || say "$1" "$at" "depends_on: no sub-goal $d"
+    [ "$d" = none ] || [ -f "$dir/subgoals/$d.md" ] || say "$1" "$at" "depends_on: no sub-goal $d"
   done
   need "$1" touches
   items "$1" | while IFS= read -r l; do echo "$1:$l"; done | grep . && fail=1

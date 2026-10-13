@@ -1,4 +1,5 @@
 ---
+status: todo
 type: <build | decide>
 advances: <acceptance scenario ids and uncertainties this moves forward, e.g. capture, U2>
 depends_on: <slugs of sub-goals that must be merged first, or none>

@@ -5,7 +5,7 @@ W=$(mktemp -d "${TMPDIR:-/tmp}/guard-test-XXXX"); cd "$W"
 export TMPDIR="$W/tmp"; mkdir -p "$TMPDIR" gdd sub/gdd tests
 printf '# Goal: X\n' > gdd/goal.md
 mkdir -p gdd/subgoals
-printf -- '---\ntype: build\nadvances: scenario_1\ndepends_on: none\ntouches: src/\n---\n# a\n' > gdd/subgoals/a.md
+printf -- '---\nstatus: todo\ntype: build\nadvances: scenario_1\ndepends_on: none\ntouches: src/\n---\n# a\n' > gdd/subgoals/a.md
 printf '# Goal: Y\n' > sub/gdd/goal.md
 printf '# State\n\n## Now\n\n- a\n\n## Learnings\n\n- keep one\n- keep two\n' > gdd/state.md
 printf '# State\n\n## 現状\n\n- a\n\n## 学び\n\n- 学び一\n- 学び二\n' > gdd/state-ja.md
@@ -72,7 +72,7 @@ json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: bash new file with
 [ ! -f gdd/subgoals/b.md ] || { echo "FAIL subgoal: file without advances not removed"; fail=1; }
 
 json Bash "" | bash "$HOOK" pre
-printf -- '---\ntype: build\nadvances: U1\ndepends_on: none\ntouches: src/\n---\n# c\n' > gdd/subgoals/c.md
+printf -- '---\nstatus: todo\ntype: build\nadvances: U1\ndepends_on: none\ntouches: src/\n---\n# c\n' > gdd/subgoals/c.md
 json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: bash new file with advances -> ok" 0 $?
 
 S="$W/gdd/subgoals/a2.md"
@@ -88,7 +88,7 @@ json Write "$S2" | bash "$HOOK" post 2>/dev/null; check "subgoal: write without 
 [ ! -f "$S2" ] || { echo "FAIL subgoal: new file not removed"; fail=1; }
 
 json Bash "" | bash "$HOOK" pre
-printf -- '---\ntype: build\nadvances: U1\ndepends_on: none\ntouches: src/\n---\n# e\n\n1. [x] no check\n' > gdd/subgoals/e.md
+printf -- '---\nstatus: todo\ntype: build\nadvances: U1\ndepends_on: none\ntouches: src/\n---\n# e\n\n1. [x] no check\n' > gdd/subgoals/e.md
 json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: bash item without Check -> refused" 2 $?
 
 mkdir -p gdd/reviews; R="$W/gdd/reviews/a2.md"

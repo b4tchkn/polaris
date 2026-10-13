@@ -2,7 +2,7 @@
 # Self-check for gdd-lint.sh. Prints PASS/FAIL per case; exits 1 on any FAIL.
 S="$(cd "$(dirname "$0")/.." && pwd)/plugins/polaris/skills/gdd-loop/scripts/gdd-lint.sh"
 W=$(mktemp -d "${TMPDIR:-/tmp}/lint-test-XXXX"); cd "$W"
-mkdir -p gdd/subgoals gdd/reviews gdd/archive/subgoals
+mkdir -p gdd/subgoals gdd/reviews
 fail=0
 has() { if printf '%s\n' "$out" | grep -qF -- "$2"; then echo "PASS $1"; else echo "FAIL $1: no '$2' in:"; printf '%s\n' "$out"; fail=1; fi; }
 ok() { if [ "$code" = 0 ]; then echo "PASS $1"; else echo "FAIL $1: exit $code:"; printf '%s\n' "$out"; fail=1; fi; }
@@ -10,6 +10,7 @@ run() { out=$(bash "$S" gdd "$@"); code=$?; }
 
 cat > gdd/subgoals/good.md <<'EOF'
 ---
+status: todo
 type: build
 advances: capture, U1
 depends_on: old
@@ -26,13 +27,14 @@ touches: src/a/
 3. [looks] it looks right
    - Check: observe: open it
 EOF
-printf -- '---\ntype: build\nadvances: x\ndepends_on: none\ntouches: a/\n---\n# old\n' > gdd/archive/subgoals/old.md
+printf -- '---\nstatus: done\ntype: build\nadvances: x\ndepends_on: none\ntouches: a/\n---\n# old\n' > gdd/subgoals/old.md
 printf -- '---\nsubgoal: good\nloop: 3\nprogress: capture=met gate=met\n---\n# r\n' > gdd/reviews/good.md
 printf '# Goal completion report\n' > gdd/reviews/GOAL.md
-run; ok "valid sub-goal, archived dependency, review, GOAL.md"
+run; ok "valid sub-goals, review, GOAL.md"
 
 cat > gdd/subgoals/bad.md <<'EOF'
 ---
+status: open
 type: feature
 advances: <acceptance scenario ids>
 depends_on: ghost
@@ -49,13 +51,14 @@ depends_on: ghost
 EOF
 run
 [ "$code" = 1 ] && echo "PASS broken sub-goal: exit 1" || { echo "FAIL broken sub-goal: exit $code"; fail=1; }
-has "type"                "gdd/subgoals/bad.md:2: type: must be build or decide"
-has "placeholder"         "gdd/subgoals/bad.md:3: advances: is still the template placeholder"
-has "missing dependency"  "gdd/subgoals/bad.md:4: depends_on: no sub-goal ghost"
+has "status"              "gdd/subgoals/bad.md:2: status: must be todo, done, or cancelled"
+has "type"                "gdd/subgoals/bad.md:3: type: must be build or decide"
+has "placeholder"         "gdd/subgoals/bad.md:4: advances: is still the template placeholder"
+has "missing dependency"  "gdd/subgoals/bad.md:5: depends_on: no sub-goal ghost"
 has "missing key"         "gdd/subgoals/bad.md:1: frontmatter needs touches:"
-has "item without check"  "gdd/subgoals/bad.md:10: [a] has no Check: line"
-has "check kind"          "gdd/subgoals/bad.md:12: Check: must be a"
-has "duplicate id"        "gdd/subgoals/bad.md:13: [b] is used twice"
+has "item without check"  "gdd/subgoals/bad.md:11: [a] has no Check: line"
+has "check kind"          "gdd/subgoals/bad.md:13: Check: must be a"
+has "duplicate id"        "gdd/subgoals/bad.md:14: [b] is used twice"
 
 run gdd/subgoals/bad.md
 printf '%s\n' "$out" | grep -q 'no sub-goal ghost' && { echo "FAIL one file: checked depends_on across files"; fail=1; } || echo "PASS one file: depends_on not checked across files"

@@ -17,7 +17,7 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 ## Files
 
 - `gdd/goal.md`: frontmatter `mode`: `fast` or `careful` (which way to lean when in doubt). Acceptance scenarios and the definition of done are `[id]` items, each with a `Check:` line. The `[gate]` item is the one command every sub-goal passes. Every write needs the human's approval (ask rule).
-- `gdd/subgoals/<slug>.md`: one file per sub-goal (`templates/subgoal.md`). `advances:` is required (the hook refuses a file without it). Its state is never written down: the pull request is the source of truth. Each pull request moves its sub-goal file to `gdd/archive/subgoals/`, so once merged and pulled it leaves `gdd/subgoals/`. The commit that archives it and its pull request's body both carry the line `Sub-goal: <archived path from the repository root>` (e.g. `Sub-goal: gdd/archive/subgoals/<slug>.md`); that line is how the loop finds them.
+- `gdd/subgoals/<slug>.md`: one file per sub-goal (`templates/subgoal.md`). `advances:` is required (the hook refuses a file without it). `status:` is `todo`, `done`, or `cancelled`; only the sub-goal's own pull request sets `done`, so the file says `done` once that pull request is merged and pulled. The commit that sets `done` and its pull request's body both carry the line `Sub-goal: <path of the file from the repository root>` (e.g. `Sub-goal: gdd/subgoals/<slug>.md`); that line is how the loop finds them.
 - `gdd/state.md`: Now / Built so far / Uncertainties (`- U<n> <question> | open`) / Rejected ideas / Learnings, rewritten every loop within one page. Never delete learnings.
 - `gdd/reviews/<slug>.md`: one review per sub-goal (`templates/review.md`).
 - `gdd/adr/<YYYY-MM-DD>-<slug>.md`: one file per decision the human made (`templates/adr.md`). Never change one once written; a new decision gets a new file.
@@ -25,7 +25,7 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 Two scripts decide what needs no judgment. Use their answers; do not redo their work by hand.
 
 - `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-check.sh <gdd-dir> [<slug>] [--at <worktree>]` runs checks: without a slug, the goal's checks (`progress:`); with one, the sub-goal's Done when and the gate. `--at` runs them in the worker's worktree.
-- `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` says each sub-goal's state from its pull request (`todo`, `in-review`, `merged`, `merged-not-pulled`, `closed`), which can start and which overlap, and whether to hold. Run `git fetch -q` first when the repository has a remote. If it says gh failed, tell the human to install the GitHub CLI and run `gh auth login`, and stop.
+- `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-status.sh <gdd-dir>` says each sub-goal's state from its pull request (`todo`, `in-review`, `done`, `merged-not-pulled`, `closed`, `cancelled`), which can start and which overlap, and whether to hold. Run `git fetch -q` first when the repository has a remote. If it says gh failed, tell the human to install the GitHub CLI and run `gh auth login`, and stop.
 - `bash ${CLAUDE_SKILL_DIR}/scripts/gdd-lint.sh <gdd-dir>` checks the format of the sub-goal and review files (the hook also runs it on every write). Fix what it reports before committing `gdd/`.
 
 ## Loop
