@@ -35,7 +35,7 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
 2. **Hold.** If `gdd-status.sh` says `hold: yes`, tell the human why and ask once: continue / change something / stop. Record the answer in `gdd/adr/`. Stop unless they say continue.
 3. **Plan.** Follow `steps/plan.md`: the goal-owner decides the next sub-goal(s); write their Done when with checks and hand them to workers.
 4. **Review.** Follow `steps/review.md` for each finished sub-goal: run its checks, the subgoal-verifier for the rest, retrospect.
-5. **Finish.** Follow `steps/finish.md`: open the pull request with line comments where the AI is unsure. Then go back to 1. The loop stops only on the goal-owner's `wait:` or `reached:`, a hold, or a question for the human.
+5. **Finish.** Follow `steps/finish.md`: open the pull request with line comments where the AI is unsure. Then go back to 1. The loop stops only on the goal-owner's `wait:`, a hold, or a question for the human. On `reached:`, follow "Goal reached" in `steps/finish.md`.
 
 ## Rules for every step
 
