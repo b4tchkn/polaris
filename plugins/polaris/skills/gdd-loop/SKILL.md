@@ -20,8 +20,9 @@ The main checkout changes only when the human merges a pull request and pulls; n
 
 - `gdd/goal.md`: frontmatter `mode`: `fast` or `careful` (which way to lean when in doubt). Acceptance scenarios and the definition of done are `[id]` items, each with a `Check:` line. The `[gate]` item is the one command every sub-goal passes. Every write needs the human's approval (ask rule).
 - `gdd/subgoals/<slug>.md`: one file per sub-goal (`templates/subgoal.md`). `advances:` is required (the hook refuses a file without it). `status:` is `todo`, `done`, or `cancelled`; only the sub-goal's own pull request sets `done`, so the file says `done` once that pull request is merged and pulled. The commit that sets `done` and its pull request's body both carry the line `Sub-goal: <path of the file from the repository root>` (e.g. `Sub-goal: gdd/subgoals/<slug>.md`); that line is how the loop finds them.
-- `gdd/state.md`: Now / Built so far / Uncertainties (`- U<n> <question> | open`) / Rejected ideas / Learnings, rewritten every loop within one page. Never delete learnings.
-- `gdd/reviews/<slug>.md`: one review per sub-goal (`templates/review.md`).
+- `gdd/uncertainties/<name>.md`: one file per thing still unknown about reaching the goal (`templates/uncertainty.md`), `status: open` or `resolved` with the answer. A sub-goal's `advances:` names it by its file name.
+- `gdd/reviews/<slug>.md`: one review per sub-goal (`templates/review.md`). Its Learnings section is what later sub-goals follow; never delete a learning.
+- A `cancelled` sub-goal is a rejected idea; its file says why under "Why cancelled".
 - `gdd/adr/<YYYY-MM-DD>-<slug>.md`: one file per decision the human made (`templates/adr.md`). Never change one once written; a new decision gets a new file.
 
 Two scripts decide what needs no judgment. Use their answers; do not redo their work by hand.
@@ -33,7 +34,7 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
 ## Loop
 
 0. **Goal.** If `goal.md` is still the template (`<goal name>` remains) or the human asked to change the goal, follow `steps/set-goal.md` and stop.
-1. **Pull requests.** Run `gdd-status.sh`. For each sub-goal: `closed` → delete its file and add it to "Rejected ideas" in a pull request of its own; `merged-not-pulled` → ask the human to pull (sub-goals that depend on it wait); `in-review` with a branch but no pull request (finished, not pushed) → open the pull request (`steps/finish.md` 2–3) when the repository has a remote, otherwise it waits for the human to merge the branch. Do not read or answer pull request comments; the human handles those.
+1. **Pull requests.** Run `gdd-status.sh`. For each sub-goal: `closed` → set its `status:` to `cancelled` and add "## Why cancelled" with the reason (ask the human if the pull request does not say), in a pull request of its own; `merged-not-pulled` → ask the human to pull (sub-goals that depend on it wait); `in-review` with a branch but no pull request (finished, not pushed) → open the pull request (`steps/finish.md` 2–3) when the repository has a remote, otherwise it waits for the human to merge the branch. Do not read or answer pull request comments; the human handles those.
 2. **Hold.** If `gdd-status.sh` says `hold: yes`, tell the human why and ask once: continue / change something / stop. Record the answer in `gdd/adr/` in a pull request of its own. Stop unless they say continue.
 3. **Plan.** Follow `steps/plan.md`: the goal-owner decides the next sub-goal(s); hand them to workers.
 4. **Review.** Follow `steps/review.md` for each finished sub-goal: run its checks, the subgoal-verifier for the rest, retrospect.
@@ -41,7 +42,7 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
 
 ## Rules for every step
 
-- Work only on the sub-goals the goal-owner chose. A sub-goal the human asks for is written as a candidate like any other (in a pull request of its own); the goal-owner decides when it starts. Do not re-propose anything in "Rejected ideas". Follow "Learnings".
+- Work only on the sub-goals the goal-owner chose. A sub-goal the human asks for is written as a candidate like any other (in a pull request of its own); the goal-owner decides when it starts. Do not re-propose a cancelled sub-goal. Follow the learnings in `gdd/reviews/`.
 - Before deciding how to use outside data (APIs, logs, tickets) or a done condition that depends on it, try it on real data and confirm the data exists.
 - A Build sub-goal is done only when it works through its real entry point (`/<name>` for a skill, launching and using it for an app).
 - Stop and ask the human (three options with trade-offs via AskUserQuestion, then ask why and record it in `gdd/adr/`, on the sub-goal's branch when it is about one sub-goal, otherwise in a pull request of its own) on:

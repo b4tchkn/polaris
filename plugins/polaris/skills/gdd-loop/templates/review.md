@@ -29,8 +29,13 @@ progress: <the progress line from gdd-check.sh>
 
 - Keep: <what worked>
 - Problems: <rework, what needed the subgoal-verifier or the human that a check could have caught>
-- Learnings added: <to state.md, or none>
 - Candidates added: <slugs, or none>
+
+## Learnings
+
+> What later sub-goals should follow. Never delete one; when it has been turned into a check, hook, or rule, keep it and add "→ hardened: <where>" in the review that does it.
+
+- <learning, or None>
 
 ## Decision
 

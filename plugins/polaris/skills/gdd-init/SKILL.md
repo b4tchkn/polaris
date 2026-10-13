@@ -1,6 +1,6 @@
 ---
 name: gdd-init
-description: Set up Goal Driven Development in a repository. Writes the state files (gdd/goal.md, gdd/state.md, gdd/subgoals/, gdd/adr/) from templates and adds rules to .claude/settings.json so that writes to goal.md and hard-to-reverse actions need human approval. Use when introducing GDD to a new or existing repository, or when starting a new goal after archiving the previous one. Triggers: "gdd-init", "set up GDD", "initialize GDD state".
+description: Set up Goal Driven Development in a repository. Writes the state files (gdd/goal.md, gdd/subgoals/, gdd/uncertainties/, gdd/adr/) from templates and adds rules to .claude/settings.json so that writes to goal.md and hard-to-reverse actions need human approval. Use when introducing GDD to a new or existing repository, or when starting a new goal after archiving the previous one. Triggers: "gdd-init", "set up GDD", "initialize GDD state".
 ---
 
 # gdd-init
@@ -13,8 +13,8 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 
 ## Steps
 
-1. If `gdd/` already has `goal.md`, `state.md`, `subgoals/`, or `adr/`, ask the human before overwriting. Stop if they decline.
-2. Write `goal.md` and `state.md` from this skill's `templates/` into `gdd/` as they are, using the Write tool (a Bash copy of `goal.md` is reverted by the hook). Create the empty directories `gdd/subgoals/`, `gdd/reviews/`, and `gdd/adr/`.
+1. If `gdd/` already has `goal.md`, `subgoals/`, `uncertainties/`, or `adr/`, ask the human before overwriting. Stop if they decline.
+2. Write `goal.md` from this skill's `templates/` into `gdd/` as it is, using the Write tool (a Bash copy of `goal.md` is reverted by the hook). Create the empty directories `gdd/subgoals/`, `gdd/uncertainties/`, `gdd/reviews/`, and `gdd/adr/`.
 3. Add these rules to `.claude/settings.json`:
    - `permissions.ask`: `Edit(/gdd/goal.md)`, `Edit(/.claude/worktrees/*/gdd/goal.md)`
    - `permissions.allow`: `Edit(/gdd/**)`, `Edit(/.claude/worktrees/*/gdd/**)` (gdd-loop writes `gdd/` on branches, in this checkout or in worktrees, and every change reaches the main branch as a pull request, so the human reviews them there)

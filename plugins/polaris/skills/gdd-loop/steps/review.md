@@ -1,6 +1,6 @@
 # Review and retrospect
 
-Do this for each finished sub-goal. When several finished together, review all of them before `steps/finish.md`. Write every `gdd/` file below (`state.md`, candidates, the review) on the sub-goal's branch (in the worker's worktree), not in the main checkout; its pull request carries them.
+Do this for each finished sub-goal. When several finished together, review all of them before `steps/finish.md`. Write every `gdd/` file below (uncertainties, candidates, the review) on the sub-goal's branch (in the worker's worktree), not in the main checkout; its pull request carries them.
 
 ## Check
 
@@ -12,12 +12,11 @@ Do this for each finished sub-goal. When several finished together, review all o
 
 ## Retrospect
 
-- From this sub-goal and all learnings in `state.md`, list what to keep and the problems (rework, conditions that needed the subgoal-verifier or the human although a check could have decided them).
+- From this sub-goal and all learnings in `gdd/reviews/`, list what to keep and the problems (rework, conditions that needed the subgoal-verifier or the human although a check could have decided them).
 - Turn what you learned into one of two things:
-  - **Learning**: something later loops should follow → add it to Learnings in `state.md` now. When a learning has been turned into a check, hook, or rule, keep it and add "→ hardened: <where>".
+  - **Learning**: something later loops should follow → add it to the Learnings section of this review. When this sub-goal turned an earlier learning into a check, hook, or rule, add that learning's text with "→ hardened: <where>" here; do not edit the earlier review.
   - **Candidate**: anything that needs work → write it as a candidate sub-goal with `advances:` (use `process` for a change to how the loop runs). Conditions that needed the subgoal-verifier or the human more than once are candidates for a deterministic check.
-- Update "Uncertainties" in `state.md`: mark resolved ones `| resolved: <answer>`, add new ones.
-- Rewrite `state.md` within one page: Now / Built so far / Uncertainties / Rejected ideas / Learnings.
+- Uncertainties: for each one this sub-goal answered, set `status: resolved` and write the answer in its file; write each new one as a file from `templates/uncertainty.md`.
 
 ## Write the review
 

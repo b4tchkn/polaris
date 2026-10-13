@@ -7,8 +7,6 @@ printf '# Goal: X\n' > gdd/goal.md
 mkdir -p gdd/subgoals
 printf -- '---\nstatus: todo\ntype: build\nadvances: scenario_1\ndepends_on: none\ntouches: src/\n---\n# a\n' > gdd/subgoals/a.md
 printf '# Goal: Y\n' > sub/gdd/goal.md
-printf '# State\n\n## Now\n\n- a\n\n## Learnings\n\n- keep one\n- keep two\n' > gdd/state.md
-printf '# State\n\n## 現状\n\n- a\n\n## 学び\n\n- 学び一\n- 学び二\n' > gdd/state-ja.md
 mkdir -p gdd/adr && printf '# 2026-01-01 x\n\n- Decided: a\n' > gdd/adr/2026-01-01-x.md
 printf 'def test_a():\n    assert 1\n' > tests/test_a.py
 
@@ -58,7 +56,7 @@ check "bash: create new goal.md" 2 "$rc"
 
 # Bash read-only and writes elsewhere: must pass
 json Bash "" | bash "$HOOK" pre
-cat gdd/goal.md > /dev/null; echo x > gdd/state.md.tmp; echo y > notes.md
+cat gdd/goal.md > /dev/null; echo x > gdd/goal.md.tmp; echo y > notes.md
 json Bash "" | bash "$HOOK" post 2>/dev/null; check "bash: read-only / other files" 0 $?
 
 # --- sub-goal files: `advances:` is required; renames keep content and pass
@@ -124,47 +122,44 @@ json Bash "" "$WT/src" | bash "$HOOK" post 2>/dev/null; check "worktree: goal.md
 [ "$(cat "$WT/gdd/goal.md")" = "# Goal: WT" ] || { echo "FAIL worktree: goal.md not restored"; fail=1; }
 unset CLAUDE_PROJECT_DIR
 
-# --- state.md learnings
-P="$W/gdd/state.md"
+# --- review learnings: never removed, and a review is never deleted
+mkdir -p gdd/reviews
+P="$W/gdd/reviews/l.md"
+printf -- '---\nsubgoal: l\nloop: 1\nprogress: p\n---\n# r\n\n## Learnings\n\n- keep one\n- keep two\n' > "$P"
 json Edit "$P" | bash "$HOOK" pre
-printf '# State\n\n## Now\n\n- b\n\n## Learnings\n\n- keep one\n' > "$P"
-json Edit "$P" | bash "$HOOK" post 2>/dev/null; check "state: learning removed -> refused" 2 $?
-grep -q "keep two" "$P" || { echo "FAIL state: not restored"; fail=1; }
+printf -- '---\nsubgoal: l\nloop: 1\nprogress: p\n---\n# r\n\n## Learnings\n\n- keep one\n' > "$P"
+json Edit "$P" | bash "$HOOK" post 2>/dev/null; check "review: learning removed -> refused" 2 $?
+grep -q "keep two" "$P" || { echo "FAIL review: learning not restored"; fail=1; }
 
 json Edit "$P" | bash "$HOOK" pre
-printf '# State\n\n## Now\n\n- b\n\n## Learnings\n\n- keep one → hardened: hook\n- keep two\n- new three\n' > "$P"
-json Edit "$P" | bash "$HOOK" post 2>/dev/null; check "state: learnings kept + suffix + new" 0 $?
+printf -- '---\nsubgoal: l\nloop: 1\nprogress: p\n---\n# r\n\n## Learnings\n\n- keep one → hardened: hook\n- keep two\n- new three\n' > "$P"
+json Edit "$P" | bash "$HOOK" post 2>/dev/null; check "review: learnings kept + suffix + new" 0 $?
 
-PJ="$W/gdd/state-ja.md"; cp "$PJ" "$W/gdd/state.md"
-json Edit "$W/gdd/state.md" | bash "$HOOK" pre
-printf '# State\n\n## 現状\n\n- b\n\n## 学び\n\n- 学び一\n' > "$W/gdd/state.md"
-json Edit "$W/gdd/state.md" | bash "$HOOK" post 2>/dev/null; check "state(ja): 学び removed -> refused" 2 $?
-
-U='# State\n\n## Uncertainties\n\n- U1 a? | open\n\n## Learnings\n\n- keep one\n'
-printf "$U" > "$P"
-json Edit "$P" | bash "$HOOK" pre
-printf '# State\n\n## Uncertainties\n\n- U1 a? | open (half done)\n\n## Learnings\n\n- keep one\n' > "$P"
-json Edit "$P" | bash "$HOOK" post 2>/dev/null; check "state: edit with a note after open -> refused" 2 $?
-grep -qx -- "- U1 a? | open" "$P" || { echo "FAIL state: uncertainty not restored"; fail=1; }
+PJ="$W/gdd/reviews/ja.md"
+printf -- '---\nsubgoal: ja\nloop: 2\nprogress: p\n---\n# r\n\n## 学び\n\n- 学び一\n- 学び二\n' > "$PJ"
+json Edit "$PJ" | bash "$HOOK" pre
+printf -- '---\nsubgoal: ja\nloop: 2\nprogress: p\n---\n# r\n\n## 学び\n\n- 学び一\n' > "$PJ"
+json Edit "$PJ" | bash "$HOOK" post 2>/dev/null; check "review(ja): 学び removed -> refused" 2 $?
 
 json Bash "" | bash "$HOOK" pre
-printf '# State\n\n## Uncertainties\n\n- U1 a? | opened\n\n## Learnings\n\n- keep one\n' > gdd/state.md
-json Bash "" | bash "$HOOK" post 2>/dev/null; check "state: bash write with a bad uncertainty -> refused" 2 $?
-grep -qx -- "- U1 a? | open" gdd/state.md || { echo "FAIL state: bash write not restored"; fail=1; }
+printf -- '---\nsubgoal: l\nloop: 1\nprogress: p\n---\n# r\n\n## Learnings\n\n- other\n' > "$P"
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "review: bash removes a learning -> refused" 2 $?
+grep -qx -- "- keep two" "$P" || { echo "FAIL review: bash-removed learning not restored"; fail=1; }
 
 json Bash "" | bash "$HOOK" pre
-printf '# State\n\n## Uncertainties\n\n- U1 a? | open\n\n## Learnings\n\n- other\n' > gdd/state.md
-json Bash "" | bash "$HOOK" post 2>/dev/null; check "state: bash removes a learning -> refused" 2 $?
-grep -qx -- "- keep one" gdd/state.md || { echo "FAIL state: bash-removed learning not restored"; fail=1; }
+rm "$P"
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "review: bash deletes a review -> refused" 2 $?
+[ -f "$P" ] || { echo "FAIL review: deleted review not restored"; fail=1; }
 
-json Bash "" | bash "$HOOK" pre
-rm gdd/state.md
-json Bash "" | bash "$HOOK" post 2>/dev/null; check "state: bash deletes state.md -> refused" 2 $?
-[ -f gdd/state.md ] || { echo "FAIL state: deleted state.md not restored"; fail=1; }
-
-json Bash "" | bash "$HOOK" pre
-printf '# State\n\n## Now\n\n- moved on\n\n## Uncertainties\n\n- U1 a? | resolved: yes\n\n## Learnings\n\n- keep one → hardened: hook\n- new two\n' > gdd/state.md
-json Bash "" | bash "$HOOK" post 2>/dev/null; check "state: bash rewrite keeping learnings -> ok" 0 $?
+# --- uncertainty files keep their format
+U="$W/gdd/uncertainties/u.md"; mkdir -p gdd/uncertainties
+json Write "$U" | bash "$HOOK" pre
+printf -- '---\nstatus: open\n---\n# u?\n' > "$U"
+json Write "$U" | bash "$HOOK" post 2>/dev/null; check "uncertainty: valid -> ok" 0 $?
+json Edit "$U" | bash "$HOOK" pre
+printf -- '---\nstatus: half\n---\n# u?\n' > "$U"
+json Edit "$U" | bash "$HOOK" post 2>/dev/null; check "uncertainty: bad status -> refused" 2 $?
+grep -qx "status: open" "$U" || { echo "FAIL uncertainty: not restored"; fail=1; }
 
 # --- gdd/adr/: new files are fine, existing ones never change
 A="$W/gdd/adr/2026-01-02-y.md"

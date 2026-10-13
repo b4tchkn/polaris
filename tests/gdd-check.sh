@@ -23,7 +23,9 @@ mode: careful
 1. [gate] the checks pass
    - Check: `test ! -f src/broken`
 EOF
-printf '# State\n\n## Uncertainties\n\n- U1 a? | open\n- U2 b? | resolved: yes\n\n## Learnings\n\n- x\n' > gdd/state.md
+mkdir -p gdd/uncertainties
+printf -- '---\nstatus: open\n---\n# a?\n' > gdd/uncertainties/a.md
+printf -- '---\nstatus: resolved\n---\n# b?\n\n## Answer\n\nyes\n' > gdd/uncertainties/b.md
 fail=0
 has() { if printf '%s\n' "$out" | grep -qF -- "$2"; then echo "PASS $1"; else echo "FAIL $1: no '$2' in:"; printf '%s\n' "$out"; fail=1; fi; }
 

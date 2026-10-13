@@ -1,7 +1,7 @@
 ---
 status: todo
 type: <build | decide>
-advances: <acceptance scenario ids and uncertainties this moves forward, e.g. capture, U2>
+advances: <acceptance scenario ids and uncertainties this moves forward, e.g. capture, storage-format>
 depends_on: <slugs of sub-goals that must be merged first, or none>
 touches: <paths this changes, comma-separated, e.g. src/todo/, docs/>
 ---

@@ -32,7 +32,7 @@ Return only this table, in the language the goal is written in:
 
 ## Decide what comes next
 
-Input: `goal.md`, `state.md`, the files in `gdd/adr/` and `gdd/subgoals/`, and the output of `gdd-check.sh` (progress) and `gdd-status.sh` (what can start, what overlaps, hold).
+Input: `goal.md`, the files in `gdd/uncertainties/`, `gdd/adr/`, and `gdd/subgoals/`, and the output of `gdd-check.sh` (progress) and `gdd-status.sh` (what can start, what overlaps, hold).
 
 Decide, in this order:
 
@@ -40,7 +40,7 @@ Decide, in this order:
 2. What to start: among sub-goals with `state=todo` and `ready=yes`, the one that moves the most `not-met` scenarios toward `met`, or resolves the biggest open uncertainty (the one whose answer would change the most plans).
    - Prefer small sub-goals. When two are close, follow `mode` (`fast`: the quicker one; `careful`: the one that removes more risk).
    - Add more ready sub-goals to run in parallel only when their `overlaps` are empty with respect to each other (`overlaps` already includes sub-goals in review).
-   - Do not choose anything that goes against a direction the human chose in `gdd/adr/`, or that repeats a rejected idea in `state.md`.
+   - Do not choose anything that goes against a direction the human chose in `gdd/adr/`, or that repeats a cancelled sub-goal (its file says why).
 3. What is missing: if no candidate moves an unmet scenario or an open uncertainty, write the sub-goal that would, in one line.
 4. Waiting: if nothing can start now (what is left waits for a merge or a pull), say what it waits for.
 
@@ -49,4 +49,4 @@ Return, in the language the goal is written in:
 - `reached: <why>`, or
 - `wait: <what it waits for>`, or
 - `start: <slug>[, <slug>...]: <why these move the goal the most>`, and
-- `new: <one-line sub-goal>, advances: <ids or U<n>>` for each candidate to add (or `new: none`).
+- `new: <one-line sub-goal>, advances: <scenario ids or uncertainty names>` for each candidate to add (or `new: none`).

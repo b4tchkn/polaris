@@ -1,7 +1,7 @@
 #!/bin/bash
-# Checks the format of gdd sub-goal and review files and of the uncertainties in state.md, so a broken file is caught when it is written instead of
+# Checks the format of gdd sub-goal, uncertainty, and review files, so a broken file is caught when it is written instead of
 # being misread later (an [id] without a Check: line would silently go unchecked).
-#   gdd-lint.sh <gdd-dir>             state.md and every file in subgoals/ and reviews/, and that depends_on names existing sub-goals
+#   gdd-lint.sh <gdd-dir>             every file in subgoals/, uncertainties/, and reviews/, and that depends_on names existing sub-goals
 #   gdd-lint.sh <gdd-dir> <file>...   only those files (the hook runs this right after a write)
 # Prints "<file>:<line>: <problem>" and exits 1 when anything is wrong. Runs nothing else. Needs bash, awk.
 
@@ -55,19 +55,19 @@ review() {
   need "$1" progress
 }
 
-state() { # each line under "Uncertainties" is "- U<n> <question> | open" or "| resolved: <answer>" (gdd-check.sh counts the open ones)
-  awk '/^## /{p=($0 ~ /Uncertainties|未確定/)} p && /^- / && $0 != "- None" && !/^- U[0-9]+ .*[^ ] \| open$/ && !/^- U[0-9]+ .* \| resolved: .*[^ ]/ {print NR}' "$1" |
-    while IFS= read -r n; do echo "$1:$n: an uncertainty is \"- U<n> <question> | open\" or \"- U<n> <question> | resolved: <answer>\" (put notes before the |)"; done | grep . && fail=1
+uncertainty() { # gdd-check.sh counts the open ones
+  head -1 "$1" | grep -qx -- '---' || { say "$1" 1 "needs frontmatter (see templates/uncertainty.md)"; return; }
+  need "$1" status && case "$val" in open|resolved) ;; *) say "$1" "$at" "status: must be open or resolved" ;; esac
 }
 
 whole=""
-if [ $# -eq 0 ]; then whole=yes; set -- "$dir/state.md" "$dir"/subgoals/*.md "$dir"/reviews/*.md; fi
+if [ $# -eq 0 ]; then whole=yes; set -- "$dir"/subgoals/*.md "$dir"/uncertainties/*.md "$dir"/reviews/*.md; fi
 for f in "$@"; do
   [ -f "$f" ] || continue
   case "$f" in
     */archive/*) ;;
     */reviews/GOAL.md) ;;
-    */state.md) state "$f" ;;
+    */uncertainties/*.md) uncertainty "$f" ;;
     */subgoals/*.md) subgoal "$f" ;;
     */reviews/*.md) review "$f" ;;
   esac

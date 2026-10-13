@@ -37,5 +37,5 @@ fi
 
 out=""
 while IFS=$'\t' read -r id spec; do out="$out $id=$(judge "$spec")"; done < <(checks "$dir/goal.md")
-open=$(awk '/^## /{p=($0 ~ /Uncertainties|未確定/)} p && /^- / && /\| *open *$/' "$dir/state.md" 2>/dev/null | wc -l | tr -d ' ')
+open=$(grep -lx 'status: *open' "$dir"/uncertainties/*.md 2>/dev/null | wc -l | tr -d ' ')
 echo "progress: ${out# } open_uncertainties=$open"
