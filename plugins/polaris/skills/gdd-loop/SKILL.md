@@ -1,6 +1,6 @@
 ---
 name: gdd-loop
-description: Run Goal Driven Development loops. Picks the next sub-goal by goal distance and uncertainty, has a worker build it in its own worktree, checks it with deterministic checks first (tests, linters, scripts) and the subgoal-verifier only where no check can decide, and opens a pull request for every finished sub-goal. Independent sub-goals run in parallel. Use when "gdd-loop", "advance the goal", "run the loop". Do not use when gdd/ does not exist (run gdd-init first).
+description: Run Goal Driven Development loops. Picks the next sub-goal by goal distance and uncertainty, has a worker build it in its own worktree, checks it with deterministic checks first (tests, linters, scripts) and the subgoal-verifier only where no check can decide, and opens a pull request for every finished sub-goal. Independent sub-goals run in parallel. Use when "gdd-loop", "advance the goal", "run the loop", "refine the sub-goals", "add a sub-goal". Do not use when gdd/ does not exist (run gdd-init first).
 allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/*)
 ---
 
@@ -16,7 +16,7 @@ If a directory is passed as an argument (e.g. `simulations/morning-review`), rea
 
 ## Files
 
-The main checkout changes only when the human merges a pull request and pulls; never commit there. Write `gdd/` files on a branch made from the main branch and commit them there: a sub-goal's files on that sub-goal's branch, anything else (the goal, an ADR not about one sub-goal, candidates) in a pull request of its own (`steps/finish.md`, "A pull request of gdd/ files alone").
+The main checkout changes only when the human merges a pull request and pulls; never commit there. Write `gdd/` files on a branch made from the main branch and commit them there: a sub-goal's files on that sub-goal's branch, anything else (the goal, an ADR not about one sub-goal, a refinement) in a pull request of its own (`steps/finish.md`, "A pull request of gdd/ files alone").
 
 - `gdd/goal.md`: frontmatter `mode`: `fast` or `careful` (which way to lean when in doubt). Acceptance scenarios and the definition of done are `[id]` items, each with a `Check:` line. The `[gate]` item is the one command every sub-goal passes. Every write needs the human's approval (ask rule).
 - `gdd/subgoals/<slug>.md`: one file per sub-goal (`templates/subgoal.md`). `advances:` is required (the hook refuses a file without it). `status:` is `todo`, `done`, or `cancelled`; only the sub-goal's own pull request sets `done`, so the file says `done` once that pull request is merged and pulled. The commit that sets `done` and its pull request's body both carry the line `Sub-goal: <path of the file from the repository root>` (e.g. `Sub-goal: gdd/subgoals/<slug>.md`); that line is how the loop finds them.
@@ -33,16 +33,16 @@ Two scripts decide what needs no judgment. Use their answers; do not redo their 
 
 ## Loop
 
-0. **Goal.** If `goal.md` is still the template (`<goal name>` remains) or the human asked to change the goal, follow `steps/set-goal.md` and stop.
-1. **Pull requests.** Run `gdd-status.sh`. For each sub-goal: `closed` → set its `status:` to `cancelled` and add "## Why cancelled" with the reason (ask the human if the pull request does not say), in a pull request of its own; `merged-not-pulled` → ask the human to pull (sub-goals that depend on it wait); `in-review` with a branch but no pull request (finished, not pushed) → open the pull request (`steps/finish.md` 2–3) when the repository has a remote, otherwise it waits for the human to merge the branch. Do not read or answer pull request comments; the human handles those.
+0. **Goal.** If `goal.md` is still the template (`<goal name>` remains) or the human asked to change the goal, follow `steps/set-goal.md` and stop. If the human asked to refine or to add a sub-goal, follow `steps/refine.md` and stop.
+1. **Pull requests.** Run `gdd-status.sh`. For each sub-goal: `merged-not-pulled` → ask the human to pull (sub-goals that depend on it wait); `in-review` with a branch but no pull request (finished, not pushed) → open the pull request (`steps/finish.md` 2–3) when the repository has a remote, otherwise it waits for the human to merge the branch. A `closed` sub-goal is cancelled by the next refinement (`steps/refine.md`). Do not read or answer pull request comments; the human handles those.
 2. **Hold.** If `gdd-status.sh` says `hold: yes`, tell the human why and ask once: continue / change something / stop. Record the answer in `gdd/adr/` in a pull request of its own. Stop unless they say continue.
-3. **Plan.** Follow `steps/plan.md`: the goal-owner decides the next sub-goal(s); hand them to workers.
+3. **Plan.** Follow `steps/plan.md`: the goal-owner decides the next sub-goal(s) or a refinement; hand the sub-goals to workers.
 4. **Review.** Follow `steps/review.md` for each finished sub-goal: run its checks, the subgoal-verifier for the rest, retrospect.
 5. **Finish.** Follow `steps/finish.md`: open the pull request with line comments where the AI is unsure. Then go back to 1. The loop stops only on the goal-owner's `wait:`, a hold, or a question for the human. On `reached:`, follow "Goal reached" in `steps/finish.md`.
 
 ## Rules for every step
 
-- Work only on the sub-goals the goal-owner chose. A sub-goal the human asks for is written as a candidate like any other (in a pull request of its own); the goal-owner decides when it starts. Do not re-propose a cancelled sub-goal. Follow the learnings in `gdd/reviews/`.
+- Work only on the sub-goals the goal-owner chose. A sub-goal the human asks for goes in through `steps/refine.md` like any other; the goal-owner decides when it starts. Do not re-propose a cancelled sub-goal. Follow the learnings in `gdd/reviews/`.
 - Before deciding how to use outside data (APIs, logs, tickets) or a done condition that depends on it, try it on real data and confirm the data exists.
 - A Build sub-goal is done only when it works through its real entry point (`/<name>` for a skill, launching and using it for an app).
 - Stop and ask the human (three options with trade-offs via AskUserQuestion, then ask why and record it in `gdd/adr/`, on the sub-goal's branch when it is about one sub-goal, otherwise in a pull request of its own) on:

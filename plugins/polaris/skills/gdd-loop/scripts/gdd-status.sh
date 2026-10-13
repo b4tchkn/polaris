@@ -21,7 +21,7 @@ if [ -n "$(git -C "$root" remote 2>/dev/null)" ]; then
   remote=yes
   # ponytail: newest 500 pull requests only; page through them if a repository ever has more.
   prs=$(cd "$root" && gh pr list --state all --limit 500 --json state,url,body \
-    -q '.[] | . as $p | ($p.body // "" | capture("(?m)^Sub-goal: *(?<s>\\S+)").s) as $s | [$s, $p.state, $p.url] | @tsv') \
+    -q '.[] | . as $p | ($p.body // "") as $b | if ($b | test("(?m)^Refine:")) then ["Refine:", $p.state, $p.url] else [($b | capture("(?m)^Sub-goal: *(?<s>\\S+)").s), $p.state, $p.url] end | @tsv') \
     || { echo "gh failed: install the GitHub CLI (https://cli.github.com) and run 'gh auth login'" >&2; exit 1; }
 fi
 
@@ -84,8 +84,8 @@ stalled() {
 stalled && echo "stalled: yes ($STALL_N latest reviews show the same progress)" || echo "stalled: no"
 hold=""
 stalled && hold="$hold stalled;"
-# A closed pull request's sub-goal stays listed until the loop deletes it, so the hold lasts until then.
-printf '%s' "$states" | awk '$2 == "closed"' | grep -q . && hold="$hold a pull request was closed;"
+# A refinement's pull request starts with "Refine:"; while one is open the goal-owner does not ask for another.
+echo "refining: $(printf '%s\n' "$prs" | awk -F'\t' '$1 == "Refine:" && $2 == "OPEN" { print $3 }' | tr '\n' ' ')"
 for s in done cancelled; do echo "$s: $(printf '%s' "$states" | awk -v s="$s" '$2 == s { print $1 }' | tr '\n' ' ')"; done
 echo "sub-goals:"
 printf '%s' "$states" | while read -r s state url; do

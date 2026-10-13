@@ -1,0 +1,11 @@
+# Refine
+
+Turns what is left between here and the goal into sub-goals, like Spec Kit's clarify and tasks. The sub-goals go out as one pull request, so the human reviews their Done when before any work starts.
+
+When called from `steps/set-goal.md`, write on the goal's branch and leave the commit and the pull request to it. Otherwise make a branch from the main branch first and write every file on it.
+
+1. Read `goal.md`, `gdd/uncertainties/`, `gdd/adr/`, the sub-goals in `gdd/subgoals/`, and the learnings in `gdd/reviews/`, with the output of `gdd-check.sh <gdd-dir>` and `gdd-status.sh <gdd-dir>`. Add what the human asked for, if anything.
+2. Clarify: ask the human about the open uncertainties whose answers would change the plan the most, at most five questions, with AskUserQuestion (a recommended option first, no jargon). For each answer, set the uncertainty's `status: resolved`, write the answer in its file, and record the decision in `gdd/adr/`. Leave the others open; a Decide sub-goal can resolve them.
+3. Write the sub-goals that move the `not-met` scenarios and the open uncertainties, from `templates/subgoal.md`: small, each with `advances:` naming the scenario ids or uncertainty names it moves, `depends_on`, `touches` (paths it will change, as narrow as you can so independent ones can run in parallel), What to show, and Done when: 1 to 5 `[id]` conditions, edge cases included, each with a `Check:`. Make each check a command (a test or script that exits 0 when the condition holds) unless a command cannot decide it. If the gate or the scenarios' checks do not exist yet, one sub-goal creates them.
+4. For each `todo` sub-goal the answers made unnecessary, and each one whose pull request was closed (`state=closed`), set `status: cancelled` and add "## Why cancelled" with the reason (ask the human if the pull request does not say). Do not touch sub-goals that are `in-review`.
+5. Run `gdd-lint.sh <gdd-dir>` and fix what it reports. Commit, push, and open the pull request (`steps/finish.md`, "A pull request of gdd/ files alone") with the body starting with the line `Refine: <why, in one line>`; that line is how the loop knows a refinement is waiting. Tell the human to merge it and pull.

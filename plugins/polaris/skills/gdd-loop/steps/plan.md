@@ -1,7 +1,7 @@
 # Plan and hand out work
 
 1. Run `gdd-check.sh <gdd-dir>` and `gdd-status.sh <gdd-dir>`. Run the Agent tool with `subagent_type: "polaris:goal-owner"` to decide what comes next, giving it the paths of `goal.md`, `gdd/uncertainties/`, `gdd/adr/`, and `gdd/subgoals/`, and both outputs. Follow its answer:
-   - `new:` → write each as a candidate as in `steps/set-goal.md` 6, in a pull request of its own (`steps/finish.md`).
+   - `refine:` → follow `steps/refine.md`, then go on with any `start:`.
    - `start:` → those sub-goals, in parallel when there are several.
    - `wait:` → nothing can start now (for example, everything left waits for a merge). Tell the human what it waits for, and stop.
    - `reached:` → go to "Goal reached" in `steps/finish.md`.

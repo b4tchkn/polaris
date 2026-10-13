@@ -67,9 +67,12 @@ review r3 4 p
 out=$(bash "$S" gdd); has "three equal reviews: stalled" "stalled: yes"
 has "stall holds" "hold: yes ( stalled; )"
 review r4 5 q; sg gone none src/gone/
-out=$(bash "$S" gdd); has "closed pull request holds" "hold: yes ( a pull request was closed; )"
-rm gdd/subgoals/gone.md
-out=$(bash "$S" gdd); has "deleting the closed sub-goal releases the hold" "hold: no"
+out=$(bash "$S" gdd); has "closed pull request: listed" "gone state=closed"
+has "closed pull request: no hold" "hold: no"
+has "no refinement waiting" "refining: "
+printf 'Refine:\tOPEN\thttps://example.invalid/pr/5\nRefine:\tMERGED\thttps://example.invalid/pr/6\n' >> prs.tsv
+out=$(bash "$S" gdd); has "open refinement is listed" "refining: https://example.invalid/pr/5 "
+printf '%s\n' "$out" | grep -q 'pr/6' && { echo "FAIL merged refinement listed"; fail=1; }
 
 echo "workdir: $W"
 exit $fail

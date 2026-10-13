@@ -12,8 +12,8 @@ Sub-goals that depend on it become ready once it is merged and pulled.
 
 ## A pull request of gdd/ files alone
 
-For `gdd/` files that belong to no sub-goal (the goal, an ADR, candidates, the goal completion report): make a branch from the main branch, write the files on it, commit as in the rules, push, and open the pull request (`gh pr create --head <branch>`, title = what it records). If the repository has no remote, or the human declines the push, leave the branch and say so.
+For `gdd/` files that belong to no sub-goal (the goal, an ADR, a refinement, the goal completion report): make a branch from the main branch, write the files on it, commit as in the rules, push, and open the pull request (`gh pr create --head <branch>`, title = what it records). If the repository has no remote, or the human declines the push, leave the branch and say so.
 
 ## Goal reached
 
-When the goal-owner answers `reached:` (`steps/plan.md`), do not plan more. Show its reason and ask: "The goal looks reached. Add sub-goals and continue / Write the goal completion report". For the report, write `gdd/reviews/GOAL.md` in a pull request of its own, with each acceptance scenario and its result, what was left undone, and two or three candidates for the next goal, then stop.
+When the goal-owner answers `reached:` (`steps/plan.md`), do not plan more. Show its reason and ask: "The goal looks reached. Add sub-goals and continue / Write the goal completion report". To continue, follow `steps/refine.md`. For the report, write `gdd/reviews/GOAL.md` in a pull request of its own, with each acceptance scenario and its result, what was left undone, and two or three candidates for the next goal, then stop.
