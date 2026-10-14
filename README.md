@@ -12,7 +12,7 @@ Goal Driven Development (GDD) for Claude Code.
 
 You set a goal. The AI breaks it into sub-goals and advances one at a time. After each sub-goal it stops with a short review and a few options, and you steer by choosing. You decide the direction; you do not have to read the code or approve every step.
 
-Human-on-the-loop, as polaris means it: the AI proceeds by default. You are called in when a sub-goal is done and when a mechanical stop condition fires (a decision that is hard to reverse), and you can stop or overturn it at any time. This matches the "Approver" level (L4) in [Levels of Autonomy for AI Agents](https://arxiv.org/abs/2506.12469) by Feng, McDonald, and Zhang (2025), where the user is involved only when the agent hits a blocker it cannot resolve on its own. A Build sub-goal whose evaluation criteria are all met by the evaluator continues without you; everything else stops for your decision.
+Human-on-the-loop, as polaris means it: the AI proceeds by default. You are called in when a sub-goal is done and when a mechanical stop condition fires (a decision that is hard to reverse), and you can stop or overturn it at any time. This matches the "Approver" level (L4) in [Levels of Autonomy for AI Agents](https://arxiv.org/abs/2506.12469) by Feng, McDonald, and Zhang (2025), where the user is involved only when the agent hits a blocker it cannot resolve on its own. A Build sub-goal whose checks (commands, plus the gate you define) all pass continues without you; a Decide sub-goal, or one with a `human:` check, stops for your decision.
 
 ## Install
 
@@ -47,7 +47,7 @@ The AI can propose changes to `goal.md`, but every write needs your approval.
 
 ## What the plugin adds to Claude Code
 
-- Two skills: `/polaris:gdd-init` and `/polaris:gdd-loop`, and one subagent, `evaluator`, that gdd-loop calls to score the evaluation criteria.
+- Two skills: `/polaris:gdd-init` and `/polaris:gdd-loop`, and one subagent, `subgoal-verifier`, that gdd-loop calls to check that the command checks really test their conditions and to judge `observe:` conditions.
 - Approval rules for hard-to-reverse actions, written by `gdd-init` into `.claude/settings.json`: adding a dependency, changing migrations, `git push`, merging a PR, rewriting history, and editing the rules themselves. They prompt you whatever the AI thinks.
 - One hook on Bash, Edit, and Write (PreToolUse and PostToolUse). It snapshots the `gdd/` state files before a tool runs and checks them after: a `gdd/goal.md` changed or created by a shell command is restored, a learning removed from a review in `gdd/reviews/` is restored, a changed or deleted file in `gdd/adr/` is restored, a sub-goal, uncertainty, or review file that breaks its format is reverted, and an edit that adds a skip or ignore to a test file is refused with an instruction to ask you first. It runs in every repository where the plugin is installed, needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
 
@@ -55,7 +55,7 @@ The AI can propose changes to `goal.md`, but every write needs your approval.
 
 1. The AI applies your last decision and works on the sub-goal marked `doing` only.
 2. It stops to ask when a decision is hard to reverse (data model, external services, authentication, new dependencies) or would loosen the acceptance criteria.
-3. It looks back: an evaluator in a separate context scores the evaluation criteria from evidence it gathers itself (the AI that did the work does not grade itself), then what to keep, what went wrong, improvement proposals, and three options for the next sub-goal, each with trade-offs.
+3. It looks back: `gdd-check.sh` runs the sub-goal's command checks and the gate, and the subgoal-verifier in a separate context covers what commands cannot (the AI that did the work does not grade itself), then what to keep, what went wrong, improvement proposals, and three options for the next sub-goal, each with trade-offs.
 4. It writes a review with all of that plus what was built and its least confident decision.
 5. You choose. The AI asks why, and records your reason in `gdd/adr/`.
 
