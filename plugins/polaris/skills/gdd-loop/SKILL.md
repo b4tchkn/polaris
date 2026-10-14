@@ -1,6 +1,6 @@
 ---
 name: gdd-loop
-description: Run the Goal Driven Development loop. Reads the goal's progress and the sub-goals' status, has the goal-owner decide what comes next, builds the sub-goals one at a time (each gated by its checks), writes a review for each, and keeps going until it must stop (a question for the human, a hold, nothing ready, or the goal reached). Use when "gdd-loop", "advance the goal", "run the loop". Do not use when gdd/ does not exist (run gdd-init first).
+description: Run the Goal Driven Development loop as the coordinator. Reads the goal's progress and the sub-goals' status, has the goal-owner decide what comes next, hands sub-goals out to workers (in parallel when they are independent), merges what is ready into main behind the gate, and keeps going until it must stop (a question for the human, a hold, nothing ready, or the goal reached). Use when "gdd-loop", "advance the goal", "run the loop". Do not use when gdd/ does not exist (run gdd-init first).
 ---
 
 # gdd-loop
@@ -26,33 +26,34 @@ Commit only `gdd/` files you wrote, and only the files of one event: `git commit
 ## The loop
 
 1. Run `scripts/gdd-check.sh <gdd-dir>` (progress toward the goal) and `scripts/gdd-status.sh <gdd-dir>` (state, what is ready, overlaps, hold).
-2. If a sub-goal has `status: doing` (an interrupted run), resume it first with "Build a sub-goal", from what is already there, instead of asking the goal-owner.
-3. If `goal.md` is still the template (`<goal name>` remains), follow `steps/set-goal.md`, then go on.
-4. If the status says `hold: yes`, ask the human with AskUserQuestion before starting anything new: continue as is / change direction (then follow `steps/refine.md`) / stop. Record the answer and reason in `gdd/adr/`.
+2. If `goal.md` is still the template (`<goal name>` remains), follow `steps/set-goal.md`, then go on.
+3. If a sub-goal is `ready-to-merge`, merge it ("Merge into main" below), then go back to 1.
+4. If the status says `hold: yes`, or a sub-goal is `doing branch=none` (set to doing, but its branch is gone), ask the human with AskUserQuestion before starting anything new. For a hold: continue as is / change direction (then follow `steps/refine.md`) / stop. For a lost branch: hand it out again / cancel it / leave it. Record the answer and reason in `gdd/adr/`.
 5. Run the Agent tool with `subagent_type: "polaris:goal-owner"` to decide what comes next, giving it the paths of `goal.md`, `gdd/uncertainties/`, `gdd/adr/`, and `gdd/subgoals/`, and both outputs. Follow its answer; if you disagree, tell the human why instead of silently picking something else:
    - `refine:` → follow `steps/refine.md`, then go on with any `start:`.
-   - `start:` → build each named sub-goal, one at a time (below).
-   - `wait:` → tell the human what it waits for, and stop.
+   - `start:` → "Hand out sub-goals" below.
+   - `wait:` → tell the human what it waits for, and stop. When it waits for a `doing branch=gdd/<slug>` sub-goal, say so and that `/polaris:gdd-work <slug>` in another worktree session, or asking you to hand it out again, resumes it.
    - `reached:` → "Goal reached" below.
-6. After each sub-goal, go back to 1.
+6. When a worker returns, go back to 1.
 
-## Build a sub-goal
+## Hand out sub-goals
 
-1. Set the sub-goal's `status: doing` and commit it.
-2. Read the Learnings of every review in `gdd/reviews/` and the cancelled sub-goals; follow them.
-3. Write the tests or scripts that the "Done when" command checks need and that do not exist yet, and confirm they fail.
-4. Build, within `touches:`. Before deciding how to use outside data (APIs, logs, tickets, and so on) or a condition that depends on it, try it on real data and confirm the data you assume exists. A Build sub-goal is done only when what you built works through its real entry point (`/<name>` for a skill, launching and using it for an app); if you cannot launch it, ask the human to. A Decide sub-goal prepares what to show (a spec, a mock, a comparison of three options with trade-offs), and is done when the human chooses.
-5. Run `scripts/gdd-check.sh <gdd-dir> <slug>` until every command check and the gate are met. Never loosen a check to make it pass. If the same check fails three times in a row, stop and ask ("Stop and ask" below) instead of trying again.
-6. Run the Agent tool with `subagent_type: "polaris:subgoal-verifier"`, giving it only the sub-goal file, where the work is, and the output of step 5. Do not pass your own view of the result. It reports whether each command check really tests its condition, and judges the `observe:` conditions.
-7. Write `gdd/reviews/<slug>.md` in the shape of `templates/review.md` (`loop:` is the number of reviews in `gdd/reviews/`, excluding `GOAL.md`, plus one; `progress:` is the line `gdd-check.sh <gdd-dir>` prints). Put the check results and the verifier's rows in the Checks table unchanged; if you disagree with the verifier, say so under "Least confident". Retrospect: what to keep, the problems (rework, conditions that needed the verifier or the human although a check could have decided them), and every earlier Learning in `gdd/reviews/`.
-   - Learning: something later sub-goals should follow → Learnings of this review. When this sub-goal turned an earlier learning into a check, hook, or rule, write that learning with "→ hardened: <where>"; do not edit the earlier review.
-   - Anything else that needs work → a new `todo` sub-goal from `templates/subgoal.md` (`advances: process` for a change to how the loop runs).
-   - Uncertainties this sub-goal answered → `status: resolved` with the answer; new ones → a new file.
-8. If the sub-goal is a Decide sub-goal or has a `human:` condition, do step 9 first, then write the Decision and the ADR, and only then set `status: done`. Otherwise set `status: done` now. Commit the review, the uncertainties, and the sub-goal file together with what you built.
-9. Report in one to three lines what was built, the review's path, and what is "Least confident". Then ask the human only in these cases, with AskUserQuestion (three options with trade-offs, recommended first, in words that need no knowledge of the code); otherwise do not ask and go back to the loop:
-   - A Decide sub-goal: the three options. Then ask why they chose it, and record the decision and reason in `gdd/adr/`.
-   - The sub-goal has a `human:` condition: ask for the judgment now; the answer goes in the review's Decision section.
-   - The verifier flagged a command check as weak: strengthen the check or accept it.
+Do this in the main checkout, which must have no uncommitted changes outside `gdd/` (otherwise ask the human and stop).
+
+1. For each sub-goal to start, set `status: doing` and commit it on main: `git commit -m "docs(gdd): <slug> start" -- gdd/`. Do this before handing out, so a branch's change to `done` is a direct descendant of main and cannot conflict.
+2. A Decide sub-goal needs no worker: prepare what to show (a spec, a mock, a comparison of three options with trade-offs) yourself, ask the human to choose with AskUserQuestion, ask why, record it in `gdd/adr/` and the review's Decision section, write `gdd/reviews/<slug>.md`, set `status: done`, and commit.
+3. For each Build sub-goal, run the Agent tool with `subagent_type: "polaris:worker"`, giving it the slug (and the directory argument). With one sub-goal run it in the foreground; with several, run them in the background at once. If the human said they will work on it in another session, tell them to run `/polaris:gdd-work <slug>` in a worktree session (`claude --worktree`) instead.
+4. When a worker returns a question instead of a result, ask the human with AskUserQuestion (three options with trade-offs), record the answer and reason in `gdd/adr/`, and resume the same worker with SendMessage so it continues where it stopped.
+
+## Merge into main
+
+Do this in the main checkout, for each `ready-to-merge` sub-goal.
+
+1. If there are uncommitted changes outside `gdd/`, ask the human and stop.
+2. If the sub-goal has a `human:` condition, ask the human for the judgment first (the answer goes in the review's Decision section). If they decline it, leave it unmerged and stop.
+3. `git merge --no-ff gdd/<slug>`. On a conflict, `git merge --abort` and hand the sub-goal back to a worker to bring main in and fix it.
+4. Run `scripts/gdd-check.sh <gdd-dir>` on main and read `gate=`. Several branches together can break what each passed alone. If the gate is not `met`, undo the merge with `git revert -m 1 HEAD` (the sub-goal goes back to `doing`) and hand it back to a worker.
+5. Report in one to three lines what went into main and the review's path, and ask the human only when the review shows a flagged weak check ("strengthen or accept") or a `human:` condition. `git push` is an ask rule: the human approves it.
 
 ## Stop and ask
 

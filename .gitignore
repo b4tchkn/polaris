@@ -4,3 +4,4 @@ simulations/
 plugins/polaris/evals/results/
 plugins/polaris/evals/*/*.jsonl
 !plugins/polaris/evals/*/history.jsonl
+.claude/worktrees/
