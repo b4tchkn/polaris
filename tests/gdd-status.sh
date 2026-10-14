@@ -33,5 +33,23 @@ out=$(bash "$S" gdd); has "no hold when progress changed" "hold: no"
 printf '# GOAL report\n' > gdd/reviews/GOAL.md
 out=$(bash "$S" gdd); has "GOAL.md is not a review" "hold: no"
 
+# --- doing sub-goals read from git: branch gdd/<slug>
+G=$(mktemp -d "${TMPDIR:-/tmp}/status-git-XXXX"); cd "$G"
+git init -q -b main; git config user.email t@t; git config user.name t
+mkdir -p gdd/subgoals; echo '# Goal: x' > gdd/goal.md
+sgfile() { printf -- '---\nstatus: %s\ntype: build\nadvances: a\ndepends_on: none\ntouches: %s\n---\n# %s\n' "$2" "$3" "$1" > "gdd/subgoals/$1.md"; }
+sgfile finished doing src/f/; sgfile working doing src/w/; sgfile lost doing src/l/; sgfile waits todo src/f/x/
+git add -A; git commit -qm base
+for b in finished working; do git branch gdd/$b; done
+git checkout -q gdd/finished; sgfile finished done src/f/; git commit -qam done; git checkout -q main
+out=$(bash "$S" gdd)
+has "ready-to-merge from the branch"  "finished state=ready-to-merge branch=gdd/finished"
+has "doing with its branch"           "working state=doing branch=gdd/working"
+has "doing without a branch"          "lost state=doing branch=none"
+has "ready-to-merge blocks overlaps"  "overlaps=[finished ]"
+git merge -q --no-ff gdd/finished -m merge; out=$(bash "$S" gdd)
+has "done after merge"                "done: finished"
+cd "$W"
+
 echo "workdir: $W"
 exit $fail

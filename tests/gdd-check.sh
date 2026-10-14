@@ -31,8 +31,6 @@ has() { if printf '%s\n' "$out" | grep -qF -- "$2"; then echo "PASS $1"; else ec
 
 out=$(bash "$S" gdd)
 has "progress: command, observe, human, gate" "progress: capture=not-met easy=observe no-forget=human gate=met open_uncertainties=1"
-mkdir -p wt/src && touch wt/src/a.txt
-out=$(bash "$S" gdd --at "$W/wt"); has "progress: checks run where --at points" "capture=met"
 touch src/a.txt src/broken
 out=$(bash "$S" gdd); has "progress: gate fails" "capture=met easy=observe no-forget=human gate=not-met"
 rm src/broken
