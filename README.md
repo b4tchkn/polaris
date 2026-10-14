@@ -40,14 +40,13 @@ In the repository where you want to get something done (new or existing):
 gdd/
   goal.md        your goal: acceptance scenarios and the definition of done, each with a Check line;
                  frontmatter holds mode (fast or careful when in doubt)
-  subgoals/      one file per open sub-goal; its state comes from its pull request, not from the file
-  archive/       sub-goals whose pull request was merged (the pull request moves the file here)
-  state.md       the AI's one-page notes: now, built so far, uncertainties, rejected ideas, learnings
+  subgoals/      one file per sub-goal, with status: todo, done (set by its own pull request), or cancelled (with why)
+  uncertainties/ one file per thing still unknown about reaching the goal, open or resolved with the answer
   adr/           one file per decision you made, with the options and your reasons
-  reviews/       one review per sub-goal
+  reviews/       one review per sub-goal, with the learnings later sub-goals follow
 ```
 
-Every write to `goal.md` needs your approval.
+Every write to `goal.md` needs your approval. Nothing is committed to your main branch directly: every change, `gdd/` files included, reaches it as a pull request you merge.
 
 ## Goals and checks
 
@@ -76,24 +75,26 @@ mode: careful
 
 ## What the plugin adds to Claude Code
 
-- Two skills, `/polaris:gdd-init` and `/polaris:gdd-loop`, and three subagents that gdd-loop calls, each in a separate context: `goal-owner` is responsible for the goal: it checks a draft goal (outcomes, size, checks that could be deterministic) and decides from the check and status results which sub-goals to start next, when to wait, and whether the goal is reached; `worker` writes a sub-goal's checks and then builds it in its own worktree, `subgoal-verifier` says whether each command check really tests its condition and judges the `observe:` items.
+- Two skills, `/polaris:gdd-init` and `/polaris:gdd-loop`, and three subagents that gdd-loop calls, each in a separate context: `goal-owner` is responsible for the goal: it checks a draft goal (outcomes, size, checks that could be deterministic) and decides from the check and status results which sub-goals to start next, when a refinement is needed, when to wait, and whether the goal is reached; `worker` writes a sub-goal's checks and then builds it in its own worktree, `subgoal-verifier` says whether each command check really tests its condition and judges the `observe:` items.
 - `gdd-check.sh` runs the checks: the goal's (progress toward the goal) or one sub-goal's plus the gate.
 - `gdd-lint.sh` checks the format of sub-goal and review files (frontmatter, and a `Check:` for every `[id]`); the hook runs it on every write, and it runs on its own too.
-- `gdd-status.sh` says where the sub-goals stand: lists pull requests and whether they were merged, says which candidates can start and which can run in parallel, and holds when progress stalls or a pull request was closed.
+- `gdd-status.sh` says where the sub-goals stand: done and cancelled ones from their files, the rest from their pull requests (in review, merged but not pulled, closed), which can start and which can run in parallel, whether a refinement is waiting, and holds when progress stalls.
 - Approval rules for hard-to-reverse actions, written by `gdd-init` into `.claude/settings.json`: adding a dependency, changing migrations, `git push`, merging a PR, rewriting history, and editing the rules themselves. They prompt you whatever the AI thinks, also when a worker running in the background triggers them.
-- One hook on Bash, Edit, and Write. It restores a `gdd/goal.md` written by a shell command, a sub-goal file without an `advances:` line, a learning removed from `gdd/state.md`, and a changed or deleted ADR in `gdd/adr/`. It restores test files when an edit adds a skip or removes tests, or a shell command deletes them, and tells the AI to ask you first. Each subagent and each worktree is checked on its own. It needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
+- One hook on Bash, Edit, and Write. It restores a `gdd/goal.md` written by a shell command, a sub-goal file without an `advances:` line, a learning removed from a review or a deleted review, and a changed or deleted ADR in `gdd/adr/`. It restores test files when an edit adds a skip or removes tests, or a shell command deletes them, and tells the AI to ask you first. Each subagent and each worktree is checked on its own. It needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
 
 ## How a loop works
 
-1. **Pull requests.** The AI checks the pull requests it opened (each one's body starts with `Sub-goal: gdd/archive/subgoals/<slug>.md`, where the pull request moves the sub-goal file): merged ones unblock the sub-goals that depend on them once you have pulled; closed ones become rejected ideas. It does not read or answer comments; that is yours.
-2. **Plan.** The goal-owner picks the candidate that moves the most unmet scenarios or resolves the biggest open uncertainty, and the AI writes its "Done when" with checks. Independent candidates that touch different paths are picked together.
+1. **Pull requests.** The AI checks the pull requests it opened (each one's body starts with `Sub-goal: gdd/subgoals/<slug>.md`; the pull request sets that file's `status: done`): merged ones unblock the sub-goals that depend on them once you have pulled; closed ones are cancelled by the next refinement. It does not read or answer comments; that is yours.
+2. **Plan.** The goal-owner picks the `todo` sub-goal that moves the most unmet scenarios or resolves the biggest open uncertainty. Independent ones that touch different paths are picked together. When nothing left would move the goal, a pull request was closed, or an answer changed the plan, it asks for a refinement instead.
 3. **Work.** A worker writes the checks, builds the sub-goal in its own worktree, runs the checks and the gate, and commits. When it hits a decision that is hard to reverse (data model, external services, authentication, new dependencies) or would loosen a check, it stops; the AI asks you three options and passes your answer back.
-4. **Review.** `gdd-check.sh` runs the checks on the worker's branch; the subgoal-verifier covers what no command can; the AI looks back (learnings go into `state.md`, work becomes new candidates).
+4. **Review.** `gdd-check.sh` runs the checks on the worker's branch; the subgoal-verifier covers what no command can; the AI looks back (learnings go into the review, resolved uncertainties get their answers).
 5. **Finish.** The AI opens the pull request without asking, with its code, checks, sub-goal file, review, and decisions, and posts what it is unsure of as line comments. You review, have it fixed in any session, and merge or close it.
 
-A Decide sub-goal asks you to choose among three options before its pull request. When the goal's progress has not moved for three reviews, or a pull request was closed, the loop holds and asks you before starting anything new.
+A Decide sub-goal asks you to choose among three options before its pull request. When the goal's progress has not moved for three reviews, the loop holds and asks you before starting anything new.
 
-When every scenario is met and nothing is left, the AI tells you the goal looks reached and asks whether to add sub-goals or write a goal completion report (`gdd/reviews/GOAL.md`: acceptance scenarios and their results, what was left undone, candidates for the next goal). Archiving a finished goal and starting the next one is not automated yet.
+**Refinement** (like Spec Kit's clarify and tasks) asks you up to five questions about the open uncertainties, then writes the sub-goals, with their "Done when" and checks, as one pull request for you to review before any work starts. It runs when the goal is set, when you ask ("refine the sub-goals", "add a sub-goal"), and when the goal-owner asks for one.
+
+When every scenario is met and nothing is left, the AI tells you the goal looks reached and asks whether to add sub-goals (a refinement) or write a goal completion report (`gdd/reviews/GOAL.md`: acceptance scenarios and their results, what was left undone, candidates for the next goal). Archiving a finished goal and starting the next one is not automated yet.
 
 The AI replies in the language you use.
 
