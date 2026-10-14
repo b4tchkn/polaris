@@ -21,7 +21,7 @@ Goal Driven Development の基盤を作り、Claude Code の plugin として提
 3. [judge-without-code] 各サブゴールの完了時に、人間がコードを読まずに、サブゴール完了報告とデモだけで「次へ進む / 方向転換 / やめる」を判断できる。
    - Check: human: 判断できたかは人間にしか分からない
 4. [retro-reflected] 振り返りの「変えること」が実際に次のループに反映され、同じ手戻りが再発しない。
-   - Check: observe: レビューの Problems と state.md の Learnings を並べ、同じ問題が2回出ていないか
+   - Check: observe: レビューの Problems と Learnings を並べ、同じ問題が2回出ていないか
 5. [published] GitHub 上で plugin として公開され、誰でも `/plugin install` で入れられる。
    - Check: `gh repo view b4tchkn/polaris --json visibility -q .visibility | grep -qx PUBLIC && claude plugin validate plugins/polaris >/dev/null`
 
