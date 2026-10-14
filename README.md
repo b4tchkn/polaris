@@ -36,37 +36,29 @@ In the repository where you want to get something done (new or existing):
 
 ```
 gdd/
-  goal.md        your goal, acceptance scenarios, premises
-  subgoals.md    sub-goals, each with evaluation criteria
-  state.md       the AI's one-page notes, rewritten every loop (learnings are kept)
-  adr.md         decisions you made, with the options and your reasons
-  reviews/       one review per sub-goal
+  goal.md          your goal, acceptance scenarios, premises
+  subgoals/        one file per sub-goal (todo, doing, done, cancelled), each with its "Done when"
+  uncertainties/   one file per open question about reaching the goal, and its answer once resolved
+  reviews/         one review per sub-goal; its learnings are kept
+  adr/             one file per decision you made, with the options and your reasons
 ```
 
-The AI can propose changes to `goal.md` and `subgoals.md`, but every write needs your approval.
+The AI can propose changes to `goal.md`, but every write needs your approval.
 
 ## What the plugin adds to Claude Code
 
 - Two skills: `/polaris:gdd-init` and `/polaris:gdd-loop`, and one subagent, `evaluator`, that gdd-loop calls to score the evaluation criteria.
 - Approval rules for hard-to-reverse actions, written by `gdd-init` into `.claude/settings.json`: adding a dependency, changing migrations, `git push`, merging a PR, rewriting history, and editing the rules themselves. They prompt you whatever the AI thinks.
-- One hook on Bash, Edit, and Write (PreToolUse and PostToolUse). It snapshots the `gdd/` state files before a tool runs and checks them after: a `gdd/goal.md` or `gdd/subgoals.md` changed or created by a shell command is restored, a learning removed from `gdd/state.md` is restored, a rewritten `gdd/adr.md` is restored, and an edit that adds a skip or ignore to a test file is refused with an instruction to ask you first. It runs in every repository where the plugin is installed, needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
+- One hook on Bash, Edit, and Write (PreToolUse and PostToolUse). It snapshots the `gdd/` state files before a tool runs and checks them after: a `gdd/goal.md` changed or created by a shell command is restored, a learning removed from a review in `gdd/reviews/` is restored, a changed or deleted file in `gdd/adr/` is restored, a sub-goal, uncertainty, or review file that breaks its format is reverted, and an edit that adds a skip or ignore to a test file is refused with an instruction to ask you first. It runs in every repository where the plugin is installed, needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
 
 ## How a loop works
 
-1. The AI applies your last decision and works on the next sub-goal only.
+1. The AI applies your last decision and works on the sub-goal marked `doing` only.
 2. It stops to ask when a decision is hard to reverse (data model, external services, authentication, new dependencies) or would loosen the acceptance criteria.
 3. It looks back: an evaluator in a separate context scores the evaluation criteria from evidence it gathers itself (the AI that did the work does not grade itself), then what to keep, what went wrong, improvement proposals, and three options for the next sub-goal, each with trade-offs.
 4. It writes a review with all of that plus what was built and its least confident decision.
-5. You choose. The AI asks why, and records your reason in `adr.md`.
+5. You choose. The AI asks why, and records your reason in `gdd/adr/`.
 
 When no sub-goal is left, the AI tells you the goal looks reached and asks whether to add sub-goals or write a goal completion report (`gdd/reviews/GOAL.md`: acceptance scenarios and their results, what was left undone, candidates for the next goal). Archiving a finished goal and starting the next one is not automated yet.
 
 The AI replies in the language you use.
-
-## Testing the skills
-
-`plugins/polaris/evals/` holds eval cases for `claude plugin eval`: each case scaffolds a small `gdd/`, runs `/polaris:gdd-loop` on it, and checks the files and reviews it leaves behind. Run them from the repository root (each case is one real Claude session, so it costs tokens):
-
-```
-claude plugin eval plugins/polaris --scaffold --allow-tools Bash Write Edit --ablation none --runs 1 --no-publish
-```
