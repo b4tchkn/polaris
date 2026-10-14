@@ -1,32 +1,32 @@
 # Goal: Goal Driven Development 基盤
 
-## 大ゴール（北極星）
+## North star
 
-Goal Driven Development の基盤を作り、Claude Code の plugin として提供する。
+Goal Driven Development の基盤を Claude Code の plugin として提供し、新規でも既存のリポジトリでも plugin を入れて init すれば、AI がゴールへ自律的に進み、人間は要所だけ介在する開発を同じ手順で始められるようにする。
 
-- 新規のサービス開発や事業の立ち上げ（0→1）でも、既存のリポジトリ（1→100）でも、plugin を入れて init すれば同じ手順で始められる。
-- AI（Claude Code）が GOAL に向かって自律的に作業し、人間は**要所で理解しながら介在する**。
-  - 人間が見るのはコードの細部ではない。「何が出来上がったか」と「本当にそれでいいか」を見る。
-  - 人間は毎ステップ承認する係にはならない。ただし、方向を決める瞬間には必ず関わる。
+## Acceptance scenarios
 
-## 受け入れシナリオ
+> Outcomes of the whole goal, from the user's side: 3 to 5, at most 7. Keep one only if the goal would be unmet when it alone fails. Edge cases belong in a sub-goal's "Done when".
+> Each gets an `[id]` and a `Check:` line. Prefer a command (tests, scripts): `` Check: `<command>` ``. Otherwise `Check: observe: <what to look at>` or `Check: human: <why only a human can judge>`.
 
-1. [new-repo] 新規リポジトリに plugin と init で導入し、小さな新規アプリのサブゴールを3つ以上回せる。
-   - Check: human: 実際の新規リポジトリで回した結果を人間が確かめる
-2. [existing-repo] 既存のリポジトリに plugin と init で導入し、サブゴールを1つ以上回せる。
-   - Check: human: 実際の既存リポジトリで回した結果を人間が確かめる
-3. [judge-without-code] 人間がコードを読まずに、レビューと ADR だけで、進行中の作業を止めて方向を変えられる。
-   - Check: human: 判断できたかは人間にしか分からない
-4. [retro-reflected] 振り返りの「変えること」が実際に次のループに反映され、同じ手戻りが再発しない。
-   - Check: observe: レビューの Problems と Learnings を並べ、同じ問題が2回出ていないか
-5. [published] GitHub 上で plugin として公開され、誰でも `/plugin install` で入れられる。
+1. [new-repo] 空の新規リポジトリに plugin を入れて `/polaris:gdd-init` と `/polaris:gdd-loop` を実行すると、小さな新規アプリのサブゴールが3つ以上 main に取り込まれ、main で gate が通る。
+   - Check: `bash sim/verify.sh new-repo`（直近のシミュレーションの結果について、main に gdd/<slug> のマージコミットが3件以上あり、それらのサブゴールが status: done で、main で gate が 0 で終わることを確かめる）
+2. [parallel] 独立したサブゴール2〜3個を、worker サブエージェントの並列と、別のセッションで開いた `/polaris:gdd-work` の2通りで回すと、どちらもすべて main に取り込まれ、main で gate が通る。
+   - Check: `bash sim/verify.sh parallel`（2通りそれぞれについて、配ったサブゴールすべての gdd/<slug> が main にマージされて status: done で、main で gate が 0 で終わることを確かめる）
+3. [existing-repo] 自分の既存のリポジトリに `/plugin install` で入れ、`/polaris:gdd-init` と `/polaris:gdd-loop` でサブゴールを1つ以上 main に取り込める。
+   - Check: human: 本物の既存リポジトリでの使い勝手は人間にしか分からない
+4. [published] GitHub 上で plugin として公開され、誰でも `/plugin install` で入れられる。
    - Check: `gh repo view b4tchkn/polaris --json visibility -q .visibility | grep -qx PUBLIC && claude plugin validate plugins/polaris >/dev/null`
 
-## 完成の定義
+## Definition of done
 
-1. [gate] hook のテスト、gdd-check.sh、gdd-status.sh、gdd-lint.sh のテスト、plugin の検証が通る
+> The gate every sub-goal passes: one command that runs the project's formatter, linter, type check, build, and tests.
+
+1. [gate] hook のテスト、gdd-check.sh、gdd-status.sh、gdd-lint.sh のテスト、plugin の検証が通る（シェルスクリプトと Markdown だけなので、formatter、型チェック、ビルドは無い）
    - Check: `bash tests/check.sh`
 
-## 前提
+## Premises
 
-- なし
+- 設計は `docs/design.md`（2026-10-14 版）。それに沿った実装（gdd-init、gdd-loop、gdd-work、goal-owner、worker、subgoal-verifier、hook）が main にある。
+- new-repo と parallel は Docker のシミュレーション（headless の Claude Code）で確かめる。人間の答えはシミュレーションの中で台本として与える。
+- 旧設計での学びは `gdd/reviews/redesign.md`、旧サブゴールは `gdd/archive/` にある。
