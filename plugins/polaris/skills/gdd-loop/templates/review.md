@@ -1,34 +1,35 @@
-# Sub-goal review: SG<N> <goal>
+---
+subgoal: <slug>
+loop: <n>
+progress: <one line with the check results, e.g. 2 of 3 met>
+---
+# Sub-goal review: <slug> <what it achieves>
 
 ## What was built and how to try it
 
-- <Deliverable>
+- <Deliverable, and the branch it is on>
 - Demo: <link, recording, or how to run it>
 
-## Evaluation against the criteria
+## Checks
 
-| Criterion | Quantitative / qualitative | Result | Met? |
+| Condition | Check | Result | By |
 |---|---|---|---|
-| <criterion from subgoals.md> | | | <Met / Not met / Partly> |
+| <id> <condition> | <command / observe / human> | <Met / Not met / Partly / Not checked / for the human> | <evaluator / human> |
 
-## Least confident decision
+## Distance to the goal
 
-- <The decision and why>
+- <Each acceptance scenario: met / not met, and what changed in this loop>
+- <Open uncertainties, and which were resolved>
 
-## Discarded ideas
+## Least confident
 
-- <Idea>: <why it was discarded>
-
-## Questions for the human
-
-- <Question>
+- <file:line: what is uncertain and how to check it>
 
 ## Retrospective
 
-| Item | Content |
-|---|---|
-| Keep | <What worked> |
-| Problems | <Rework, where the human stepped in, why something was rejected> |
+- Keep: <what worked>
+- Problems: <rework, what needed the subgoal-verifier or the human that a check could have caught>
+- Candidates added: <slugs, or none>
 
 ## Improvement proposals
 
@@ -38,11 +39,17 @@
 
 ## Next sub-goal options
 
-| Option | Goal | Type and done condition | Evaluation criteria (quantitative / qualitative) | What to show | Trade-off |
+| Option | Goal | Type | Done when (quantitative / qualitative) | What to show | Trade-off |
 |---|---|---|---|---|---|
 | A | | | | | |
 | B | | | | | |
 | C | | | | | |
+
+## Learnings
+
+> What later sub-goals should follow. Never delete one; when it has been turned into a check, hook, or rule, keep it and add "→ hardened: <where>" in the review that does it.
+
+- <learning, or None>
 
 ## Decision
 

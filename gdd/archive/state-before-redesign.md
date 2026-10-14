@@ -4,7 +4,8 @@
 
 ## 現状
 
-- SG19 完了（19ケース pass、対応表に未カバーなし）。次は SG20（ヒルクライミング）。SG15 は「その先」のまま。
+- 2026-10-10：`docs/redesign-plan.md` の改修を実装（ブランチ `feat/redesign`）。`subgoals.md` は `gdd/subgoals/` の1件1ファイルに移した。eval は18ケースに書き直したが未実行（人間が流す）。候補は sg20（ヒルクライミング。19ケース前提の記述は着手時に直す）、sg15、sg10。
+- SG19 完了（19ケース pass、対応表に未カバーなし）。
 - 2026-10-07 に Human-on-the-loop の多視点レビューと4シナリオのシミュレーションを行い、「その先」を機械的な停止条件 → 公開 → 評価の独立 → 続く既定の順に並べ直した。定義は README と design.md 0（SKILL.md には SG12 で）。
 
 ## 出来たもの
@@ -16,8 +17,8 @@
 - `gdd-loop` 手順5・7（SG13）：「その先」が空なら受け入れシナリオごとの結果を書き、GOAL 達成に見えると伝えて「サブゴールを足す / 完了報告（`gdd/reviews/GOAL.md`）を書く」を聞く。試験用 `simulations/goal-done/gdd/`（commit しない）
 - `plugins/polaris/agents/evaluator.md`（SG11）：評価基準と成果物の場所だけを受け取り、自分で測って基準ごとの表を返す。`gdd-loop` 5 が `polaris:evaluator` を呼び、表をそのまま貼る。試験用 `simulations/eval-test/gdd/`（commit しない）
 - `gdd-loop` 7（SG12）：作る系で evaluator の表が全行「達成」なら人間に聞かず「次へ進む（自動）」として手順2へ。冒頭に Human-on-the-loop の1文。試験用 `simulations/auto-test/gdd/`（commit しない）
-- `plugins/polaris/evals/`（SG19 で19ケース）：ambiguous-comment（3案は LLM 判定）、stop-data-model、evaluator-verdict、init-existing、apply-proceed にハーネス化の印。SG18 時点：決める系、方向転換、提案の採用、依存で止まる、言語、history_file で人間の答えを再現する3つ（初回の答え、完了報告、見送り）、案を選んで adr。指示との対応表は `gdd/reviews/SG18.md`。SG17 時点の6ケース：`init`、`first-run`、`apply-proceed`、`apply-stop`、`auto-continue`（SG0・SG1 が自動で進み SG2 で止まる）と `goal-reached`（「その先」が空で GOAL 達成の2択）。scaffold_script が試験用 `gdd/` を作り、graders が a.txt / b.txt とレビューの判断欄を見る。README に走らせ方
-- design.md と plugin の対応表（SG14）：`gdd/reviews/SG14.md`。入っている 14、一部 6、無い 6（予定無しはアーカイブ一式、大きさの指針、典型的な並び、N 周無変化）
+- `plugins/polaris/evals/`（SG19 で19ケース）：ambiguous-comment（3案は LLM 判定）、stop-data-model、evaluator-verdict、init-existing、apply-proceed にハーネス化の印。SG18 時点：決める系、方向転換、提案の採用、依存で止まる、言語、history_file で人間の答えを再現する3つ（初回の答え、完了報告、見送り）、案を選んで adr。指示との対応表は `gdd/archive/reviews/SG18.md`。SG17 時点の6ケース：`init`、`first-run`、`apply-proceed`、`apply-stop`、`auto-continue`（SG0・SG1 が自動で進み SG2 で止まる）と `goal-reached`（「その先」が空で GOAL 達成の2択）。scaffold_script が試験用 `gdd/` を作り、graders が a.txt / b.txt とレビューの判断欄を見る。README に走らせ方
+- design.md と plugin の対応表（SG14）：`gdd/archive/reviews/SG14.md`。入っている 14、一部 6、無い 6（予定無しはアーカイブ一式、大きさの指針、典型的な並び、N 周無変化）
 - `.claude/settings.json`：どこの `gdd/state.md` も allow。`gdd/` と `simulations/**/gdd/` の goal.md / subgoals.md を ask
 - design.md：改善ループ（5）、3案と adr.md（3）、アーカイブ前に学びを雛形へ移す（6）。README：入れ方と始め方
 - シミュレーション1 `simulations/morning-review/`（commit しない）：SG0〜SG3 を回し、`/morning-review` で動いた
@@ -44,6 +45,11 @@
 - SG17 → 次へ進む（6ケース pass）。次は順番どおり SG15（着手は人間の指示待ち）。提案 1（長い作業は分けて伝える）を採用。
 - 2026-10-09：人間の割り込みで SG18（全挙動を eval で）を追加して着手。SG18 → 次へ進む。次は SG19（未カバー8つ）→ SG20（ヒルクライミング）。理由「未カバーを残したままヒルクライミングに入らない」。提案 1（fixture の文は解釈が1つに決まるように）、2（未カバーをサブゴールに）を採用。
 - SG19 → 次へ進む（19ケース pass）。次は SG20 ヒルクライミング。理由：安全網が揃った。提案 1（自由文は LLM 判定）、2（fixture は本物の流れ）を採用。
+
+## 未確定事項
+
+- U1 worker サブエージェント（`isolation: worktree`）と background 実行は、eval と実セッションで想定どおり動くか | open
+- U2 聞かずに進む条件（直近3件、停滞3件、大きさの上限）は、聞かれすぎ / 聞かなさすぎのどちらにも偏らないか | open
 
 ## 却下された案
 

@@ -5,7 +5,7 @@ flags: s
 match: contains
 target:
   source: file
-  path: skip-test/gdd/reviews/SG0.md
+  path: skip-test/gdd/reviews/create-a.md
 ---
 
 The answered questions were written into the Decision section (Proceed, option A).

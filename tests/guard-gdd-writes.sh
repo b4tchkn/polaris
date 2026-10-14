@@ -4,32 +4,33 @@ HOOK="$(cd "$(dirname "$0")/.." && pwd)/plugins/polaris/hooks/guard-gdd-writes.s
 W=$(mktemp -d "${TMPDIR:-/tmp}/guard-test-XXXX"); cd "$W"
 export TMPDIR="$W/tmp"; mkdir -p "$TMPDIR" gdd sub/gdd tests
 printf '# Goal: X\n' > gdd/goal.md
-printf '# Sub-goals\n' > gdd/subgoals.md
+mkdir -p gdd/subgoals
+printf -- '---\nstatus: todo\ntype: build\nadvances: scenario_1\ndepends_on: none\ntouches: src/\n---\n# a\n' > gdd/subgoals/a.md
 printf '# Goal: Y\n' > sub/gdd/goal.md
-printf '# State\n\n## Now\n\n- a\n\n## Learnings\n\n- keep one\n- keep two\n' > gdd/state.md
-printf '# State\n\n## 現状\n\n- a\n\n## 学び\n\n- 学び一\n- 学び二\n' > gdd/state-ja.md
-printf '# ADR\n\n## 2026-01-01 SG0 x\n\n- Decided: a\n' > gdd/adr.md
+mkdir -p gdd/adr && printf '# 2026-01-01 x\n\n- Decided: a\n' > gdd/adr/2026-01-01-x.md
 printf 'def test_a():\n    assert 1\n' > tests/test_a.py
 
 fail=0
 check() { # name expected_exit actual_exit
   if [ "$2" = "$3" ]; then echo "PASS $1"; else echo "FAIL $1 (want exit $2, got $3)"; fail=1; fi
 }
-json() { printf '{"session_id":"s1","tool_name":"%s","tool_input":{"command":"x","file_path":"%s"}}' "$1" "$2"; }
+json() { # tool file_path [cwd] [agent_id]
+  printf '{"session_id":"s1",%s%s"tool_name":"%s","tool_input":{"command":"x","file_path":"%s"}}' \
+    "${3:+\"cwd\":\"$3\",}" "${4:+\"agent_id\":\"$4\",}" "$1" "$2"
+}
 
-# --- Bash writes to goal/subgoals: each must be reverted and refused
+# --- Bash writes to goal.md: each must be reverted and refused
 bash_case() { # name, command that writes
   json Bash "" | bash "$HOOK" pre
   bash -c "$2" 2>/dev/null
   json Bash "" | bash "$HOOK" post 2>/dev/null; rc=$?
   check "bash: $1" 2 "$rc"
   [ "$(cat gdd/goal.md)" = "# Goal: X" ] || { echo "FAIL bash: $1 goal.md not restored"; fail=1; }
-  [ "$(cat gdd/subgoals.md)" = "# Sub-goals" ] || { echo "FAIL bash: $1 subgoals.md not restored"; fail=1; }
   [ "$(cat sub/gdd/goal.md)" = "# Goal: Y" ] || { echo "FAIL bash: $1 sub goal.md not restored"; fail=1; }
 }
 bash_case "redirect"        'echo hacked > gdd/goal.md'
 bash_case "python open"     'python3 -c "open(\"gdd/goal.md\",\"w\").write(\"hacked\")"'
-bash_case "cd then write"   'cd gdd && echo hacked > subgoals.md'
+bash_case "cd then write"   'cd gdd && echo hacked > goal.md'
 bash_case "variable path"   'F=gdd/goal.md; echo hacked > $F'
 bash_case "glob"            'echo hacked > gdd/go*.md'
 bash_case "sed -i"          'sed -i "" "s/X/hacked/" gdd/goal.md'
@@ -55,35 +56,126 @@ check "bash: create new goal.md" 2 "$rc"
 
 # Bash read-only and writes elsewhere: must pass
 json Bash "" | bash "$HOOK" pre
-cat gdd/goal.md > /dev/null; echo x > gdd/state.md.tmp; echo y > notes.md
+cat gdd/goal.md > /dev/null; echo x > gdd/goal.md.tmp; echo y > notes.md
 json Bash "" | bash "$HOOK" post 2>/dev/null; check "bash: read-only / other files" 0 $?
 
-# --- state.md learnings
-P="$W/gdd/state.md"
+# --- sub-goal files: `advances:` is required; renames keep content and pass
+json Bash "" | bash "$HOOK" pre
+mv gdd/subgoals/a.md gdd/subgoals/a2.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: rename -> ok" 0 $?
+
+json Bash "" | bash "$HOOK" pre
+printf -- '---\ntype: build\n---\n# b\n' > gdd/subgoals/b.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: bash new file without advances -> refused" 2 $?
+[ ! -f gdd/subgoals/b.md ] || { echo "FAIL subgoal: file without advances not removed"; fail=1; }
+
+json Bash "" | bash "$HOOK" pre
+printf -- '---\nstatus: todo\ntype: build\nadvances: U1\ndepends_on: none\ntouches: src/\n---\n# c\n' > gdd/subgoals/c.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: bash new file with advances -> ok" 0 $?
+
+S="$W/gdd/subgoals/a2.md"
+json Edit "$S" | bash "$HOOK" pre
+printf -- '---\ntype: build\nadvances:\ndepends_on: none\ntouches: src/\n---\n# a\n' > "$S"
+json Edit "$S" | bash "$HOOK" post 2>/dev/null; check "subgoal: edit empties advances -> refused" 2 $?
+grep -q "scenario_1" "$S" || { echo "FAIL subgoal: not restored"; fail=1; }
+
+S2="$W/gdd/subgoals/d.md"
+json Write "$S2" | bash "$HOOK" pre
+printf '# d\n' > "$S2"
+json Write "$S2" | bash "$HOOK" post 2>/dev/null; check "subgoal: write without frontmatter -> refused" 2 $?
+[ ! -f "$S2" ] || { echo "FAIL subgoal: new file not removed"; fail=1; }
+
+json Bash "" | bash "$HOOK" pre
+printf -- '---\nstatus: todo\ntype: build\nadvances: U1\ndepends_on: none\ntouches: src/\n---\n# e\n\n1. [x] no check\n' > gdd/subgoals/e.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "subgoal: bash item without Check -> refused" 2 $?
+
+mkdir -p gdd/reviews; R="$W/gdd/reviews/a2.md"
+json Write "$R" | bash "$HOOK" pre
+printf -- '---\nsubgoal: a2\nloop: 1\nprogress: p\n---\n# r\n' > "$R"
+json Write "$R" | bash "$HOOK" post 2>/dev/null; check "review: valid -> ok" 0 $?
+json Edit "$R" | bash "$HOOK" pre
+printf -- '---\nsubgoal: a2\n---\n# r\n' > "$R"
+json Edit "$R" | bash "$HOOK" post 2>/dev/null; check "review: edit drops loop and progress -> refused" 2 $?
+grep -q "^loop: 1" "$R" || { echo "FAIL review: not restored"; fail=1; }
+
+# --- parallel subagents: agent B's snapshot must not overwrite agent A's
+json Bash "" "" agentA | bash "$HOOK" pre
+echo hacked > gdd/goal.md
+json Bash "" "" agentB | bash "$HOOK" pre
+json Bash "" "" agentB | bash "$HOOK" post 2>/dev/null
+json Bash "" "" agentA | bash "$HOOK" post 2>/dev/null; check "agents: A's change is caught after B ran" 2 $?
+[ "$(cat gdd/goal.md)" = "# Goal: X" ] || { echo "FAIL agents: goal.md not restored"; fail=1; }
+
+# --- a worktree created under .claude/worktrees/ during a Bash command is left alone
+json Bash "" | bash "$HOOK" pre
+mkdir -p .claude/worktrees/w1/gdd && printf '# Goal: X\n' > .claude/worktrees/w1/gdd/goal.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "worktree: new worktree copy of goal.md is not removed" 0 $?
+[ -f .claude/worktrees/w1/gdd/goal.md ] || { echo "FAIL worktree: worktree goal.md removed"; fail=1; }
+
+# --- worktree: the root is the git root of cwd, not CLAUDE_PROJECT_DIR
+WT=$(mktemp -d "${TMPDIR}/wt-XXXX"); mkdir -p "$WT/gdd" "$WT/src"; printf '# Goal: WT\n' > "$WT/gdd/goal.md"
+git -C "$WT" init -q
+export CLAUDE_PROJECT_DIR="$W/sub"
+json Bash "" "$WT/src" | bash "$HOOK" pre
+echo hacked > "$WT/gdd/goal.md"
+json Bash "" "$WT/src" | bash "$HOOK" post 2>/dev/null; check "worktree: goal.md under cwd's git root is guarded" 2 $?
+[ "$(cat "$WT/gdd/goal.md")" = "# Goal: WT" ] || { echo "FAIL worktree: goal.md not restored"; fail=1; }
+unset CLAUDE_PROJECT_DIR
+
+# --- review learnings: never removed, and a review is never deleted
+mkdir -p gdd/reviews
+P="$W/gdd/reviews/l.md"
+printf -- '---\nsubgoal: l\nloop: 1\nprogress: p\n---\n# r\n\n## Learnings\n\n- keep one\n- keep two\n' > "$P"
 json Edit "$P" | bash "$HOOK" pre
-printf '# State\n\n## Now\n\n- b\n\n## Learnings\n\n- keep one\n' > "$P"
-json Edit "$P" | bash "$HOOK" post 2>/dev/null; check "state: learning removed -> refused" 2 $?
-grep -q "keep two" "$P" || { echo "FAIL state: not restored"; fail=1; }
+printf -- '---\nsubgoal: l\nloop: 1\nprogress: p\n---\n# r\n\n## Learnings\n\n- keep one\n' > "$P"
+json Edit "$P" | bash "$HOOK" post 2>/dev/null; check "review: learning removed -> refused" 2 $?
+grep -q "keep two" "$P" || { echo "FAIL review: learning not restored"; fail=1; }
 
 json Edit "$P" | bash "$HOOK" pre
-printf '# State\n\n## Now\n\n- b\n\n## Learnings\n\n- keep one → hardened: hook\n- keep two\n- new three\n' > "$P"
-json Edit "$P" | bash "$HOOK" post 2>/dev/null; check "state: learnings kept + suffix + new" 0 $?
+printf -- '---\nsubgoal: l\nloop: 1\nprogress: p\n---\n# r\n\n## Learnings\n\n- keep one → hardened: hook\n- keep two\n- new three\n' > "$P"
+json Edit "$P" | bash "$HOOK" post 2>/dev/null; check "review: learnings kept + suffix + new" 0 $?
 
-PJ="$W/gdd/state-ja.md"; cp "$PJ" "$W/gdd/state.md"
-json Edit "$W/gdd/state.md" | bash "$HOOK" pre
-printf '# State\n\n## 現状\n\n- b\n\n## 学び\n\n- 学び一\n' > "$W/gdd/state.md"
-json Edit "$W/gdd/state.md" | bash "$HOOK" post 2>/dev/null; check "state(ja): 学び removed -> refused" 2 $?
+PJ="$W/gdd/reviews/ja.md"
+printf -- '---\nsubgoal: ja\nloop: 2\nprogress: p\n---\n# r\n\n## 学び\n\n- 学び一\n- 学び二\n' > "$PJ"
+json Edit "$PJ" | bash "$HOOK" pre
+printf -- '---\nsubgoal: ja\nloop: 2\nprogress: p\n---\n# r\n\n## 学び\n\n- 学び一\n' > "$PJ"
+json Edit "$PJ" | bash "$HOOK" post 2>/dev/null; check "review(ja): 学び removed -> refused" 2 $?
 
-# --- adr.md append-only
-A="$W/gdd/adr.md"
+json Bash "" | bash "$HOOK" pre
+printf -- '---\nsubgoal: l\nloop: 1\nprogress: p\n---\n# r\n\n## Learnings\n\n- other\n' > "$P"
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "review: bash removes a learning -> refused" 2 $?
+grep -qx -- "- keep two" "$P" || { echo "FAIL review: bash-removed learning not restored"; fail=1; }
+
+json Bash "" | bash "$HOOK" pre
+rm "$P"
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "review: bash deletes a review -> refused" 2 $?
+[ -f "$P" ] || { echo "FAIL review: deleted review not restored"; fail=1; }
+
+# --- uncertainty files keep their format
+U="$W/gdd/uncertainties/u.md"; mkdir -p gdd/uncertainties
+json Write "$U" | bash "$HOOK" pre
+printf -- '---\nstatus: open\n---\n# u?\n' > "$U"
+json Write "$U" | bash "$HOOK" post 2>/dev/null; check "uncertainty: valid -> ok" 0 $?
+json Edit "$U" | bash "$HOOK" pre
+printf -- '---\nstatus: half\n---\n# u?\n' > "$U"
+json Edit "$U" | bash "$HOOK" post 2>/dev/null; check "uncertainty: bad status -> refused" 2 $?
+grep -qx "status: open" "$U" || { echo "FAIL uncertainty: not restored"; fail=1; }
+
+# --- gdd/adr/: new files are fine, existing ones never change
+A="$W/gdd/adr/2026-01-02-y.md"
+json Write "$A" | bash "$HOOK" pre
+printf '# 2026-01-02 y\n\n- Decided: b\n' > "$A"
+json Write "$A" | bash "$HOOK" post 2>/dev/null; check "adr: new file" 0 $?
+
 json Edit "$A" | bash "$HOOK" pre
-printf '\n## 2026-01-02 SG1 y\n\n- Decided: b\n' >> "$A"
-json Edit "$A" | bash "$HOOK" post 2>/dev/null; check "adr: append" 0 $?
-
-json Edit "$A" | bash "$HOOK" pre
-printf '# ADR\n\n## 2026-01-01 SG0 x\n\n- Decided: CHANGED\n' > "$A"
-json Edit "$A" | bash "$HOOK" post 2>/dev/null; check "adr: rewrite -> refused" 2 $?
+printf '# 2026-01-02 y\n\n- Decided: CHANGED\n' > "$A"
+json Edit "$A" | bash "$HOOK" post 2>/dev/null; check "adr: edit existing -> refused" 2 $?
 grep -q "Decided: b" "$A" || { echo "FAIL adr: not restored"; fail=1; }
+
+json Bash "" | bash "$HOOK" pre
+rm "$A"; printf '# z\n' > gdd/adr/2026-01-03-z.md
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "adr: bash delete existing -> refused" 2 $?
+[ -f "$A" ] && [ -f gdd/adr/2026-01-03-z.md ] || { echo "FAIL adr: delete not restored or new file removed"; fail=1; }
 
 # --- tests: skip added
 T="$W/tests/test_a.py"
@@ -91,9 +183,32 @@ json Edit "$T" | bash "$HOOK" pre
 printf 'import pytest\n@pytest.mark.skip\ndef test_a():\n    assert 1\n' > "$T"
 json Edit "$T" | bash "$HOOK" post 2>/dev/null; check "test: skip added -> refused" 2 $?
 
+grep -q skip "$T" && { echo "FAIL test: skip not restored"; fail=1; }
+printf 'import pytest\n@pytest.mark.skip\ndef test_a():\n    assert 1\n' > "$T"
 json Edit "$T" | bash "$HOOK" pre
 printf 'import pytest\n@pytest.mark.skip\ndef test_a():\n    assert 2\n' > "$T"
 json Edit "$T" | bash "$HOOK" post 2>/dev/null; check "test: skip unchanged -> ok" 0 $?
+
+printf 'def test_a():\n    assert 1\n\ndef test_b():\n    assert 1\n' > "$T"
+json Edit "$T" | bash "$HOOK" pre
+printf 'def test_a():\n    assert 1\n' > "$T"
+json Edit "$T" | bash "$HOOK" post 2>/dev/null; check "test: test removed by Edit -> refused" 2 $?
+grep -q test_b "$T" || { echo "FAIL test: removed test not restored"; fail=1; }
+
+J="$W/tests/list.test.js"; printf "test('a', () => {})\n" > "$J"
+json Edit "$J" | bash "$HOOK" pre
+printf "test('a', () => {})\ntest('b', () => {})\n" > "$J"
+json Edit "$J" | bash "$HOOK" post 2>/dev/null; check "test: test added -> ok" 0 $?
+
+# --- Bash deleting a test file is restored from git; moving one is fine
+git add -A >/dev/null 2>&1; git -c user.email=a@b -c user.name=a commit -qm t >/dev/null 2>&1
+json Bash "" | bash "$HOOK" pre
+rm tests/test_a.py
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "test: bash delete -> refused" 2 $?
+[ -f tests/test_a.py ] || { echo "FAIL test: deleted test not restored"; fail=1; }
+json Bash "" | bash "$HOOK" pre
+mkdir -p tests/unit && git mv tests/test_a.py tests/unit/test_a.py
+json Bash "" | bash "$HOOK" post 2>/dev/null; check "test: bash move -> ok" 0 $?
 
 # non-test file with 'skip' word must pass
 N="$W/notes.md"; json Edit "$N" | bash "$HOOK" pre; echo "it.skip(" > "$N"

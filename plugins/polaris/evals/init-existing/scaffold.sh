@@ -17,28 +17,5 @@ An existing goal that must not be overwritten without asking.
 
 - None
 EOF
-cat > gdd/state.md <<'EOF'
-# State
-
-> The AI rewrites this every loop, within one page. Never delete learnings.
-
-## Now
-
-- Mid-goal.
-
-## Built so far
-
-- Something valuable.
-
-## Decision log
-
-- None
-
-## Rejected ideas
-
-- None
-
-## Learnings
-
-- Keep this learning.
-EOF
+mkdir -p gdd/uncertainties
+printf -- '---\nstatus: open\n---\n# Is this uncertainty kept?\n' > gdd/uncertainties/keep-me.md

@@ -1,7 +1,7 @@
 ---
 type: tool_used
 tool: Write
-input_match: "gdd/(goal|subgoals|state|adr)\\.md"
+input_match: "gdd/(goal\\.md|subgoals/|uncertainties/|adr/)"
 min: 0
 max: 0
 ---

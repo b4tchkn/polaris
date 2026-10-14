@@ -1,7 +1,7 @@
 #!/bin/bash
-# SG0 is built and reviewed with two proposals; the Decision section is empty. history.jsonl holds the AI's three questions; the prompt answers 1 and 2 only.
+# create-a is built and reviewed with two proposals; the Decision section is empty. history.jsonl holds the AI's three questions; the prompt answers 1 and 2 only.
 set -e
-mkdir -p skip-test/gdd/reviews
+mkdir -p skip-test/gdd/reviews skip-test/gdd/subgoals skip-test/gdd/uncertainties skip-test/gdd/adr
 printf 'a\n' > skip-test/a.txt
 cat > skip-test/gdd/goal.md <<'EOF'
 # Goal: skipped-rule test
@@ -18,71 +18,53 @@ A question the human did not answer is recorded as skipped and never asked again
 
 - None
 EOF
-cat > skip-test/gdd/subgoals.md <<'EOF'
-# Sub-goals
+cat > skip-test/gdd/subgoals/create-a.md <<'EOF'
+---
+status: doing
+type: build
+advances: skipped-question
+depends_on: none
+touches: skip-test/
+---
+# Create `skip-test/a.txt` containing the single line `a`
 
-> The goal in goal.md, broken into sub-goals. The AI proposes, the human approves (enforced by the ask rules in `.claude/settings.json`).
+## Done when
 
-## Next: SG0 create a.txt
+1. [a-line] Quantitative: the file exists and its content is exactly one line `a`
+   - Check: `test "$(cat skip-test/a.txt)" = a`
 
-| Item | Content |
-|---|---|
-| Goal | Create `skip-test/a.txt` containing the single line `a` |
-| Type and done condition | Build. Done when `cat skip-test/a.txt` prints `a` |
-| Evaluation criteria | Quantitative: the file exists and its content is exactly one line `a` |
-| What to show | Output of `cat skip-test/a.txt` |
+## What to show
 
-## Later (rough outlook)
-
-> Only the next sub-goal is detailed. Later ones get their done condition and evaluation criteria when they become next, using what was learned by then.
-
-| # | Goal | Type |
-|---|---|---|
-| SG1 | Create `skip-test/b.txt` containing the single line `b` | Build |
+- Output of `cat skip-test/a.txt`
 EOF
-cat > skip-test/gdd/state.md <<'EOF'
-# State
-
-> The AI rewrites this every loop, within one page. Never delete learnings.
-
-## Now
-
-- SG0 built and reviewed; waiting for the human's answers to the three questions.
-
-## Built so far
-
-- `skip-test/a.txt`
-
-## Decision log
-
-- None
-
-## Rejected ideas
-
-- None
-
-## Learnings
-
-- None
+cat > skip-test/gdd/subgoals/create-b.md <<'EOF'
+---
+status: todo
+type: build
+advances: skipped-question
+depends_on: create-a
+touches: skip-test/
+---
+# Create `skip-test/b.txt` containing the single line `b`
 EOF
-cat > skip-test/gdd/adr.md <<'EOF'
-# ADR
-
-> Decisions chosen from options. Append only; never rewrite earlier entries.
-EOF
-cat > skip-test/gdd/reviews/SG0.md <<'EOF'
-# Sub-goal review: SG0 create a.txt
+cat > skip-test/gdd/reviews/create-a.md <<'EOF'
+---
+subgoal: create-a
+loop: 1
+progress: 1 of 1 met
+---
+# Sub-goal review: create-a create a.txt
 
 ## What was built and how to try it
 
 - `skip-test/a.txt`
 - Demo: `cat skip-test/a.txt`
 
-## Evaluation against the criteria
+## Checks
 
-| Criterion | Quantitative / qualitative | Result | Met? |
+| Condition | Check | Result | By |
 |---|---|---|---|
-| the file exists and its content is exactly one line `a` | quantitative | `cat skip-test/a.txt` prints `a`; 1 line | Met |
+| a-line the file exists and its content is exactly one line `a` | command | Met | evaluator |
 
 ## Least confident decision
 
@@ -107,15 +89,15 @@ cat > skip-test/gdd/reviews/SG0.md <<'EOF'
 
 | # | Kind | Change | Where it goes | Trade-off |
 |---|---|---|---|---|
-| 1 | Add learning | Always end text files with a trailing newline | `state.md` learnings | Line counts become reliable |
-| 2 | Add learning | Prefer uppercase file names | `state.md` learnings | Consistent names, unusual convention |
+| 1 | Add learning | Always end text files with a trailing newline | the Learnings of this review | Line counts become reliable |
+| 2 | Add learning | Prefer uppercase file names | the Learnings of this review | Consistent names, unusual convention |
 
 ## Next sub-goal options
 
 | Option | Goal | Type and done condition | Evaluation criteria (quantitative / qualitative) | What to show | Trade-off |
 |---|---|---|---|---|---|
-| A | SG1 create `skip-test/b.txt` containing the single line `b` | Build. Done when `cat skip-test/b.txt` prints `b` | Quantitative: one line `b` | `cat skip-test/b.txt` | Follows the planned order |
-| B | SG1 create `skip-test/b.txt` with two lines | Build. Done when the file has two lines | Quantitative: 2 lines | `wc -l` | More content, more to check |
+| A | create `skip-test/b.txt` containing the single line `b` | Build. Done when `cat skip-test/b.txt` prints `b` | Quantitative: one line `b` | `cat skip-test/b.txt` | Follows the planned order |
+| B | create `skip-test/b.txt` with two lines | Build. Done when the file has two lines | Quantitative: 2 lines | `wc -l` | More content, more to check |
 | C | Stop here | — | — | — | Nothing more gets built |
 
 ## Decision

@@ -1,5 +1,5 @@
 #!/bin/bash
-# The human writes in Japanese; the review must be written in Japanese too. SG0 has a qualitative criterion so the loop stops after one sub-goal.
+# The human writes in Japanese; the review must be written in Japanese too. create-hello has a qualitative criterion so the loop stops after one sub-goal.
 set -e
 mkdir -p lang-test/gdd
 cat > lang-test/gdd/goal.md <<'EOF'
@@ -17,55 +17,35 @@ The AI talks to the human and writes reviews in the language the human uses.
 
 - None
 EOF
-cat > lang-test/gdd/subgoals.md <<'EOF'
-# Sub-goals
+mkdir -p lang-test/gdd/subgoals lang-test/gdd/reviews lang-test/gdd/uncertainties lang-test/gdd/adr
+cat > lang-test/gdd/subgoals/create-hello.md <<'EOF'
+---
+status: doing
+type: build
+advances: reply-language
+depends_on: none
+touches: lang-test/
+---
+# Create `lang-test/hello.txt` with a one-line greeting
 
-> The goal in goal.md, broken into sub-goals. The AI proposes, the human approves (enforced by the ask rules in `.claude/settings.json`).
+## Done when
 
-## Next: SG0 create hello.txt
+1. [one-line] Quantitative: the file has exactly one line
+   - Check: `test "$(wc -l < lang-test/hello.txt)" -eq 1`
+2. [friendly] Qualitative: the human finds the greeting friendly
+   - Check: human: whether a greeting is friendly is a matter of taste
 
-| Item | Content |
-|---|---|
-| Goal | Create `lang-test/hello.txt` with a one-line greeting |
-| Type and done condition | Build. Done when the file exists with one line |
-| Evaluation criteria | Quantitative: the file has exactly one line. Qualitative: the human finds the greeting friendly |
-| What to show | Output of `cat lang-test/hello.txt` |
+## What to show
 
-## Later (rough outlook)
-
-> Only the next sub-goal is detailed. Later ones get their done condition and evaluation criteria when they become next, using what was learned by then.
-
-| # | Goal | Type |
-|---|---|---|
-| SG1 | Add a second greeting | Build |
+- Output of `cat lang-test/hello.txt`
 EOF
-cat > lang-test/gdd/state.md <<'EOF'
-# State
-
-> The AI rewrites this every loop, within one page. Never delete learnings.
-
-## Now
-
-- None
-
-## Built so far
-
-- None
-
-## Decision log
-
-- None
-
-## Rejected ideas
-
-- None
-
-## Learnings
-
-- None
-EOF
-cat > lang-test/gdd/adr.md <<'EOF'
-# ADR
-
-> Decisions chosen from options. Append only; never rewrite earlier entries.
+cat > lang-test/gdd/subgoals/second-greeting.md <<'EOF'
+---
+status: todo
+type: build
+advances: reply-language
+depends_on: create-hello
+touches: lang-test/
+---
+# Add a second greeting
 EOF

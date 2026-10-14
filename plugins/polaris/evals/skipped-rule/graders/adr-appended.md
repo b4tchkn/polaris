@@ -1,10 +1,8 @@
 ---
-type: regex
-pattern: "planned order"
-match: contains
-target:
-  source: file
-  path: skip-test/gdd/adr.md
+type: tool_used
+tool: Write
+input_match: "gdd/adr/.*planned order|planned order.*gdd/adr/"
+min: 1
 ---
 
-The chosen option and the human's reason were appended to adr.md.
+A new ADR file in gdd/adr/ holds the chosen option and the human's reason.
