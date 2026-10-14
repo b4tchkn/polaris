@@ -29,8 +29,7 @@ In the repository where you want to get something done (new or existing):
 
 1. `/polaris:gdd-init` — creates `gdd/` and the approval rules in `.claude/settings.json`.
 2. Accept the trust prompt for the new rules (restart Claude Code if it does not appear).
-3. `/polaris:gdd-loop` — the AI asks a few questions and writes your goal and first sub-goal.
-4. `/polaris:gdd-loop` again, each time you want to advance. Every run ends with a review and choices.
+3. `/polaris:gdd-loop` — the AI asks a few questions, writes your goal and its checks, and has you approve the first sub-goals. Then it keeps going until it must stop.
 
 ## What you get in your repository
 
@@ -47,18 +46,18 @@ The AI can propose changes to `goal.md`, but every write needs your approval.
 
 ## What the plugin adds to Claude Code
 
-- Two skills: `/polaris:gdd-init` and `/polaris:gdd-loop`, and one subagent, `subgoal-verifier`, that gdd-loop calls to check that the command checks really test their conditions and to judge `observe:` conditions.
+- Two skills: `/polaris:gdd-init` and `/polaris:gdd-loop`, and two subagents: `goal-owner`, which reviews the goal and decides what to start next, and `subgoal-verifier`, which gdd-loop calls to check that the command checks really test their conditions and to judge `observe:` conditions.
 - Approval rules for hard-to-reverse actions, written by `gdd-init` into `.claude/settings.json`: adding a dependency, changing migrations, `git push`, merging a PR, rewriting history, and editing the rules themselves. They prompt you whatever the AI thinks.
 - One hook on Bash, Edit, and Write (PreToolUse and PostToolUse). It snapshots the `gdd/` state files before a tool runs and checks them after: a `gdd/goal.md` changed or created by a shell command is restored, a learning removed from a review in `gdd/reviews/` is restored, a changed or deleted file in `gdd/adr/` is restored, a sub-goal, uncertainty, or review file that breaks its format is reverted, and an edit that adds a skip or ignore to a test file is refused with an instruction to ask you first. It runs in every repository where the plugin is installed, needs `bash`, `grep`, `sed`, `awk`, `shasum`, and `find`, and checks results, not intent; it is not a sandbox.
 
 ## How a loop works
 
-1. The AI applies your last decision and works on the sub-goal marked `doing` only.
-2. It stops to ask when a decision is hard to reverse (data model, external services, authentication, new dependencies) or would loosen the acceptance criteria.
-3. It looks back: `gdd-check.sh` runs the sub-goal's command checks and the gate, and the subgoal-verifier in a separate context covers what commands cannot (the AI that did the work does not grade itself), then what to keep, what went wrong, improvement proposals, and three options for the next sub-goal, each with trade-offs.
-4. It writes a review with all of that plus what was built and its least confident decision.
-5. You choose. The AI asks why, and records your reason in `gdd/adr/`.
+1. `gdd-check.sh` measures progress toward the goal, and `gdd-status.sh` reads which sub-goals are ready, which overlap, and whether progress has stalled.
+2. The `goal-owner` (a separate context from the AI that builds) decides what comes next: start sub-goals, refine the plan, wait, or the goal is reached.
+3. The AI builds one sub-goal at a time until its checks and the gate pass, then writes a review with what was built, its least confident decision, and what it learned.
+4. It continues without you when every check is a passing command (or a verified `observe:`). It stops for you at a Decide sub-goal, a `human:` check, a check the verifier found weak, a hard-to-reverse decision, a stall (the last three reviews show the same progress), or when the goal looks reached.
+5. When you choose, the AI asks why and records your reason in `gdd/adr/`.
 
-When no sub-goal is left, the AI tells you the goal looks reached and asks whether to add sub-goals or write a goal completion report (`gdd/reviews/GOAL.md`: acceptance scenarios and their results, what was left undone, candidates for the next goal). Archiving a finished goal and starting the next one is not automated yet.
+When the goal looks reached, the AI asks whether to add sub-goals or write a goal completion report (`gdd/reviews/GOAL.md`: acceptance scenarios and their results, what was left undone, candidates for the next goal). Archiving a finished goal and starting the next one is not automated yet.
 
 The AI replies in the language you use.

@@ -5,5 +5,6 @@ cd "$(dirname "$0")/.."
 bash tests/guard-gdd-writes.sh > /dev/null
 bash tests/gdd-lint.sh > /dev/null
 bash tests/gdd-check.sh > /dev/null
+bash tests/gdd-status.sh > /dev/null
 claude plugin validate plugins/polaris > /dev/null
 echo "check: ok"
