@@ -26,14 +26,15 @@ Commit only `gdd/` files you wrote, and only the files of one event: `git commit
 ## The loop
 
 1. Run `scripts/gdd-check.sh <gdd-dir>` (progress toward the goal) and `scripts/gdd-status.sh <gdd-dir>` (state, what is ready, overlaps, hold).
-2. If `goal.md` is still the template (`<goal name>` remains), follow `steps/set-goal.md`, then go on.
-3. If the status says `hold: yes`, ask the human with AskUserQuestion before starting anything new: continue as is / change direction (then follow `steps/refine.md`) / stop. Record the answer and reason in `gdd/adr/`.
-4. Run the Agent tool with `subagent_type: "polaris:goal-owner"` to decide what comes next, giving it the paths of `goal.md`, `gdd/uncertainties/`, `gdd/adr/`, and `gdd/subgoals/`, and both outputs. Follow its answer; if you disagree, tell the human why instead of silently picking something else:
+2. If a sub-goal has `status: doing` (an interrupted run), resume it first with "Build a sub-goal", from what is already there, instead of asking the goal-owner.
+3. If `goal.md` is still the template (`<goal name>` remains), follow `steps/set-goal.md`, then go on.
+4. If the status says `hold: yes`, ask the human with AskUserQuestion before starting anything new: continue as is / change direction (then follow `steps/refine.md`) / stop. Record the answer and reason in `gdd/adr/`.
+5. Run the Agent tool with `subagent_type: "polaris:goal-owner"` to decide what comes next, giving it the paths of `goal.md`, `gdd/uncertainties/`, `gdd/adr/`, and `gdd/subgoals/`, and both outputs. Follow its answer; if you disagree, tell the human why instead of silently picking something else:
    - `refine:` → follow `steps/refine.md`, then go on with any `start:`.
    - `start:` → build each named sub-goal, one at a time (below).
    - `wait:` → tell the human what it waits for, and stop.
    - `reached:` → "Goal reached" below.
-5. After each sub-goal, go back to 1.
+6. After each sub-goal, go back to 1.
 
 ## Build a sub-goal
 
@@ -41,13 +42,13 @@ Commit only `gdd/` files you wrote, and only the files of one event: `git commit
 2. Read the Learnings of every review in `gdd/reviews/` and the cancelled sub-goals; follow them.
 3. Write the tests or scripts that the "Done when" command checks need and that do not exist yet, and confirm they fail.
 4. Build, within `touches:`. Before deciding how to use outside data (APIs, logs, tickets, and so on) or a condition that depends on it, try it on real data and confirm the data you assume exists. A Build sub-goal is done only when what you built works through its real entry point (`/<name>` for a skill, launching and using it for an app); if you cannot launch it, ask the human to. A Decide sub-goal prepares what to show (a spec, a mock, a comparison of three options with trade-offs), and is done when the human chooses.
-5. Run `scripts/gdd-check.sh <gdd-dir> <slug>` until every command check and the gate are met. Never loosen a check to make it pass.
+5. Run `scripts/gdd-check.sh <gdd-dir> <slug>` until every command check and the gate are met. Never loosen a check to make it pass. If the same check fails three times in a row, stop and ask ("Stop and ask" below) instead of trying again.
 6. Run the Agent tool with `subagent_type: "polaris:subgoal-verifier"`, giving it only the sub-goal file, where the work is, and the output of step 5. Do not pass your own view of the result. It reports whether each command check really tests its condition, and judges the `observe:` conditions.
 7. Write `gdd/reviews/<slug>.md` in the shape of `templates/review.md` (`loop:` is the number of reviews in `gdd/reviews/`, excluding `GOAL.md`, plus one; `progress:` is the line `gdd-check.sh <gdd-dir>` prints). Put the check results and the verifier's rows in the Checks table unchanged; if you disagree with the verifier, say so under "Least confident". Retrospect: what to keep, the problems (rework, conditions that needed the verifier or the human although a check could have decided them), and every earlier Learning in `gdd/reviews/`.
    - Learning: something later sub-goals should follow → Learnings of this review. When this sub-goal turned an earlier learning into a check, hook, or rule, write that learning with "→ hardened: <where>"; do not edit the earlier review.
    - Anything else that needs work → a new `todo` sub-goal from `templates/subgoal.md` (`advances: process` for a change to how the loop runs).
    - Uncertainties this sub-goal answered → `status: resolved` with the answer; new ones → a new file.
-8. Set `status: done` and commit the review, the uncertainties, and the sub-goal file together with what you built.
+8. If the sub-goal is a Decide sub-goal or has a `human:` condition, do step 9 first, then write the Decision and the ADR, and only then set `status: done`. Otherwise set `status: done` now. Commit the review, the uncertainties, and the sub-goal file together with what you built.
 9. Report in one to three lines what was built, the review's path, and what is "Least confident". Then ask the human only in these cases, with AskUserQuestion (three options with trade-offs, recommended first, in words that need no knowledge of the code); otherwise do not ask and go back to the loop:
    - A Decide sub-goal: the three options. Then ask why they chose it, and record the decision and reason in `gdd/adr/`.
    - The sub-goal has a `human:` condition: ask for the judgment now; the answer goes in the review's Decision section.
