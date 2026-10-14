@@ -29,21 +29,7 @@ progress: <the progress line from gdd-check.sh>
 
 - Keep: <what worked>
 - Problems: <rework, what needed the subgoal-verifier or the human that a check could have caught>
-- Candidates added: <slugs, or none>
-
-## Improvement proposals
-
-| # | Kind | Change | Where it goes | Trade-off |
-|---|---|---|---|---|
-| 1 | <Add learning / Fix the process / Harden a learning / Revise sub-goals> | <What changes> | <File> | <What gets better / what it costs> |
-
-## Next sub-goal options
-
-| Option | Goal | Type | Done when (with Check) | What to show | Trade-off |
-|---|---|---|---|---|---|
-| A | | | | | |
-| B | | | | | |
-| C | | | | | |
+- Candidates added: <slugs of new todo sub-goals (advances: process for a change to how the loop runs), or none>
 
 ## Learnings
 
@@ -53,4 +39,4 @@ progress: <the progress line from gdd-check.sh>
 
 ## Decision
 
-<!-- gdd-loop writes the human's choice here: Proceed / Change direction / Stop (with a comment for Change direction). Also list the adopted proposals (e.g. Adopt 1, 3) -->
+<!-- A Decide sub-goal records the option the human chose and why. A Build sub-goal that continued automatically says so. -->
