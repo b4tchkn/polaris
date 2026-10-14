@@ -1,249 +1,317 @@
-# ゴール駆動・人間介在型 AI 作業環境 設計メモ
+# ゴール駆動・人間介在型 AI 作業環境 設計
 
-> 2026-10-05 版。初版メモを4視点（0→1プロダクト / 人間の理解 / 実現可能性 / 既存手法）で悲観レビューし、書き直したもの。
+> 2026-10-14 版。**設計はこの1ファイルだけ**。旧 `docs/redesign-plan.md`（2026-10-10、チームと PR を前提にした改修計画）はここに統合して削除した。経緯は「14. 経緯」、ここまでの実装からの移り方は「15. 移行計画」。
 
 ## 0. 目的
 
-0→1 で新しく何かを作り出すとき（新しいアプリ、将来は事業なども）にも、1→100 で既にあるものを運用するときにも使える作業環境を作る。AI（Claude Code）が GOAL に向かって自律的に作業し、人間は**要所で理解しながら介在する**。
+0→1 で新しく何かを作るとき（新しいアプリ、将来は事業なども）にも、1→100 で既にあるものを運用するときにも使える作業環境を作る。
+
+人間が達成したいゴールを伝えると、AI がそこへ至るサブゴールを提案する。人間が承認したら、AI がスクラムのように反復と漸進を繰り返し、不確実性の高い問題を自律的に解いていく。人間は必要なときだけ聞かれる（Human-on-the-loop）。
 
 ```
 GOAL ◀── サブゴール ◀── サブゴール ◀── サブゴール
-          (Loop)       (Loop)       (Loop)
+          (Loop)       (Loop)       (Loop)   ← 依存しないものは並列
 ```
 
-- AI が自律的にサブゴールを立て、GOAL に向かって作業する。セクション4 の条件のときだけ人間が介入する（Human-on-the-loop）。
-- 各 Loop の最後に、サブゴールを達成したかと、Loop の進め方を振り返る（ハーネスエンジニアリング）。
-- GOAL は一度設定したあとも再設定できる。サブゴールは振り返りの結果で増えたり減ったりする。
+## 1. 原則
 
-- 人間が見るのはコードの細部ではない。「何が出来上がったか」と「本当にそれでいいか」を見る。
-- 人間は毎ステップ承認する係にはならない。ただし、方向を決める瞬間には必ず関わる。
-- Human-on-the-loop の定義：AI は既定で進む。人間が関わるのはサブゴール完了時と、機械的な停止条件（セクション7）に当たったときだけ。人間はいつでも止めて覆せる（Feng・McDonald・Zhang 2025「Levels of Autonomy for AI Agents」 https://arxiv.org/abs/2506.12469 の L4 Approver に相当）。
-
-## 1. 初版からの主な変更（レビュー結果）
-
-| 初版 | 変更後 | 理由 |
-|---|---|---|
-| PR のマージで承認する | **サブゴールの完了時に承認する**。PR は CI が通れば自動 | PR 単位だと、中身を見ずに押すだけになる |
-| 判断材料は PR の解説、ADR、日次まとめ | **デモ**（触れるビルド、実機の録画）＋サブゴール完了報告 | 文章の要約は読まれなくなり、理解したつもりになるだけ |
-| 最初に契約を書き、都度確認しない | 契約は**書き換えてよい仮説**。サブゴールの完了ごとに見直す | 0→1 の完了条件は、作ってみて初めて書ける |
-| 割り込みは AI の自己申告（迷い、自信のなさ） | **機械的なトリガー**で止める | AI は自信のある誤りに気づけない |
-| 介入率を KPI にする | 「後から判明した手戻り」と「サブゴール完了時の却下率」を見る | Goodhart の法則。エスカレーションを避ける方向に最適化される |
-| 題材は既存の業務アプリ | 対象は 0→1 と 1→100 の両方。**最初の題材は小さな新規アプリ** | 既存アプリでは 0→1 の難所が検証されない |
-| 骨格をすべて自作し、Phase 4 で plugin 化 | 骨格は既存手法を借りる。**自作は「理解・介在」の層に絞る** | 骨格はほぼ再発明になる |
+- **Human-on-the-loop**：AI は既定で進む。人間が関わるのは「4. 人間が関わる場面」だけで、いつでも止めて覆せる（Feng・McDonald・Zhang 2025「Levels of Autonomy for AI Agents」 https://arxiv.org/abs/2506.12469 の L4 Approver）。人間は毎ステップ承認する係にはならない。
+- **人間の理解はコードではなく、ゴールと完了条件・判断・学びに集中させる**。実装は機械チェックが通れば人間は見なくてよい。その代わり、チェックの中身（完了条件）は作業前に人間が理解して承認する。チェックが甘いと、通っても間違ったものができるため。
+- **完了はガードレールで決める**：テスト、lint、型チェック、ビルド、スクリプト、hook など確定的で再現できるチェックを優先する。AI の判断はチェックにできない部分の補助、人間は主観的なものだけ。AI は自信のある誤りに気づけないので、自己申告では止めない。
+- **1人用**：1人の人間が、1つのメインセッションと、並列に開く複数のセッション（3つほど）で使う。チームでの共有は対象外（Claude Code の Projects も1人用で、チーム向けは別機能）。状態は git に入るので、結果として他の人が読むことはできる。
+- **トランクベース**：長命ブランチは作らない。サブゴール1つごとに main へ取り込む。PR を関門にしない（使う場合も Ship/Show/Ask の Show：チェックが通れば AI がマージし、人間は後から読む）。
+- **自作は判断と状態の層だけ**：何を始めるか、いつ人間に聞くか、達成したかの判断と、`gdd/` の状態は Polaris が持つ。セッションの起動と並列実行（サブエージェント、別ターミナルのセッション、将来は Projects のスレッド）は実行環境に任せる。
+- **判断軸は「元に戻せるか」**。ガードレールはプロンプトではなくハーネス（sandbox、permissions、hooks、CI）で強制する。人間の介入はルール、テスト、hook の修正に変換する。
+- **YAGNI**：今の問題を解くのに要らない仕組みは作らない。仕組みは増やすより削る。
 
 ## 2. 構成
 
 エンジン（全プロジェクト共通）と状態（プロジェクトごと）を分ける。
 
 ```
-plugins/polaris/          エンジン（Claude Code の plugin として配る。英語で書き、返す言葉は使う人に合わせる）
-  skills/gdd-init/        状態ファイルと承認ルールを作る
-  skills/gdd-loop/        次のサブゴールを選び、ワーカーに作らせ、レビューと振り返りをして、続けるか人間に聞く
-    scripts/gdd-check.sh  チェックを実行する。ゴールまでの距離、またはサブゴールの Done when と gate
-    scripts/gdd-lint.sh   サブゴール、未確定事項、レビューの書き方を確かめる（frontmatter、[id] ごとの Check:）。hook が書き込みのたびに呼ぶ
-    scripts/gdd-status.sh サブゴールの状況。PR の状態、着手できるもの、並列にできるか、リファインメントの PR 待ちか、
-                          止まるべきか（停滞）を機械的に判定する
-    steps/                手順の詳細（ゴール設定、リファインメント、計画、レビュー、判断）
-  agents/                 goal-owner（ゴールに責任を持つ。ゴールの審査、次に着手するサブゴール、リファインメントが要るか、待つか、到達したかの判断）、
-                          worker（チェックを先に書き、worktree でサブゴールを作る）、
-                          subgoal-verifier（コマンドのチェックが本当に条件を確かめているかと、observe: の判定だけ）
-  hooks/                  Bash からの goal.md 書き込み、advances の無いサブゴール、学びの削除などを戻す
-.claude-plugin/           マーケットプレイス（/plugin marketplace add b4tchkn/polaris）
-.claude/settings.json     使う側のリポジトリの制約（gdd-init が承認ルールを書く）
-gdd/                      状態（使う側のリポジトリに gdd-init が作る）
-  goal.md                 GOAL：北極星、受け入れシナリオと完成の定義（どちらも [id] と Check: 付き）、前提。
-                          frontmatter は AI の関わり方だけ：mode（fast：速さ優先 か careful：確実さ優先 か）
-                          ※ 書き込みには毎回人間の承認が要る（permissions の ask で強制）
-  subgoals/<slug>.md      サブゴール1件1ファイル。リファインメントの PR で作る。frontmatter に status（todo / done / cancelled）/
-                          type / advances / depends_on / touches。本文の Done when に [id] と Check:。
-                          done にするのはそのサブゴール自身の PR だけ（本文の先頭行 `Sub-goal: <ファイルのパス>` で紐づける）。
-                          cancelled は却下された案で、理由を Why cancelled に書く
-  uncertainties/<名前>.md  未確定事項1件1ファイル。status: open / resolved と答え。advances は名前で指す
-  reviews/<slug>.md        サブゴールレビュー。frontmatter に progress。Learnings に学び（消さない）
-  adr/<日付>-<slug>.md     人間の判断の記録を1判断1ファイルで（何を決めたか、出した案、選んだ案、理由）。
-                          一度書いたら変えない（hook が戻す）。別ファイルなので複数のセッションや人が同時に書ける
-  archive/                完了した GOAL
-docs/design.md            この設計
+plugins/polaris/                 エンジン（plugin として配る。英語で書き、返す言葉は使う人に合わせる）
+  skills/gdd-init/               状態ファイルと承認ルールを作る
+  skills/gdd-loop/               コーディネーター：状態を読み、次を決めさせ、配り、取り込む
+    scripts/gdd-check.sh         チェックを実行する（ゴールまでの距離、またはサブゴールの Done when と gate）
+    scripts/gdd-status.sh        各サブゴールの状態、着手できるもの、重なり、停滞（hold）を機械的に出す。ファイルと git だけを読む（gh は使わない）
+    scripts/gdd-lint.sh          サブゴール、不確実性、レビューの書式を確かめる（hook が書き込みのたびに呼ぶ）
+    steps/                       手順の詳細（ゴール設定、リファインメント）
+  skills/gdd-work/               実行役：サブゴール1つを達成する。どのセッションからでも呼べる
+  agents/goal-owner.md           判断役：ゴール案の審査、次に始めるもの、リファインメントの要否、待つか、達成したか
+  agents/worker.md               gdd-work を worktree で呼ぶだけの薄い器（isolation: worktree）
+  agents/subgoal-verifier.md     検証役：コマンドのチェックが本当に条件を試しているかと、observe: の判定だけ
+  hooks/                         チェックを緩める変更、goal.md の Bash 書き込み、ADR の変更、学びの削除、書式違反を戻す
+.claude-plugin/                  マーケットプレイス（/plugin marketplace add b4tchkn/polaris）
+.claude/settings.json            使う側のリポジトリの制約（gdd-init が承認ルールを書く）
+gdd/                             状態（使う側のリポジトリに gdd-init が作る。すべて main 上のファイル）
+  goal.md                        北極星、受け入れシナリオと完成の定義（[id] と Check: 付き）、前提。書き込みは毎回人間が承認（ask）
+  subgoals/<slug>.md             サブゴール1件1ファイル
+  uncertainties/<name>.md        不確実性1件1ファイル。status: open | resolved と答え
+  reviews/<slug>.md              サブゴールレビュー。Learnings は消さない（hook が戻す）
+  adr/<YYYY-MM-DD>-<slug>.md     人間の判断1件1ファイル。書いたら変えない（hook が戻す）
+  archive/                       完了した GOAL
+docs/design.md                   この設計
 ```
+
+- 1件1ファイルにするのは、並列のセッションが同じファイルを書いてマージで衝突しないため。各セッションは自分のサブゴール、レビュー、新しい不確実性と ADR だけを書く。
+- `state.md` は持たない。今どこか・何ができたかは status から導き、学びはレビューに、却下された案は cancelled のサブゴールに置く。
 
 ### 配布方法
 
-新規リポジトリ（0→1）も既存リポジトリ（1→100）も同じ手順にする（Template Repository は作らない。`gdd/adr/`）。
+新規リポジトリ（0→1）も既存リポジトリ（1→100）も同じ手順にする。
 
 1. `/plugin marketplace add b4tchkn/polaris` → `/plugin install polaris@polaris`
 2. やりたいことのリポジトリで `/polaris:gdd-init`
-3. `/polaris:gdd-loop` をくり返す（止まるまで続けて進む）
+3. `/polaris:gdd-loop`（止まるまで続けて進む）
 
 このリポジトリ自身も `gdd/` に「基盤を作る」GOAL を入れ、`claude --plugin-dir plugins/polaris` で起動してドッグフーディングで進める。
 
-## 3. サブゴールの定義
+## 3. 役割
 
-サブゴールは、**大ゴールを分解した段階的なゴール**とする。大ゴールは `goal.md` の北極星で、サブゴールはそれに近づくためのゴールである。1件ずつ `gdd/subgoals/` の下にファイルで置く。
-
-各サブゴールには次の3つを書く。
-
-| 項目 | 内容 |
-|---|---|
-| ゴール | このサブゴールで達成すること（1文） |
-| 種類と完了条件 | **決める系**：仕様、方式、範囲などを人間と合意したら完了。成果物は仕様書、モック、比較表など<br>**作る系**：受け入れシナリオが通ったら完了。成果物は動くもの |
-| 評価基準 | うまくいったかを何で測るか。**定量**（数字で測る）か**定性**（人間が判断する）かを明記する。レビューではこの基準で振り返る |
-| 見せるもの | サブゴール完了時に人間が判断に使う成果物（デモ、モック、仕様1枚） |
-
-どちらの種類でも、最後は人間が「次へ進む / 方向転換 / やめる」を判断して締める。外れたら、作ったものを捨てて方向転換する前提で進める。
-
-1. **ゴールは1つにする**：見せるものが出せない区切りは、粒度が誤っている。
-2. **大きさは、外れたら丸ごと捨てても惜しくない量を上限にする**
-3. **大きさは不確実性に合わせて変える**：初期は小さく、方向が固まったら大きくする。却下が続いたら小さく、承認が続いたら大きくする。頻度は人間の都合（例：1日1回なら見られる）から逆算する。
-4. **完了条件はリファインメントで書く**：サブゴールはリファインメントの PR で完了条件とチェックまで書き、人間が着手前にレビューする。前提が変わったら、もう一度リファインメントする。
-
-0→1 アプリでの典型的な並び：
-
-| # | ゴール | 種類 | 見せるもの |
+| 役割 | 実体 | 動く場所 | やること |
 |---|---|---|---|
-| SG0 | 誰の何を解決するかを決める | 決める | 課題、ペルソナ、コア体験を1枚で |
-| SG1 | コア体験の画面仕様を決める | 決める | クリックできるモック（データなし） |
-| SG2 | 技術構成とデータモデルを決める | 決める | 構成図と比較案を1枚で |
-| SG3 | コア体験1本を端から端まで動かす | 作る | walking skeleton のデモ |
-| SG4〜 | ユーザーストーリーを1つずつ実現する | 作る | ストーリーごとのデモ |
+| コーディネーター | skill `gdd-loop` | メインセッション（main のチェックアウト） | `gdd-check.sh` と `gdd-status.sh` を読み、`goal-owner` に次を決めさせ、サブゴールを配り、終わったものを main に取り込む。人間との対話はここ |
+| 判断役 | subagent `goal-owner` | コーディネーターから呼ぶ | 作業する AI とは別のコンテキストで、ゴール案を審査し、次に何をするか決める |
+| 実行役 | skill `gdd-work <slug>` | 任意のセッション（worktree） | サブゴール1つを達成し、取り込み待ちにする |
+| 実行役の器 | subagent `worker` | コーディネーターから呼ぶ | `gdd-work` を呼ぶだけ。人間が別セッションを開くときは不要 |
+| 検証役 | subagent `subgoal-verifier` | `gdd-work` から呼ぶ | コマンドのチェックの妥当性と `observe:` の判定。自己採点はしない |
 
-役割分担：次のサブゴールは AI が決める。基準は「受け入れシナリオを一番前に進めるもの、一番大きな未確定事項を潰すもの」。人間が並べた順に消化する方式にはしない。選ぶのは goal-owner で、作業する AI とは別のコンテキストで、チェックと状況の結果から決める。サブゴールが終わったら AI が PR を作り、人間は PR レビューで判断する（コメント、修正の依頼、マージ、クローズ）。決める系の案や途中で止まって聞く判断（3案、トレードオフ付き）を選んだときは理由を聞き、人間の言葉で `gdd/adr/` に1ファイルとして残す。
+- `goal-owner` の答えは `reached:` / `wait:` / `refine:` / `start: <slug>[, ...]` のどれか。次に選ぶ基準は「未達の受け入れシナリオを一番前に進めるもの、一番大きな不確実性を潰すもの」。人間が並べた順に消化する方式にはしない。並列に足すのは `gdd-status.sh` の overlaps が互いに空のものだけ。
+- `gdd-work` は、サブエージェントからでも、人間が別ターミナルで開いたセッションからでも、同じ手順で動く。
 
-## 4. 人間が介入する条件（Human-on-the-loop）
+## 4. 人間が関わる場面
 
-基本は AI が自律的に進める。人間が介入するのは次の4つのときだけ。
+これ以外では止まらない。
 
-| # | 条件 | 動き |
+| いつ | 何を | どう |
 |---|---|---|
-| 1 | GOAL を設定・変更するとき | AI が案を出し、goal-owner が審査し、人間が確定する（`goal.md` への書き込みは ask で必ず承認） |
-| 2 | 判断結果が GOAL / サブゴールの達成に影響するとき | 止まって人間を待つ。AI の自己申告だけに頼らず、セクション7 の機械的なトリガーと併用する |
-| 3 | サブゴールが完了したとき | AI が聞かずに PR を作る。不安な箇所は PR の該当行にコメントし、人間が PR レビューで判断する。停滞（直近3件の progress が同じ）があれば、新しいサブゴールに着手する前に人間に聞く（`gdd-status.sh` の hold）。PR のクローズは次のリファインメントで cancelled にする |
-| 4 | Loop のレトロスペクティブをするとき | 3 と同じタイミングでまとめて行う |
+| ゴールの設定・変更 | `goal.md`（シナリオと Check、gate） | `goal-owner` が審査し、ask ルールで人間が確定する |
+| リファインメント | サブゴールの一覧と、各 Done when と Check | 不確実性について最大5問聞き、一覧を見せて AskUserQuestion で1回承認する |
+| 決める系のサブゴール | 3案から選ぶ | コーディネーターのセッションで AskUserQuestion。理由を聞いて ADR に残す |
+| `human:` のチェックを含むサブゴール | 主観の判定 | main に取り込む前に聞く（Ship/Show/Ask の Ask） |
+| 戻しにくい判断、チェックを緩める変更 | 3案から選ぶ | ask ルールと hook が止める（9節）。`gdd-work` は聞けるなら AskUserQuestion、サブエージェントなら質問を返して止まる |
+| 停滞（直近3件のレビューの progress が同じ） | 続ける / 変える / やめる | `gdd-status.sh` の `hold: yes` で、新しいサブゴールの前に1回聞く |
+| `doing` のまま作業ブランチが無いサブゴール | 作り直すか | `gdd-status.sh` の `doing (no branch)` で聞く |
+| ゴール達成 | 続ける / 完了報告を書く | `goal-owner` の `reached:` で聞く |
 
-これ以外（作業の進め方、サブゴールの中での細かい判断など）は AI に任せ、結果をサブゴールレビューに載せる。
+- 上のどれにも当たらない作る系のサブゴール（コマンドのチェックと gate がすべて通ったもの）は、聞かずに main に取り込む（Show）。人間は `gdd/reviews/<slug>.md` を後から読み、気になれば止めて覆す。
+- 選択肢を出すときはいつも3案にし、選んだ結果で行動かトレードオフが変わるものにする。各案にトレードオフを1行書く。人間が選んだら理由を聞き、人間の言葉で `gdd/adr/` に残す。
+- 質問はコードや専門用語を知らない人にもわかる言葉にする。
 
-## 4.1 サブゴールレビュー（1枚だけ）
+## 5. サブゴール
 
-- 何が出来たか、どう触るか（デモのリンク、録画）
-- 一番自信がない判断
-- 捨てた案と、その理由
-- 人間への質問
-- 振り返り（セクション5）
-- 改善の提案（セクション5）
-- ゴールまでの距離（受け入れシナリオごとの状態、未確定事項）
+サブゴールは大ゴールを分解した段階的なゴール。1件ずつ `gdd/subgoals/<slug>.md` に置く。
 
-報告が読まれなければ、次の周には進まない。
+```markdown
+---
+status: todo            # todo | doing | done | cancelled
+type: build             # build（作る系）| decide（決める系）
+advances: capture, storage-format   # 前に進める受け入れシナリオの id、不確実性の名前（必須。無いと hook が戻す）
+depends_on: none        # 先に done になっている必要があるサブゴール
+touches: src/todo/      # 変えるパス（並列にできるかの判定に使う。なるべく狭く）
+---
+# <このサブゴールで達成すること、1文>
 
-## 5. 振り返り（レトロスペクティブ）
+## Done when
+1. [id] <条件。エッジケースはここ>
+   - Check: `<条件が成り立つと 0 で終わるコマンド>`   # または observe: … / human: …
 
-サブゴールが完了するたびに振り返り、GDD の仕組みそのものとサブゴールを直す。これを毎周くり返す改善ループにする。
+## What to show
+- <人間が後で見るもの>
+```
+
+- **作る系**：Done when のチェックと gate が通り、本当の入口（skill なら `/<name>`、アプリなら起動して使う）で動いたら完了。成果物は動くもの。
+- **決める系**：仕様、方式、範囲などを人間が3案から選んだら完了。成果物は仕様書、モック、比較表など。
+- **大きさ**：ゴールは1つ。外れたら丸ごと捨てても惜しくない量を上限にする。初期は小さく、方向が固まったら大きくする。
+- **完了条件はリファインメントで書く**：作業前に人間が Done when とチェックを承認する。前提が変わったら、もう一度リファインメントする。
+
+0→1 アプリでの典型的な並び（目安）：
+
+| ゴール | 種類 | 見せるもの |
+|---|---|---|
+| 誰の何を解決するかを決める | 決める | 課題、ペルソナ、コア体験を1枚で |
+| コア体験の画面仕様を決める | 決める | クリックできるモック |
+| 技術構成とデータモデルを決める | 決める | 構成図と比較案 |
+| コア体験1本を端から端まで動かす | 作る | walking skeleton のデモ |
+| ユーザーストーリーを1つずつ実現する | 作る | ストーリーごとのデモ |
+
+### 状態の遷移
 
 ```
-今回の周 ＋ reviews/ の学び全体
+todo ──(コーディネーターが配る：main で status: doing をコミット)──▶ doing
+doing ──(gdd-work がブランチ gdd/<slug> で status: done をコミット)──▶ ready-to-merge（表示上の状態）
+ready-to-merge ──(コーディネーターが main に取り込み、main で gate が通る)──▶ done
+todo / doing ──(リファインメントで不要になった)──▶ cancelled（「Why cancelled」に理由を書く）
+```
+
+- ファイルに書く `status:` は `todo | doing | done | cancelled` の4つ。`ready-to-merge` は `gdd-status.sh` が「main では doing、ブランチ `gdd/<slug>` では done」から導く。
+- 作業ブランチの名前は `gdd/<slug>` に固定する。これで状態を git だけから読める。
+- `doing` を main に先にコミットしてから配るので、ブランチ側の `done` への変更は main の直系になり、衝突しない。
+- 依存は、依存先が `done` になって初めて満たされる。
+- `cancelled` は却下された案。同じ案を再提案しない。
+
+## 6. ループ（コーディネーター）
+
+1. `gdd-check.sh gdd` と `gdd-status.sh gdd` を実行する。
+2. `hold: yes` や `doing (no branch)` があれば人間に聞く（4節）。
+3. `ready-to-merge` のものを main に取り込む（8節）。
+4. `goal-owner` に次を決めさせ、答えに従う。従わないときは人間に理由を言う。
+   - `refine:` → リファインメント（`steps/refine.md`）。
+   - `start:` → 各サブゴールを `doing` にして main にコミットし、配る。1つなら `worker` をフォアグラウンドで、複数なら `worker` をバックグラウンドで同時に。人間が別セッションで進めると言ったときは、そのセッションで `/polaris:gdd-work <slug>` を実行するよう伝える。決める系はコーディネーター自身が扱う。
+   - `wait:` → 何を待っているか伝えて止まる。
+   - `reached:` → 11節。
+5. 報告が来たら 1 に戻る。止まるのは `wait:`、hold、人間への質問、`reached:` のときだけ。
+
+- ゴールが雛形のまま（`<goal name>` が残っている）なら、まずゴール設定（`steps/set-goal.md`）をする：人間に質問し、`goal.md` の案と不確実性を書き、`goal-owner` に審査させ（最大2回直す）、人間が承認したらリファインメントで最初のサブゴールを書く。
+- `gdd/` のコミットは対象を絞る：`git commit -m "docs(gdd): <slug> <what happened>" -- gdd/`。
+
+## 7. サブゴール1つの達成（`gdd-work <slug>`）
+
+1. worktree の中でブランチ `gdd/<slug>` にいることを確かめる（無ければ main から作る）。`git merge main` で最新にする。
+2. Done when のコマンドのチェックのうち、まだ無いテストやスクリプトを先に書き、失敗することを確かめる。
+3. `touches:` の範囲で作る。範囲外の変更、戻しにくい判断、チェックを緩める変更が要るなら止まって聞く（聞けなければ質問を返す）。`gdd/` は、自分のサブゴール、レビュー、新しい不確実性と ADR だけを書く。
+4. `gdd-check.sh gdd <slug>` で、Done when と gate がすべて `met` になるまで直す。チェックは緩めない。`subgoal-verifier` に、コマンドのチェックの妥当性と `observe:` を判定させる。
+5. `gdd/reviews/<slug>.md` を書く（Checks の表、ゴールまでの距離、Least confident、振り返り、Learnings）。答えが出た不確実性は `resolved` にし、新しい不確実性はファイルを足す。
+6. サブゴールのファイルを `status: done` にしてコミットする。push はしない。
+7. 報告する：ブランチ、作ったものと試し方、チェックの結果、Least confident（`file:line: 何が不安か、どう確かめるか`）、`human:` の条件の有無。
+
+## 8. main への取り込み（コーディネーターが main のチェックアウトで行う）
+
+1. main のチェックアウトに `gdd/` 以外の未コミットの変更があれば、人間に聞いて止まる。
+2. `human:` の条件があれば、先に人間に聞く（4節）。
+3. `git merge --no-ff gdd/<slug>`。衝突したら `git merge --abort` し、`gdd-work <slug>` に main を取り込んで直すよう戻す。
+4. main で `[gate]` を実行する。並列の変更を合わせたときに壊れていないかを確かめるため。落ちたら `git revert -m 1 HEAD` で戻し（status も doing に戻る）、`gdd-work` に戻す。
+5. 通れば完了。人間には1〜3行で、何が main に入ったかとレビューのパスを伝える。
+6. `git push` は ask ルールで人間が承認する。
+
+## 9. 検証とガードレール
+
+- **チェック**：受け入れシナリオ、完成の定義、Done when はすべて `[id]` と `Check:` の組で書く。`Check:` はコマンドが原則（`gdd-check.sh` が実行し、0 で終われば met）。コマンドにできないものだけ `observe:`（`subgoal-verifier` が判定）、主観的なものだけ `human:`（人間が判定）。
+- **gate**：`goal.md` の完成の定義にある `[gate]` は、フォーマッタ、lint、型チェック、ビルド、テストをまとめた1コマンド。全サブゴールがブランチで通し、取り込み後に main でも通す。CI でも回す。gate が無いプロジェクトでは最初のサブゴールで作る。
+- **受け入れシナリオは人間が確定する**。AI は承認なしに書き換えられない（ask）。
+- **止まる条件（機械的に判定する）**：
+  - 戻しにくい判断：依存の追加、データモデル（マイグレーション）、リポジトリの外に出る操作（push、PR のマージ、release）、履歴の書き換え、settings の変更 → `gdd-init` が書く ask ルール。外部サービスの選定、課金、認証は今は指示文だけ。
+  - チェックを緩める変更：テストへの skip 追加、テストの削除（Edit でも Bash でも）→ hook が戻す。受け入れシナリオの緩和、assert を弱める変更は今は指示文だけ。
+  - 停滞：直近3件のレビューの progress が同じ → `gdd-status.sh` の hold。
+- **状態ファイルの保護（hook）**：`goal.md` への Bash の書き込み、既存の ADR の変更や削除、レビューの削除や学びの削除、書式違反（`gdd-lint.sh`）を戻す。スナップショットはサブエージェントごと・worktree ごとに分け、並列でも混ざらないようにする。
+
+## 10. 振り返りと学び
+
+サブゴールが完了するたびに、`gdd-work` がレビューの中で振り返る。
+
+```
+今回のサブゴール ＋ reviews/ の学び全体
    ▼
-振り返り（続けること / 問題）
+振り返り（続けること / 問題：手戻り、人間が介入した箇所、チェックで決められたのに AI や人間が判断したもの）
    ▼
 学び → そのサブゴールのレビューの Learnings に書く
-それ以外の改善 → サブゴール（advances: process など）として積み、
+それ以外の改善 → サブゴール（advances: process など）として次のリファインメントで積み、
                  ほかのサブゴールと同じ基準で選ばれたときに行う
 ```
 
-| 項目 | 内容 |
-|---|---|
-| 続けること | うまくいった進め方 |
-| 問題 | 手戻り、人間が介入した箇所、サブゴール完了時に却下された理由 |
+- 学びは将来のハーネスの元になるので消さない（hook が戻す）。ハーネスに移した学びは、元のレビューを書き換えず、移したサブゴールのレビューに「→ hardened: <場所>」を付けて書く。
+- 繰り返し出る学び、機械的に確かめられる学びは、チェック、hook、ask ルールに変える（ハーネス化）。
+- 大ゴールの振り返りは 11節の完了報告で行う。
 
-仕組みの修正や学びのハーネス化（`.claude/settings.json` / hook / `CLAUDE.md`）もサブゴールとして積み、普通のサブゴールと同じく作って評価する。
-
-学びは将来のハーネスの元になるので、消さない（hook が戻す）。ハーネスに移した学びは、元のレビューを書き換えず、移したサブゴールのレビューに「→ hardened: <場所>」を付けて書く。
-
-振り返りには2つのレベルがある。
-
-- **サブゴールの振り返り**：毎周行い、サブゴールレビューに含める。改善の提案もここで出す。
-- **大ゴールの振り返り**：ゴール全体の手戻りと介入をまとめ、次のゴールに引き継ぐ学びを決める。
-
-AI が案を出し、人間が承認または修正する。
-
-## 6. 大ゴールの切り替え
+## 11. 大ゴールの切り替え
 
 ```
-最後のサブゴールの完了
+goal-owner が reached: と判断
    ▼
-① 大ゴールの完了判断（人間）
-   AI の完了報告：受け入れシナリオと結果の対応、デモ、大ゴールの振り返り、
-   やり残し、次のゴール候補 2〜3案
-   人間が判断する：完了 / 追加のサブゴールで続ける / 終了
+① 人間に聞く：追加のサブゴールで続ける / 完了報告を書く
+   完了報告（gdd/reviews/GOAL.md）：受け入れシナリオと結果の対応、デモ、大ゴールの振り返り、やり残し、次のゴール候補2〜3案
    ▼
-② アーカイブ：レビューの学びのうち、どの題材でも効くものを gdd-loop / 雛形に移すか、
-   人間に3案で選んでもらう（レビューの学びはそのリポジトリでしか効かないため）。
+② アーカイブ：レビューの学びのうち、どの題材でも効くものを plugin の手順や雛形に移すか、人間に3案で選んでもらう。
    そのあと gdd/archive/NN-<slug>/ に goal.md / subgoals/ / uncertainties/ / reviews/ / 完了報告を移し、
-   gdd-init で空の状態ファイルを作り直す
+   gdd-init で空の状態を作り直す（未実装）
    ▼
-③ 新しい大ゴールの設定（人間）
-   AI が「引き継ぐ前提」の案を出す（確定した仕様、技術構成、既存の成果物、振り返りの学び）
-   人間が承認・修正し、gdd-init が作った goal.md に書く
-   ▼
-④ 新しいゴールの SG0 から再開
+③ 新しい大ゴールの設定：AI が引き継ぐ前提（確定した仕様、技術構成、既存の成果物、学び）の案を出し、人間が承認する
 ```
 
-- 2つ目以降のゴールの SG0 は、「何を変える / 何を足すか」を決めることから始める。前提が引き継がれているため、「誰の何を解決するか」から決め直さない。
-- 引き継ぐものは `goal.md` の「前提」欄に書く。新しいファイルは作らない。
-- GOAL は完了前でも再設定できる（セクション4 の条件1）。その場合も同じ流れで、リファインメントでサブゴールを作り直す。
-- 過去のゴールは `gdd/archive/` に残す。AI は普段は読まず、必要なときだけ参照する。
+- 2つ目以降のゴールは「何を変える / 何を足すか」から始める。引き継ぐものは `goal.md` の「前提」に書く。
+- GOAL は完了前でも再設定できる。その場合もリファインメントでサブゴールを作り直す。
+- 過去のゴールは `gdd/archive/` に残す。AI は普段は読まない。
 
-## 7. 途中で止まる条件（機械的に判定する）
-
-- 戻しにくい判断：データモデル、外部サービスの選定、課金、認証、依存の追加
-- N 周続けてゴールまでの距離（レビューの progress）が変わらない
-- 受け入れシナリオやテストを緩める変更があった
-
-実装の対応（2026-10-10 時点）。機械化できたもの：依存の追加・マイグレーション・push・PR のマージ・履歴の書き換え・settings の変更は `gdd-init` が書く ask ルール、`goal.md` への Bash 書き込み・advances の無いサブゴール・学びの削除・`gdd/adr/` の既存ファイルの変更や削除・テストへの skip 追加は hook（結果を見て戻す）、N 周無変化（レビューの progress が3回同じ）は `gdd-status.sh`。まだ指示文だけのもの：外部サービスの選定、課金、認証、受け入れシナリオの緩和、assert を弱める変更。
-
-## 7.1 並列化と PR
-
-- main には直接コミットしない。`gdd/` のファイルも含め、すべて PR のマージで main に入る。サブゴールのレビュー、ADR、未確定事項の更新はそのサブゴールの PR に、どのサブゴールにも属さないもの（ゴール、ADR、リファインメント、完了報告）はそれだけの PR にする。ブランチの作り方（worktree か切り替えか）は指定しない。
-- サブゴールは worker サブエージェントが専用の worktree で作り、コミットする（ブランチ名は Polaris が決めない）。依存が全部 done で、`touches` が重ならないものは同時に進める。
-- サブゴールの状態：done / cancelled はファイルの status。todo のファイルは、本文の先頭行に `Sub-goal: <ファイルのパス>` を持つ PR の状態（OPEN / MERGED / CLOSED）で、レビュー中 / マージ済みで未 pull / クローズを判定する。PR が無いときは、同じ行を持つコミットがブランチにあれば完成済み（push 待ち）。作業中は会話の中にしか無いので、途中で会話が切れた作業は未着手に戻り、次の周で作り直す。複数のセッションが同時に同じサブゴールを始めると作業が重複しうる（始めたことは PR を出すまで見えない）。
-- リファインメント（Spec Kit の clarify と tasks にあたる）：未確定事項について人間に最大5問聞き、サブゴールを完了条件まで書いて1本の PR にする（本文の先頭行 `Refine:`）。ゴール設定時、人間が頼んだとき、goal-owner が `refine:` と答えたとき（PR のクローズ、残りではゴールが進まない、答えで前提が変わった）に行う。その PR が開いている間は次のリファインメントをしない。
-- Issue や Jira などの外部ツールとの連携は、本体に保存先を持たせず、ファイルを正として書き写す拡張で行う（今は作らない）。
-- worker は人間に質問できないので、止まる条件に当たったら質問を返して止まる。メインが人間に聞き、答えを渡して再開させる。
-- `gdd/` を更新するのはメインのセッションだけ。
-- サブゴールは種類によらず、完了したら PR を作る（push とマージは ask）。PR にはコード（あれば）、サブゴールのファイル、レビュー、関係する ADR を入れ、人間は PR レビューで何が起きたかを見る。done = マージ済みとして、依存するサブゴールはマージ後に着手する。
-
-## 8. 検証
-
-- 受け入れシナリオは人間が確定する。AI は人間の承認なしに書き換えられない（ask）。
-- 達成の確認はガードレール（テスト、lint、型チェック、ビルド、スクリプト、hook など確定的で再現できるチェック）を優先する。確かめ方は `[id]` ごとの `Check:` に書き、コマンドは `gdd-check.sh` が実行する。完成の定義の `[gate]` は全サブゴールが通る1つのコマンドで、CI でも回す。
-- AI の判断（subgoal-verifier）は、コマンドのチェックが本当に条件を確かめているかの確認と、コマンドにできない `observe:` の判定だけに使う。作業した AI とは別のコンテキストで行い、自己採点はしない。人間が判断するのは `human:` の主観的なものだけ。
-- チェックを緩める変更（skip の追加、テストの削除）は hook が戻す。
-
-## 9. 借りる既存手法
+## 12. 借りる既存手法
 
 | 要素 | 既存手法 |
 |---|---|
-| 契約 → 計画 → タスク | GitHub Spec Kit https://github.com/github/spec-kit 、Kiro specs |
+| 仕様 → 計画 → タスク、clarify（質問で不確実性を潰す） | GitHub Spec Kit https://github.com/github/spec-kit 、Kiro specs |
 | 進捗ファイル、状態を持ち越さないループ | Anthropic「Effective harnesses for long-running agents」 https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents 、Ralph loop |
 | planner / generator / evaluator | https://www.anthropic.com/engineering/harness-design-long-running-apps |
-| Markdown 過多への警告 | https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html |
-| 確定的なチェック（computational）を優先し、推論的なチェック（inferential）は補助に使う | Böckeler「Harness engineering for coding agent users」 https://martinfowler.com/articles/harness-engineering.html |
+| 確定的なチェックを優先し、推論的なチェックは補助にする | Böckeler「Harness engineering for coding agent users」 https://martinfowler.com/articles/harness-engineering.html |
 | ガードレール（成果物への柵と行動への柵、1コマンドの門） | kinopeee「ハーネス設計入門」 https://speakerdeck.com/kinopeee/hanesu-sekkei-nyuumon-kontekisuto-no-tsugi |
+| 細かく main に入れ、レビューは後から（Ship / Show / Ask） | トランクベース開発、Wilsenach「Ship / Show / Ask」 https://martinfowler.com/articles/ship-show-ask.html |
+| コーディネーターが並列のセッションを配って追跡する | Claude Code Projects https://code.claude.com/docs/en/claude-projects.md |
+| Markdown 過多への警告 | https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html |
 
-※ 本文を確認したのは Anthropic の2本と Fowler の1本だけ。Spec Kit / Kiro / Ralph は未確認。
+スクラムからは、反復と漸進、振り返りの型、完成の定義だけを借りる。人間が並べたバックログを上から消化する形はとらない。
 
-## 10. 進め方
+## 13. 未決事項
 
-- **改修（2026-10-10）**：`docs/redesign-plan.md` の計画で、次の一手を AI が決める形、サブゴール1件1ファイル、ワーカーによる並列化、サブゴールごとの PR に変えた。
-- **Phase 1**：`goal.md` と `state.md` のテンプレートを作り、1サブゴールを進める skill を1本作る。小さな新規アプリで手動で3周ほど回し、サブゴールの粒度と報告の形を固める。
-- **後回し**（Phase 1 を回してから判断する）：自動起動、リスク別の判断、指標の計測、plugin 化、ソフトウェア以外への適用。
+1. **eval で git が使えるか**。旧計画では「eval のサンドボックスは macOS で git を動かせない」として eval を消した。新設計でもコーディネーターはコミットとマージをする。試せない場合、(a) eval は git を使わない判断の部分だけにする、(b) Docker のシミュレーション（`simulations/` は gitignore されていて作り直しが要る。Docker と OAuth トークンも未準備）で試す、のどちらにするか。
+2. **Projects のスレッドにいつ対応するか**。クラウドのスレッドは自分のブランチを push して PR を作る。`ready-to-merge` を `origin/gdd/<slug>` からも読めば対応できる。
+3. **`doing` のまま止まったサブゴール**は、当面「人間に聞く」だけでよいか。
+4. **取り込みの方法**は `--no-ff` のマージコミットでよいか（rebase は ask ルールの対象）。
+5. 最初の題材（小さな新規アプリ）、デモの届け方（Web ならプレビュー URL、Android なら録画かビルド）。
 
-## 11. 残すもの（初版から）
+## 14. 経緯
 
-- 判断軸は「元に戻せるか」
-- ガードレールはプロンプトではなくハーネス（sandbox、permissions、hooks、CI）で強制する
-- 人間の介入をルール、テスト、hook の修正に変換する
+- **2026-10-05**：初版メモを4視点で悲観レビューして書き直した。PR のマージで承認する形をやめ、サブゴールの完了時に承認する形にした。止める条件を AI の自己申告から機械的なトリガーに変えた。骨格は既存手法から借り、自作は「理解・介在」の層に絞った。
+- **2026-10-10〜11（旧 `docs/redesign-plan.md`、PR #4 `feat/redesign`）**：次の一手を AI（goal-owner）が決める、サブゴールと ADR を1件1ファイルにする、チェックをガードレールにする（`[id]` と `Check:`、`[gate]`）、worker による並列化、を入れた。あわせて、チームで使えるようにサブゴールごとに PR を作り、人間がマージするまで次に進まない形にした。
+- **2026-10-14（この版）**：PR 前提の形は、人間がマージするまで止まるので実質 HITL になり、gh や PR 本文の目印などの仕組みで差分が理解できない大きさになった。そこで方針を決め直した：1人用にする、PR を関門にせずトランクベースでサブゴールごとに main へ取り込む、実装は機械チェックで通し人間はゴールと完了条件・判断・学びに集中する、並列のセッション（メインの指示で3つほど）に耐える。
 
-## 12. 未決事項
+## 15. 移行計画
 
-- 最初の題材（小さな新規アプリ）を何にするか
-- デモをどう届けるか（Web ならプレビュー URL、Android なら録画かビルド）
-- 実行基盤（当面はローカルで手動起動。その後 routines / GitHub Actions / Agent SDK）
-- 「承認なしでコミットしない」ルールを、新規リポジトリの中でどこまで緩めるか
+PR #4 のブランチのコードは 2026-10-11 時点の形（PR 前提）のまま。ここから上の設計へは、**main から切った小さな PR を順に作って移る**。PR #4 は部品の置き場として使い（`git show origin/feat/redesign:<path>` で取り出す）、移行が済んだら閉じる。この `docs/design.md` は PR 1 で main に入れる。
+
+各 PR は `bash tests/check.sh` と、その PR に関係する eval が通ってから出す。
+
+### PR #4 の部品の扱い
+
+| 部品（`origin/feat/redesign:` から） | 扱い |
+|---|---|
+| `plugins/polaris/skills/gdd-loop/scripts/gdd-check.sh` | そのまま使う |
+| `.../scripts/gdd-lint.sh` | 使う。status に `doing` を足す |
+| `.../scripts/gdd-status.sh` | 書き直す。gh、PR、`refining:` を削り、ファイルとブランチ `gdd/<slug>` から状態を読む。ready、overlaps、stalled、hold は残す |
+| `plugins/polaris/agents/goal-owner.md` | 使う。`mode`、`refining`、PR まわりの記述を削る |
+| `plugins/polaris/agents/subgoal-verifier.md` | そのまま使う（main の `evaluator.md` を置き換える） |
+| `plugins/polaris/agents/worker.md` | 薄くする：`gdd-work` を呼ぶだけ |
+| `.../gdd-loop/templates/`（subgoal、uncertainty、review、adr） | 使う。subgoal の status に `doing` を足し、PR の語を削る |
+| `.../gdd-init/templates/goal.md` | 使う。`mode` の frontmatter は削る |
+| `.../gdd-init/SKILL.md` | 使う。`worktree.baseRef: "head"` と `.gitignore` の `.claude/worktrees/` は残す。`Edit(/gdd/**)` を allow にする理由から PR を削る |
+| `plugins/polaris/hooks/guard-gdd-writes.sh` | 使う |
+| `.../gdd-loop/steps/set-goal.md`、`refine.md` | 使う。PR を作る部分を「人間の承認 → main にコミット」に変え、閉じた PR による cancel を削る |
+| `.../gdd-loop/steps/plan.md`、`review.md`、`finish.md` | 分けて使う：plan → `gdd-loop` 本体、review → `gdd-work` の 4〜5、finish → 8節と 11節 |
+| `tests/`（`check.sh`、`gdd-check.sh`、`gdd-lint.sh`、`gdd-status.sh`、`guard-gdd-writes.sh`） | 使う。`gdd-status` のテストは gh の偽物をやめ、git リポジトリを作って試す形にする |
+| `mode: fast \| careful` | 使わない（必要になったら足す） |
+| main を PR でしか変えない方針、`Sub-goal:` と `Refine:` の目印、`merged-not-pulled` / `in-review` / `closed`、gh が失敗したら止まる処理、PR の行コメント | 使わない |
+| eval スイートの削除 | しない。main の eval は旧設計向けなので、PR ごとに要るケースだけ書き直す |
+| このリポジトリ自身の `gdd/` の移行（`archive/state-before-redesign.md`、`reviews/redesign.md`） | PR 1 で使う |
+
+### PR 1：状態を1件1ファイルにする（振る舞いはほぼ変えない）
+
+- `gdd/subgoals/<slug>.md`、`uncertainties/`、`adr/`、`reviews/<slug>.md`（Learnings）に移し、`state.md`、`subgoals.md`、`adr.md` をなくす。
+- 変更：`gdd-init`（SKILL.md、templates）、`gdd-loop/templates/`、`gdd-lint.sh` を追加、hook を PR #4 版に、`gdd-loop/SKILL.md` は読み書きするファイルを新しい配置に合わせるだけ（1回の起動で1サブゴール、サブゴールごとの人間の判断はまだ残す）、tests、このリポジトリの `gdd/` の移行、README、この `docs/design.md`。
+- 確認：`tests/check.sh`、新しい配置に書き直した eval（init、init-existing、first-run、language、skipped-rule）。
+
+### PR 2：チェックを関門にする
+
+- `[id]` と `Check:` と `[gate]`、`gdd-check.sh`、`subgoal-verifier`（`evaluator` を置き換え）。作る系はコマンドのチェックと gate がすべて met なら人間に聞かずに次へ。サブゴールごとの「OK / 変える / やめる」の質問は、決める系と `human:` を含むものだけに残す。
+- 変更：`gdd-init/templates/goal.md`、`templates/subgoal.md`、`gdd-check.sh`、`agents/subgoal-verifier.md`、`agents/evaluator.md` の削除、`gdd-loop/SKILL.md` の振り返りと判断の部分、tests、eval（auto-continue、decide-subgoal、evaluator-verdict、stop-and-ask を書き直し）。
+
+### PR 3：goal-owner、続けて回るループ、リファインメント
+
+- `goal-owner`、`gdd-status.sh`（ファイルとブランチから状態を読む）、止まる条件まで回り続けるループ、`steps/set-goal.md`、`steps/refine.md`（会話の中で承認）、hold、ゴール達成。
+- この PR ではまだ並列にしない（`start:` が複数でも、コーディネーター自身が1つずつ `gdd-work` と同じ手順で作る）。
+- 変更：`agents/goal-owner.md`、`gdd-status.sh`、`gdd-loop/SKILL.md`、`steps/`、tests、eval（goal-reached、completion-report、first-run-answered、change-direction などを書き直し）。
+
+### PR 4：並列のセッション
+
+- `skills/gdd-work/`、薄い `worker`、`doing` とブランチ `gdd/<slug>`、`ready-to-merge` の判定、8節の取り込みと main での gate、`gdd-init` の `worktree.baseRef` と `.gitignore`。
+- 変更：`skills/gdd-work/SKILL.md` を新規、`agents/worker.md`、`gdd-loop/SKILL.md`（配る、取り込む）、`gdd-status.sh`、`gdd-init/SKILL.md`、tests（2つのブランチを並列に作って取り込む git のテスト）、README。
+- 確認：実モデルで、独立したサブゴール2〜3個を、(a) `worker` サブエージェントの並列、(b) 人間が別ターミナルで `/polaris:gdd-work` を開く、の2通りで回す。
+
+### 最後に
+
+- PR #4 を閉じる（理由と、この文書へのリンクを書く）。
