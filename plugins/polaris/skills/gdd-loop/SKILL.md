@@ -86,7 +86,7 @@ Gather the material for the review before writing it.
 
 ## 6. Have the human choose, then stop
 
-A Build sub-goal with no `human:` condition, whose command checks and gate are all met and whose `observe:` conditions the subgoal-verifier judged met, is done without asking the human (they read the review afterwards and can stop or overturn it): write "Proceed (automatic)" in the Decision section and go to step 2 with the first `todo` sub-goal as the next one.
+A Build sub-goal with no `human:` condition, whose command checks and gate are all met, whose `observe:` conditions the subgoal-verifier judged met, and with no command check the subgoal-verifier flagged as weak (when it flags one, ask the human whether to strengthen the check or accept it), is done without asking the human (they read the review afterwards and can stop or overturn it): write "Proceed (automatic)" in the Decision section and go to step 2 with the first `todo` sub-goal as the next one.
 
 Otherwise, do not just ask the human to fill in the Decision section. Always offer choices with AskUserQuestion.
 
