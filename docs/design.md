@@ -265,7 +265,7 @@ goal-owner が reached: と判断
 
 PR #4 のブランチのコードは 2026-10-11 時点の形（PR 前提）のまま。ここから上の設計へは、**main から切った小さな PR を順に作って移る**。PR #4 は部品の置き場として使い（`git show origin/feat/redesign:<path>` で取り出す）、移行が済んだら閉じる。この `docs/design.md` は PR 1 で main に入れる。
 
-各 PR は `bash tests/check.sh` と、その PR に関係する eval が通ってから出す。
+各 PR は `bash tests/check.sh` が通ってから出す。eval は全部消してあり、新しい設計が実装しきってから作り直す。
 
 ### PR #4 の部品の扱い
 
@@ -286,25 +286,25 @@ PR #4 のブランチのコードは 2026-10-11 時点の形（PR 前提）の�
 | `tests/`（`check.sh`、`gdd-check.sh`、`gdd-lint.sh`、`gdd-status.sh`、`guard-gdd-writes.sh`） | 使う。`gdd-status` のテストは gh の偽物をやめ、git リポジトリを作って試す形にする |
 | `mode: fast \| careful` | 使わない（必要になったら足す） |
 | main を PR でしか変えない方針、`Sub-goal:` と `Refine:` の目印、`merged-not-pulled` / `in-review` / `closed`、gh が失敗したら止まる処理、PR の行コメント | 使わない |
-| eval スイートの削除 | しない。main の eval は旧設計向けなので、PR ごとに要るケースだけ書き直す |
+| eval スイート | 使わない。旧設計向けなので PR 1 で全部消し、新しい設計が実装しきってから作り直す |
 | このリポジトリ自身の `gdd/` の移行（`archive/state-before-redesign.md`、`reviews/redesign.md`） | PR 1 で使う |
 
 ### PR 1：状態を1件1ファイルにする（振る舞いはほぼ変えない）
 
 - `gdd/subgoals/<slug>.md`、`uncertainties/`、`adr/`、`reviews/<slug>.md`（Learnings）に移し、`state.md`、`subgoals.md`、`adr.md` をなくす。
 - 変更：`gdd-init`（SKILL.md、templates）、`gdd-loop/templates/`、`gdd-lint.sh` を追加、hook を PR #4 版に、`gdd-loop/SKILL.md` は読み書きするファイルを新しい配置に合わせるだけ（1回の起動で1サブゴール、サブゴールごとの人間の判断はまだ残す）、tests、このリポジトリの `gdd/` の移行、README、この `docs/design.md`。
-- 確認：`tests/check.sh`、新しい配置に書き直した eval（init、init-existing、first-run、language、skipped-rule）。
+- 確認：`tests/check.sh`。
 
 ### PR 2：チェックを関門にする
 
 - `[id]` と `Check:` と `[gate]`、`gdd-check.sh`、`subgoal-verifier`（`evaluator` を置き換え）。作る系はコマンドのチェックと gate がすべて met なら人間に聞かずに次へ。サブゴールごとの「OK / 変える / やめる」の質問は、決める系と `human:` を含むものだけに残す。
-- 変更：`gdd-init/templates/goal.md`、`templates/subgoal.md`、`gdd-check.sh`、`agents/subgoal-verifier.md`、`agents/evaluator.md` の削除、`gdd-loop/SKILL.md` の振り返りと判断の部分、tests、eval（auto-continue、decide-subgoal、evaluator-verdict、stop-and-ask を書き直し）。
+- 変更：`gdd-init/templates/goal.md`、`templates/subgoal.md`、`gdd-check.sh`、`agents/subgoal-verifier.md`、`agents/evaluator.md` の削除、`gdd-loop/SKILL.md` の振り返りと判断の部分、tests。
 
 ### PR 3：goal-owner、続けて回るループ、リファインメント
 
 - `goal-owner`、`gdd-status.sh`（ファイルとブランチから状態を読む）、止まる条件まで回り続けるループ、`steps/set-goal.md`、`steps/refine.md`（会話の中で承認）、hold、ゴール達成。
 - この PR ではまだ並列にしない（`start:` が複数でも、コーディネーター自身が1つずつ `gdd-work` と同じ手順で作る）。
-- 変更：`agents/goal-owner.md`、`gdd-status.sh`、`gdd-loop/SKILL.md`、`steps/`、tests、eval（goal-reached、completion-report、first-run-answered、change-direction などを書き直し）。
+- 変更：`agents/goal-owner.md`、`gdd-status.sh`、`gdd-loop/SKILL.md`、`steps/`、tests。
 
 ### PR 4：並列のセッション
 

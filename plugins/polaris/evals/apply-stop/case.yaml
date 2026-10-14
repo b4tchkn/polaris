@@ -1,4 +1,0 @@
-schema_version: "1.1"
-name: apply-stop
-context:
-  scaffold_script: scaffold.sh

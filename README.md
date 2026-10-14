@@ -62,11 +62,3 @@ The AI can propose changes to `goal.md`, but every write needs your approval.
 When no sub-goal is left, the AI tells you the goal looks reached and asks whether to add sub-goals or write a goal completion report (`gdd/reviews/GOAL.md`: acceptance scenarios and their results, what was left undone, candidates for the next goal). Archiving a finished goal and starting the next one is not automated yet.
 
 The AI replies in the language you use.
-
-## Testing the skills
-
-`plugins/polaris/evals/` holds eval cases for `claude plugin eval`: each case scaffolds a small `gdd/`, runs `/polaris:gdd-loop` on it, and checks the files and reviews it leaves behind. Run them from the repository root (each case is one real Claude session, so it costs tokens):
-
-```
-claude plugin eval plugins/polaris --scaffold --allow-tools Bash Write Edit --ablation none --runs 1 --no-publish
-```
