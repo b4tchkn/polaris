@@ -55,7 +55,7 @@ The AI can propose changes to `goal.md`, but every write needs your approval.
 1. `gdd-check.sh` measures progress toward the goal, and `gdd-status.sh` reads which sub-goals are ready, which overlap, and whether progress has stalled.
 2. The `goal-owner` (a separate context from the AI that builds) decides what comes next: start sub-goals, refine the plan, wait, or the goal is reached.
 3. The coordinator marks the sub-goals it starts as `doing` on `main` and hands them out: workers run `gdd-work` in parallel for independent ones (no overlapping `touches:`). Each builds on its branch `gdd/<slug>` until its checks and the gate pass, then writes a review with what was built, its least confident decision, and what it learned.
-4. The coordinator merges each finished branch into `main` and runs the gate again there, so changes that pass alone but break together are caught and reverted.
+4. The coordinator merges each finished branch into `main` and runs the gate again there, so changes that pass alone but break together are caught.
 5. It continues without you when every check is a passing command (or a verified `observe:`). It stops for you at a Decide sub-goal, a `human:` check, a check the verifier found weak, a hard-to-reverse decision, a stall (the last three reviews show the same progress), or when the goal looks reached.
 6. When you choose, the AI asks why and records your reason in `gdd/adr/`.
 

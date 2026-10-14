@@ -9,7 +9,7 @@ Talk to the human in the language they use. Several of these may run at once in 
 
 Input: `<slug>`, and if given a directory (e.g. `simulations/morning-review`), read every `gdd/` below as `<directory>/gdd/`.
 
-1. Check where you are. In the main checkout (the first entry of `git worktree list`) stop and tell the human to start Claude Code with `claude --worktree`, so the work does not disturb the coordinator. In a worktree, get on the branch `gdd/<slug>`: switch to it if it exists, or `git switch -c gdd/<slug>` from the current commit. Then `git merge main` to catch up.
+1. Get on the branch `gdd/<slug>` with `git switch -c gdd/<slug>` (you are in a worktree: `claude --worktree`, or the worker's). Then `git merge main` to catch up.
 2. Read `gdd/subgoals/<slug>.md` (its `status:` must be `doing`), `goal.md`, the Learnings of every review in `gdd/reviews/`, and the cancelled sub-goals; follow them and do not repeat what a cancelled sub-goal tried.
 3. Write the tests or scripts that the "Done when" command checks need and that do not exist yet, and confirm they fail. These checks are how the sub-goal is judged; do not weaken them later.
 4. Build, within `touches:`. Write under `gdd/` only your own sub-goal, its review, and new uncertainties and ADRs. Stop and ask (three options with a one-line trade-off each, recommended first) before: a hard-to-reverse decision (data model, external service, billing, authentication, adding a dependency), a change that loosens acceptance scenarios, checks, or tests (the hook also refuses these), or a change outside `touches:`. Ask with AskUserQuestion when you can talk to the human; otherwise return the question as your result and stop, and you will be resumed with the answer.

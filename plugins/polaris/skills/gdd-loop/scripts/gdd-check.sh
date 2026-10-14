@@ -1,17 +1,14 @@
 #!/bin/bash
 # Runs gdd checks, so whether something is done is decided by commands, not by the AI.
-#   gdd-check.sh <gdd-dir> [--at <dir>]         progress toward the goal: each check in goal.md, and open uncertainties
-#   gdd-check.sh <gdd-dir> <slug> [--at <dir>]  a sub-goal's "Done when" checks and the gate
+#   gdd-check.sh <gdd-dir>         progress toward the goal: each check in goal.md, and open uncertainties
+#   gdd-check.sh <gdd-dir> <slug>  a sub-goal's "Done when" checks and the gate
 # Checks are the "Check:" lines under each [id] item: a `command` runs here (exit 0 = met); "observe:" is left
-# to the subgoal-verifier, "human:" to the human. --at runs commands in <dir> (the worker's worktree) instead of the
-# repository that holds <gdd-dir>. Needs bash, sed, awk.
+# to the subgoal-verifier, "human:" to the human. Commands run in the repository that holds <gdd-dir>. Needs bash, sed, awk.
 # ponytail: checks rerun on every call; cache them if a project's checks get slow.
 
-at=""; args=()
-while [ $# -gt 0 ]; do case "$1" in --at) at="$2"; shift 2 ;; *) args+=("$1"); shift ;; esac; done
-dir="${args[0]:-gdd}"; slug="${args[1]}"
+dir="${1:-gdd}"; slug="$2"
 [ -f "$dir/goal.md" ] || { echo "no $dir/goal.md" >&2; exit 1; }
-checks_root="${at:-$(cd "$dir/.." && pwd)}"
+checks_root=$(cd "$dir/.." && pwd)
 
 checks() { # file -> "id<TAB>spec" for every [id] item followed by a Check: line
   awk '
