@@ -8,7 +8,6 @@
 dir="${1:-gdd}"
 [ -f "$dir/goal.md" ] || { echo "no $dir/goal.md" >&2; exit 1; }
 root=$(cd "$dir/.." && pwd)
-prefix=$(git -C "$root" rev-parse --show-prefix 2>/dev/null)
 STALL_N=3   # identical progress in this many latest reviews = stalled
 
 fm() { sed -n '1{/^---$/!q;};2,/^---$/p' "$1" | sed -n "s/^$2:[[:space:]]*//p" | head -1; }
@@ -16,7 +15,7 @@ fm() { sed -n '1{/^---$/!q;};2,/^---$/p' "$1" | sed -n "s/^$2:[[:space:]]*//p" |
 branch_state() { # slug -> "ready-to-merge" / "doing branch=gdd/<slug>" / "doing branch=none"
   b="gdd/$1"
   git -C "$root" rev-parse -q --verify "refs/heads/$b" >/dev/null 2>&1 || { echo "doing branch=none"; return; }
-  if git -C "$root" show "$b:${prefix}$(basename "$dir")/subgoals/$1.md" 2>/dev/null | sed -n '1{/^---$/!q;};2,/^---$/p' | grep -qx 'status: *done'
+  if git -C "$root" show "$b:gdd/subgoals/$1.md" 2>/dev/null | sed -n '1{/^---$/!q;};2,/^---$/p' | grep -qx 'status: *done'
   then echo "ready-to-merge branch=$b"; else echo "doing branch=$b"; fi
 }
 

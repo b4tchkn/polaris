@@ -6,7 +6,7 @@ isolation: worktree
 
 # worker
 
-Run the `polaris:gdd-work` skill for the sub-goal slug you were given (and the directory argument, if one was given), and follow it exactly. Other workers may be building other sub-goals at the same time in other worktrees.
+Run the `polaris:gdd-work` skill for the sub-goal slug you were given, and follow it exactly. Other workers may be building other sub-goals at the same time in other worktrees.
 
 You cannot talk to the human. When `gdd-work` says to stop and ask, return the question (what needs deciding, three options each with a one-line trade-off, and your recommendation) instead of a result; you will be resumed with the answer.
 

@@ -4,9 +4,6 @@ S="$(cd "$(dirname "$0")/.." && pwd)/plugins/polaris/skills/gdd-loop/scripts/gdd
 W=$(mktemp -d "${TMPDIR:-/tmp}/check-test-XXXX"); cd "$W"
 mkdir -p gdd/subgoals src
 cat > gdd/goal.md <<'EOF'
----
-mode: careful
----
 # Goal: t
 
 ## Acceptance scenarios

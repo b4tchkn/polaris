@@ -8,7 +8,7 @@
     {
       "name": "polaris",
       "source": "./plugins/polaris",
-      "description": "Goal Driven Development: the AI advances one sub-goal at a time toward your goal, and you steer by choosing from its reviews."
+      "description": "Goal Driven Development: the AI breaks your goal into sub-goals, builds independent ones in parallel, and merges each into main when its checks pass."
     }
   ]
 }

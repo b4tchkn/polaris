@@ -65,7 +65,6 @@ if [ $# -eq 0 ]; then whole=yes; set -- "$dir"/subgoals/*.md "$dir"/uncertaintie
 for f in "$@"; do
   [ -f "$f" ] || continue
   case "$f" in
-    */archive/*) ;;
     */reviews/GOAL.md) ;;
     */uncertainties/*.md) uncertainty "$f" ;;
     */subgoals/*.md) subgoal "$f" ;;
