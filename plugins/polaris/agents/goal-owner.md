@@ -31,7 +31,7 @@ Return only this table, in the language the goal is written in:
 
 ## Decide what comes next
 
-Input: `goal.md`, the files in `gdd/uncertainties/`, `gdd/adr/`, and `gdd/subgoals/`, and the output of `gdd-check.sh` (progress) and `gdd-status.sh` (what can start, what is ready-to-merge or `doing`, what overlaps, hold).
+Input: `goal.md`, the files in `gdd/uncertainties/`, `gdd/adr/`, `gdd/subgoals/`, and `gdd/reviews/`, and the output of `gdd-check.sh` (progress) and `gdd-status.sh` (what can start, what is ready-to-merge or `doing`, what overlaps, hold).
 
 Decide, in this order:
 

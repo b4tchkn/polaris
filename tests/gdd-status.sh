@@ -49,6 +49,10 @@ has "doing without a branch"          "lost state=doing branch=none"
 has "ready-to-merge blocks overlaps"  "overlaps=[finished ]"
 git merge -q --no-ff gdd/finished -m merge; out=$(bash "$S" gdd)
 has "done after merge"                "done: finished"
+# two independent branches built in parallel both merge into main
+git checkout -q gdd/working; mkdir -p src/w; echo w > src/w/a; sgfile working done src/w/; git add -A; git commit -qm done; git checkout -q main
+git merge -q --no-ff gdd/working -m merge2; out=$(bash "$S" gdd)
+has "both merged"                    "done: finished working"
 cd "$W"
 
 echo "workdir: $W"

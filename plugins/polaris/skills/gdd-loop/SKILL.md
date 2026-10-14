@@ -9,8 +9,6 @@ Human-on-the-loop: the AI proceeds by default; the human is called in only at th
 
 Talk to the human, write reviews, and ask questions in the language the human uses. Keep the headings of the templates as they are, and keep the language a file already uses.
 
-If a directory is passed as an argument (e.g. `simulations/morning-review`), read every `gdd/` below as `<directory>/gdd/`, and put what you build inside that directory. Without an argument, target the repository root.
-
 ## State
 
 One item per file. Shapes are in `templates/`.
@@ -25,11 +23,11 @@ Commit only `gdd/` files you wrote, and only the files of one event: `git commit
 
 ## The loop
 
-1. Run `scripts/gdd-check.sh <gdd-dir>` (progress toward the goal) and `scripts/gdd-status.sh <gdd-dir>` (state, what is ready, overlaps, hold).
+1. Run `scripts/gdd-check.sh gdd` (progress toward the goal) and `scripts/gdd-status.sh gdd` (state, what is ready, overlaps, hold).
 2. If `goal.md` is still the template (`<goal name>` remains), follow `steps/set-goal.md`, then go on.
 3. If a sub-goal is `ready-to-merge`, merge it ("Merge into main" below), then go back to 1.
 4. If the status says `hold: yes`, ask the human with AskUserQuestion before starting anything new: continue as is / change direction (then follow `steps/refine.md`) / stop. Record the answer and reason in `gdd/adr/`.
-5. Run the Agent tool with `subagent_type: "polaris:goal-owner"` to decide what comes next, giving it the paths of `goal.md`, `gdd/uncertainties/`, `gdd/adr/`, and `gdd/subgoals/`, and both outputs. Follow its answer; if you disagree, tell the human why instead of silently picking something else:
+5. Run the Agent tool with `subagent_type: "polaris:goal-owner"` to decide what comes next, giving it the paths of `goal.md`, `gdd/uncertainties/`, `gdd/adr/`, `gdd/subgoals/`, and `gdd/reviews/`, and both outputs. Follow its answer; if you disagree, tell the human why instead of silently picking something else:
    - `refine:` → follow `steps/refine.md`, then go on with any `start:`.
    - `start:` → "Hand out sub-goals" below.
    - `wait:` → tell the human what it waits for, and stop.
@@ -42,7 +40,7 @@ Do this in the main checkout.
 
 1. For each sub-goal to start, set `status: doing` and commit it on main: `git commit -m "docs(gdd): <slug> start" -- gdd/`. Do this before handing out, so a branch's change to `done` is a direct descendant of main and cannot conflict.
 2. A Decide sub-goal needs no worker: prepare what to show (a spec, a mock, a comparison of three options with trade-offs) yourself, ask the human to choose with AskUserQuestion, ask why, record it in `gdd/adr/` and the review's Decision section, write `gdd/reviews/<slug>.md`, set `status: done`, and commit.
-3. For each Build sub-goal, run the Agent tool with `subagent_type: "polaris:worker"`, giving it the slug (and the directory argument). With one sub-goal run it in the foreground; with several, run them in the background at once.
+3. For each Build sub-goal, run the Agent tool with `subagent_type: "polaris:worker"`, giving it the slug. With one sub-goal run it in the foreground; with several, run them in the background at once.
 4. When a worker returns a question instead of a result, ask the human with AskUserQuestion (three options with trade-offs), record the answer and reason in `gdd/adr/`, and resume the same worker with SendMessage so it continues where it stopped.
 
 ## Merge into main
@@ -51,8 +49,8 @@ Do this in the main checkout, for each `ready-to-merge` sub-goal.
 
 1. If the sub-goal has a `human:` condition, ask the human for the judgment first (the answer goes in the review's Decision section). If they decline it, leave it unmerged and stop.
 2. `git merge --no-ff gdd/<slug>`. On a conflict, stop and show the human what git reported.
-3. Run `scripts/gdd-check.sh <gdd-dir>` on main and read `gate=`. Several branches together can break what each passed alone. If the gate is not `met`, stop and tell the human which check failed and that the merge commit is on main.
-4. Report in one to three lines what went into main and the review's path, and ask the human only when the review shows a flagged weak check ("strengthen or accept") or a `human:` condition. `git push` is an ask rule: the human approves it.
+3. Run `scripts/gdd-check.sh gdd` on main and read `gate=`. Several branches together can break what each passed alone. If the gate is not `met`, stop and tell the human which check failed and that the merge commit is on main.
+4. Report in one to three lines what went into main and the review's path, and ask the human only when the review shows a flagged weak check ("strengthen or accept"). `git push` is an ask rule: the human approves it.
 
 ## Stop and ask
 
@@ -60,11 +58,9 @@ These stop the work and need the human's choice (three options with AskUserQuest
 
 - Hard-to-reverse decisions: data model, choice of external service, billing, authentication, adding a dependency.
 - Changes that loosen acceptance scenarios, checks, or tests.
-- Decisions whose outcome affects reaching the goal or a sub-goal.
-- When the interpretation of the human's words can split (a number, a scope, where to write it): offer three options with trade-offs before writing.
 
 Options are always three, and differ in what happens next or in trade-offs (speed / certainty / scope), each with a one-line trade-off. Do not offer three rewordings of one idea.
 
 ## Goal reached
 
-Show the goal-owner's reason and ask with AskUserQuestion: add sub-goals and continue (follow `steps/refine.md`) / write the goal completion report. For the report, write `gdd/reviews/GOAL.md` with each acceptance scenario and its result, what was left undone, and two or three candidates for the next goal, then stop.
+Show the goal-owner's reason and ask with AskUserQuestion: add sub-goals and continue (follow `steps/refine.md`) / write the goal completion report. For the report, write `gdd/reviews/GOAL.md` with each acceptance scenario and its result, a demo, a retrospective of the whole goal, what was left undone, and two or three candidates for the next goal, then stop.

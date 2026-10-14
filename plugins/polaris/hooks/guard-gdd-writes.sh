@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mechanical stop conditions for the gdd/ state files (design.md 7).
+# Mechanical stop conditions for the gdd/ state files (design.md 9).
 # "pre" snapshots the files a tool may touch; "post" compares and undoes or refuses:
 #   - gdd/goal.md changed or created by Bash                    -> restored, exit 2
 #   - gdd/subgoals/*.md, gdd/uncertainties/*.md, gdd/reviews/*.md failing gdd-lint.sh -> restored or removed, exit 2

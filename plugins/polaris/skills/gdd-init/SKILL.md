@@ -1,15 +1,11 @@
 ---
 name: gdd-init
-description: Set up Goal Driven Development in a repository. Writes the state files (gdd/goal.md, gdd/subgoals/, gdd/uncertainties/, gdd/adr/) from templates and adds rules to .claude/settings.json so that writes to goal.md and hard-to-reverse actions need human approval. Use when introducing GDD to a new or existing repository, or when starting a new goal after archiving the previous one. Triggers: "gdd-init", "set up GDD", "initialize GDD state".
+description: Set up Goal Driven Development in a repository. Writes the state files (gdd/goal.md, gdd/subgoals/, gdd/uncertainties/, gdd/adr/) from templates and adds rules to .claude/settings.json so that writes to goal.md and hard-to-reverse actions need human approval. Use when introducing GDD to a new or existing repository. Triggers: "gdd-init", "set up GDD", "initialize GDD state".
 ---
 
 # gdd-init
 
 Talk to the human in the language they use. Keep the file contents in the templates' language.
-
-## Target directory
-
-If a directory is passed as an argument (e.g. `simulations/morning-review`), read every `gdd/` below as `<directory>/gdd/`. Use the `.claude/settings.json` at the repository root, and prefix rule paths with `/<directory>` (e.g. `Edit(/simulations/morning-review/gdd/goal.md)`). Skip a rule when a broader one already covers it (e.g. `Edit(/simulations/**/gdd/goal.md)`). Without an argument, target the repository root.
 
 ## Steps
 
