@@ -63,7 +63,11 @@ When applying the human's decisions or comments, if the interpretation can split
 
 Gather the material for the review before writing it.
 
-- Have the evaluation scored in a separate context: run the Agent tool with `subagent_type: "polaris:evaluator"`, giving it only the sub-goal's goal, type, "Done when" conditions, the paths of the deliverables, and how to run them. Do not pass your own view of the result. Paste the table it returns into the review unchanged; if you disagree with a verdict, say so under "Least confident" instead of editing the table.
+- Run `gdd-check.sh <gdd-dir> <slug>` (in this skill's `scripts/`): it runs every command check of the sub-goal's "Done when" and the gate in `goal.md`. Its results are final for those conditions; put them in the review's Checks table with "gdd-check.sh" as the source.
+- Run the Agent tool with `subagent_type: "polaris:subgoal-verifier"`, giving it only the sub-goal file, where the work is, and the output of the step above. Do not pass your own view of the result. It reports whether each command check really tests its condition, and judges the `observe:` conditions. Add its rows to the table unchanged; if you disagree, say so under "Least confident" instead of editing the table.
+- `human:` conditions stay "for the human".
+- Run `gdd-check.sh <gdd-dir>` and copy its `progress:` line into the review's `progress:`.
+- A failing command check or gate means the sub-goal is not done: fix it, then check again. Do not loosen the check.
 - From this loop and all Learnings in `gdd/reviews/`, list what to keep and the problems (rework, where the human stepped in, why something was rejected).
 - From those, derive numbered improvement proposals. For each, write where it goes and its trade-off (what gets better, what it costs). Leave out items with nowhere to go. There are four kinds:
   - Add learning: something the AI should follow in later loops → the Learnings of this review
@@ -71,18 +75,18 @@ Gather the material for the review before writing it.
   - Harden a learning: turn a recurring or mechanically checkable learning into enforcement → `.claude/settings.json` / hook / `CLAUDE.md`
   - Revise sub-goals: add, remove, or reorder the `todo` ones → `gdd/subgoals/` / `goal.md`
 - Only propose. Apply them only after the human adopts them in the Decision section (step 2).
-- Draft three next sub-goal options (following step 3) that reflect the retrospective. Give each option "Done when" conditions, marked quantitative (measured by numbers) or qualitative (judged by the human). Size: one goal per sub-goal, no larger than what could be thrown away if it misses; smaller after rejections, larger after approvals.
+- Draft three next sub-goal options (following step 3) that reflect the retrospective. Give each option "Done when" conditions, each with a `Check:` (`command`, `observe:`, or `human:`; prefer a command). Size: one goal per sub-goal, no larger than what could be thrown away if it misses; smaller after rejections, larger after approvals.
 - If no sub-goal is `todo`, the goal may be reached. Instead of the next sub-goal options, write for each acceptance scenario in `goal.md` the result and whether it was met.
 
 ## 5. Write the sub-goal review
 
-- Write `gdd/reviews/<slug>.md` in the shape of `templates/review.md` (`<slug>` is this sub-goal's file name; `loop:` is the number of reviews in `gdd/reviews/`, excluding `GOAL.md`, plus one; `progress:` is one line with the check results, e.g. `2 of 3 met`), filling it from step 4.
+- Write `gdd/reviews/<slug>.md` in the shape of `templates/review.md` (`<slug>` is this sub-goal's file name; `loop:` is the number of reviews in `gdd/reviews/`, excluding `GOAL.md`, plus one; `progress:` is the line `gdd-check.sh` printed), filling it from step 4.
 - Leave the Decision section empty (filled in step 6).
 - Show the same content in the chat, then go to step 6.
 
 ## 6. Have the human choose, then stop
 
-A Build sub-goal whose evaluator table is all "Met" is done without asking the human: write "Proceed (automatic)" in the Decision section and go to step 2 with the first `todo` sub-goal as the next one.
+A Build sub-goal with no `human:` condition, whose command checks and gate are all met and whose `observe:` conditions the subgoal-verifier judged met, is done without asking the human (they read the review afterwards and can stop or overturn it): write "Proceed (automatic)" in the Decision section and go to step 2 with the first `todo` sub-goal as the next one.
 
 Otherwise, do not just ask the human to fill in the Decision section. Always offer choices with AskUserQuestion.
 

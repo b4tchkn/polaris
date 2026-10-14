@@ -1,7 +1,7 @@
 ---
 subgoal: <slug>
 loop: <n>
-progress: <one line with the check results, e.g. 2 of 3 met>
+progress: <the progress line from gdd-check.sh>
 ---
 # Sub-goal review: <slug> <what it achieves>
 
@@ -14,7 +14,7 @@ progress: <one line with the check results, e.g. 2 of 3 met>
 
 | Condition | Check | Result | By |
 |---|---|---|---|
-| <id> <condition> | <command / observe / human> | <Met / Not met / Partly / Not checked / for the human> | <evaluator / human> |
+| <id> <condition> | <command / observe / human> | <met / not-met / partial / Not checked / for the human> | <gdd-check.sh / subgoal-verifier / human> |
 
 ## Distance to the goal
 
@@ -39,7 +39,7 @@ progress: <one line with the check results, e.g. 2 of 3 met>
 
 ## Next sub-goal options
 
-| Option | Goal | Type | Done when (quantitative / qualitative) | What to show | Trade-off |
+| Option | Goal | Type | Done when (with Check) | What to show | Trade-off |
 |---|---|---|---|---|---|
 | A | | | | | |
 | B | | | | | |
