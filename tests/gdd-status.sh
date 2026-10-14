@@ -37,11 +37,10 @@ out=$(bash "$S" gdd); has "GOAL.md is not a review" "hold: no"
 G=$(mktemp -d "${TMPDIR:-/tmp}/status-git-XXXX"); cd "$G"
 git init -q -b main; git config user.email t@t; git config user.name t
 mkdir -p gdd/subgoals; echo '# Goal: x' > gdd/goal.md
-sgfile() { printf -- '---\nstatus: %s\ntype: build\nadvances: a\ndepends_on: none\ntouches: %s\n---\n# %s\n' "$2" "$3" "$1" > "gdd/subgoals/$1.md"; }
-sgfile finished doing src/f/; sgfile working doing src/w/; sgfile lost doing src/l/; sgfile waits todo src/f/x/
+sg finished doing none src/f/; sg working doing none src/w/; sg lost doing none src/l/; sg waits todo none src/f/x/
 git add -A; git commit -qm base
 for b in finished working; do git branch gdd/$b; done
-git checkout -q gdd/finished; sgfile finished done src/f/; git commit -qam done; git checkout -q main
+git checkout -q gdd/finished; sg finished done none src/f/; git commit -qam done; git checkout -q main
 out=$(bash "$S" gdd)
 has "ready-to-merge from the branch"  "finished state=ready-to-merge branch=gdd/finished"
 has "doing with its branch"           "working state=doing branch=gdd/working"
@@ -50,7 +49,7 @@ has "ready-to-merge blocks overlaps"  "overlaps=[finished ]"
 git merge -q --no-ff gdd/finished -m merge; out=$(bash "$S" gdd)
 has "done after merge"                "done: finished"
 # two independent branches built in parallel both merge into main
-git checkout -q gdd/working; mkdir -p src/w; echo w > src/w/a; sgfile working done src/w/; git add -A; git commit -qm done; git checkout -q main
+git checkout -q gdd/working; mkdir -p src/w; echo w > src/w/a; sg working done none src/w/; git add -A; git commit -qm done; git checkout -q main
 git merge -q --no-ff gdd/working -m merge2; out=$(bash "$S" gdd)
 has "both merged"                    "done: finished working"
 cd "$W"

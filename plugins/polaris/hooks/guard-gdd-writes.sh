@@ -35,16 +35,16 @@ cd "$(cat "$snap/root" 2>/dev/null || printf .)" 2>/dev/null || exit 0
 
 key() { printf '%s' "$1" | shasum | cut -c1-16; }
 sum() { shasum < "$1" | cut -c1-40; }
+prune_find() { # Other worktrees under .claude/worktrees/ have their own guard (their own root); a worker creating one mid-command is not a write.
+  find . \( -name .git -o -name node_modules -o -name build -o -name .gradle -o -path ./.claude/worktrees \) -prune -o "$@" 2>/dev/null
+}
 gdd_files() {
-  # Other worktrees under .claude/worktrees/ have their own guard (their own root); a worker creating one mid-command is not a write.
-  find . \( -name .git -o -name node_modules -o -name build -o -name .gradle -o -path ./.claude/worktrees \) -prune \
-    -o \( -path '*/gdd/goal.md' -o -path '*/gdd/subgoals/*.md' -o -path '*/gdd/uncertainties/*.md' -o -path '*/gdd/reviews/*.md' -o -path '*/gdd/adr/*.md' \) -print 2>/dev/null
+  prune_find \( -path '*/gdd/goal.md' -o -path '*/gdd/subgoals/*.md' -o -path '*/gdd/uncertainties/*.md' -o -path '*/gdd/reviews/*.md' -o -path '*/gdd/adr/*.md' \) -print
 }
 refuse() { printf '%s\n' "$1" >&2; exit 2; }
 is_test() { printf '%s' "$1" | grep -Eqi '(^|/)(tests?|spec|__tests__|androidTest)(/|$)|[._]test\.|[._]spec\.|(^|/)test_[^/]*\.py$|Tests?\.[a-z]+$'; }
 test_files() {
-  find . \( -name .git -o -name node_modules -o -name build -o -name .gradle -o -path ./.claude/worktrees \) -prune \
-    -o -type f -print 2>/dev/null | while IFS= read -r f; do is_test "$f" && printf '%s\n' "$f"; done | sort
+  prune_find -type f -print | while IFS= read -r f; do is_test "$f" && printf '%s\n' "$f"; done | sort
 }
 # Sub-goal and review files must keep their format (gdd-lint.sh prints what is wrong).
 misformed() { problems=$(bash "$lint" "${1%/gdd/*}/gdd" "$1") && return 1; printf '%s\n' "$problems"; }
