@@ -15,7 +15,7 @@ Goal Driven Development の基盤を作り、Claude Code の plugin として提
    - Check: human: 実際の新規リポジトリで回した結果を人間が確かめる
 2. [existing-repo] 既存のリポジトリに plugin と init で導入し、サブゴールを1つ以上回せる。
    - Check: human: 実際の既存リポジトリで回した結果を人間が確かめる
-3. [judge-without-code] 各サブゴールの完了時に、人間がコードを読まずに、サブゴール完了報告とデモだけで「次へ進む / 方向転換 / やめる」を判断できる。
+3. [judge-without-code] 人間がコードを読まずに、レビューと ADR だけで、進行中の作業を止めて方向を変えられる。
    - Check: human: 判断できたかは人間にしか分からない
 4. [retro-reflected] 振り返りの「変えること」が実際に次のループに反映され、同じ手戻りが再発しない。
    - Check: observe: レビューの Problems と Learnings を並べ、同じ問題が2回出ていないか

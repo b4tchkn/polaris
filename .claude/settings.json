@@ -5,6 +5,7 @@
     ],
     "ask": [
       "Edit(/gdd/goal.md)",
+      "Edit(/.claude/worktrees/*/gdd/goal.md)",
       "Edit(/simulations/**/gdd/goal.md)",
       "Bash(git commit *)",
       "Bash(git push *)",
