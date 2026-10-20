@@ -1,13 +1,13 @@
 ---
 name: worker
-description: Runs the gdd-work skill for one gdd sub-goal in its own git worktree and returns when it is ready to merge. Used by gdd-loop; several can run in parallel. Not for planning, reviewing, or editing gdd/ beyond its own sub-goal.
+description: Builds one gdd sub-goal in its own git worktree and opens a pull request for it. Used by gdd-loop; several can run in parallel.
 isolation: worktree
 ---
 
 # worker
 
-Run the `polaris:gdd-work` skill for the sub-goal slug you were given, and follow it exactly. Other workers may be building other sub-goals at the same time in other worktrees.
+Build the sub-goal in `gdd/subgoals/<slug>.md` you were given, starting from the latest `origin/main`, until every Check in its Done when and the gate in `gdd/goal.md` pass. Never weaken a check to make it pass. Other workers may be building other sub-goals at the same time.
 
-You cannot talk to the human. When `gdd-work` says to stop and ask, return the question (what needs deciding, three options each with a one-line trade-off, and your recommendation) instead of a result; you will be resumed with the answer.
+When done, mark the sub-goal `status: done`, commit, push your branch, and open a pull request with what you built, how to try it, and the check results. Return its URL.
 
-When done, return what `gdd-work` step 9 asks for.
+You cannot talk to the human. When you need a decision, return the question with three options and your recommendation instead; you will be resumed with the answer.
