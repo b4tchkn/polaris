@@ -5,20 +5,24 @@ advances: new-repo, parallel
 depends_on: none
 touches: sim/, tests/sim-verify.sh, tests/check.sh, .gitignore
 ---
-# `sim/` の Docker シミュレーション環境から PR 前提でない部分を直し、結果を判定する `sim/verify.sh` を足す
+# `sim/` の Docker シミュレーション環境を、clone した人がそのまま使えるようにし、結果を判定する `sim/verify.sh` を足す
 
 ## Done when
 
-1. [smoke] コンテナの中の headless の Claude Code が plugin を読み込み、空のリポジトリで `/polaris:gdd-init` を実行して `gdd/goal.md` を作る
+1. [setup] `sim/setup.sh <name>` が `sim/work/<name>/`（remote.git、作業ツリー、github/、claude-home/、ask ルール入りの `.claude/settings.json`）を何もない状態から作る
+   - Check: `bash sim/smoke.sh`（smoke は自分の `sim/work/<name>/` を消して setup から作り直す）
+2. [smoke] コンテナの中の headless の Claude Code が plugin を読み込み、空のリポジトリで `/polaris:gdd-init` を実行して `gdd/goal.md` を作る
    - Check: `bash sim/smoke.sh`
-2. [verify] `sim/verify.sh` が、条件を満たす結果のリポジトリでは 0 で、マージが足りない、`status: done` でない、main で gate が落ちる、のそれぞれでは 0 以外で終わる
-   - Check: `bash tests/sim-verify.sh`
-3. [answers] 人間への質問（ask ルールの承認、AskUserQuestion に当たる質問）に台本の答えを渡して、同じセッションを続けられる
+3. [verify] `sim/verify.sh <name>` が `sim/work/<name>/` を読み、条件を満たす結果では 0 で、マージが足りない、`status: done` でない、main で gate が落ちる、のそれぞれでは 0 以外で終わる。gate はシミュレーションしたリポジトリの `gdd/goal.md` の Definition of done のコマンドを使う。対象のサブゴールは、シナリオが書いた一覧ファイルがあればそれを使う
+   - Check: `bash tests/sim-verify.sh`（Docker もトークンも使わず、fixture のリポジトリとローカルの git だけで動く）
+4. [gate] `tests/check.sh` が `tests/sim-verify.sh` を実行する
+   - Check: `grep -q sim-verify.sh tests/check.sh && bash tests/check.sh`
+5. [answers] 人間への質問（ask ルールの承認、AskUserQuestion に当たる質問）に台本の答えを渡して、同じセッションを続けられる。ask ルールは `approve.sh`、質問への答えは `--resume` で次のプロンプトとして渡す
    - Check: observe: smoke のログで、質問に台本の答えが渡り、その後も作業が続いていること
-4. [secrets] OAuth トークンとシミュレーションの作業データはコミットされない
+6. [secrets] OAuth トークンとシミュレーションの作業データはコミットされない
    - Check: `git check-ignore -q sim/.oauth-token && git check-ignore -q sim/work/x`
 
 ## What to show
 
-- `sim/` の使い方（数行）と smoke のログ
+- `sim/` の使い方（数行。イメージのビルドとトークンの用意を含む）と smoke のログ
 - 1回の実行にかかった時間と費用
