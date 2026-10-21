@@ -1,0 +1,10 @@
+#!/bin/bash
+# The human merges pull request <n>: merge its branch into main on the remote and mark it MERGED.
+set -e
+D="${GH_DATA:-/work/github}"; n="$1"; d="$D/prs/$n"
+[ "$(cat "$d/state")" = OPEN ] || { echo "pull request $n is not open" >&2; exit 1; }
+t=$(mktemp -d); git clone -q /work/remote.git "$t"; cd "$t"
+git -c user.name=human -c user.email=human@example.com merge -q --no-ff "origin/$(cat "$d/head")" -m "Merge pull request #$n from $(cat "$d/head")"
+git push -q origin main
+git rev-parse HEAD > "$d/merge"; echo MERGED > "$d/state"
+echo "merged #$n as $(cat "$d/merge")"; rm -rf "$t"

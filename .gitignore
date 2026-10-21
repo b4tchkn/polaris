@@ -1,4 +1,5 @@
 CLAUDE.local.md
-simulations/
+sim/work/
+sim/.oauth-token
 .claude/settings.local.json
 .claude/worktrees/
