@@ -6,7 +6,7 @@
     "ask": [
       "Edit(/gdd/goal.md)",
       "Edit(/.claude/worktrees/*/gdd/goal.md)",
-      "Edit(/simulations/**/gdd/goal.md)",
+      "Edit(/sim/work/**/gdd/goal.md)",
       "Bash(git push *main*)",
       "mcp__github__push_files",
       "mcp__github__create_or_update_file"

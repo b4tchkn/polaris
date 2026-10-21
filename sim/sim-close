@@ -1,0 +1,3 @@
+#!/bin/bash
+# The human closes pull request <n> without merging.
+D="${GH_DATA:-/work/github}"; echo CLOSED > "$D/prs/$1/state"; echo "closed #$1"

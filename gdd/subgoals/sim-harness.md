@@ -5,7 +5,7 @@ advances: new-repo, parallel
 depends_on: none
 touches: sim/, tests/sim-verify.sh, tests/check.sh, .gitignore
 ---
-# Docker のシミュレーション環境と、その結果を判定する `sim/verify.sh` をリポジトリに入れる（`simulations/` の旧環境を使う）
+# `sim/` の Docker シミュレーション環境から PR 前提でない部分を直し、結果を判定する `sim/verify.sh` を足す
 
 ## Done when
 
