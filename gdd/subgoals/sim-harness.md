@@ -10,7 +10,7 @@ touches: sim/, tests/sim-verify.sh, tests/check.sh, .gitignore
 ## Done when
 
 1. [setup] `sim/setup.sh <name>` が `sim/work/<name>/`（remote.git、作業ツリー、github/、claude-home/、ask ルール入りの `.claude/settings.json`）を何もない状態から作る
-   - Check: `bash sim/smoke.sh`（smoke は自分の `sim/work/<name>/` を消して setup から作り直す）
+   - Check: `bash sim/smoke.sh`（smoke はイメージの `docker build` と、自分の `sim/work/<name>/` を消して setup から作り直すところからやる。トークンは `.worktreeinclude` で worker の worktree にもコピーされる）
 2. [smoke] コンテナの中の headless の Claude Code が plugin を読み込み、空のリポジトリで `/polaris:gdd-init` を実行して `gdd/goal.md` を作る
    - Check: `bash sim/smoke.sh`
 3. [verify] `sim/verify.sh <name>` が `sim/work/<name>/` を読み、条件を満たす結果では 0 で、マージが足りない、`status: done` でない、main で gate が落ちる、のそれぞれでは 0 以外で終わる。gate はシミュレーションしたリポジトリの `gdd/goal.md` の Definition of done のコマンドを使う。対象のサブゴールは、シナリオが書いた一覧ファイルがあればそれを使う
