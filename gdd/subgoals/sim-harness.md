@@ -19,8 +19,8 @@ touches: sim/, tests/sim-verify.sh, tests/check.sh, .gitignore
    - Check: `grep -q sim-verify.sh tests/check.sh && bash tests/check.sh`
 5. [answers] 人間への質問（ask ルールの承認、AskUserQuestion に当たる質問）に台本の答えを渡して、同じセッションを続けられる。ask ルールは `approve.sh`、質問への答えは `--resume` で次のプロンプトとして渡す
    - Check: observe: smoke のログで、質問に台本の答えが渡り、その後も作業が続いていること
-6. [secrets] OAuth トークンは、シミュレーションしたリポジトリ（worker の worktree を含む）でもコミットされない
-   - Check: `bash sim/smoke.sh`（シミュレーションしたリポジトリでトークンのファイルが `git check-ignore` で無視されることを確かめる）
+6. [secrets] OAuth トークンとシミュレーションの作業データは polaris にコミットされない
+   - Check: `git check-ignore -q sim/.oauth-token && git check-ignore -q sim/work/x`
 
 ## What to show
 
