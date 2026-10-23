@@ -25,12 +25,17 @@ bash "$H/approve.sh" "Bash(git push *main*)" 01-init "/polaris:gdd-init, then co
 git -C "$W/remote.git" cat-file -e main:gdd/goal.md || fail "the approved push did not reach remote.git's main"
 sum=$(shasum "$W/sim/gdd/goal.md")
 
-bash "$H/run.sh" 02-reinit "/polaris:gdd-init"
-echo "asked: $(field 02-reinit result)"
-bash "$H/run.sh" 03-answer "Keep the existing gdd/ as it is; do not overwrite it. Then reply with the first line of gdd/goal.md." "$(field 02-reinit session_id)"
-echo "after the answer: $(field 03-answer result)"
+# A word only the 02 session knows, so a fresh session without --resume cannot pass 03.
+word=w$RANDOM$RANDOM
+bash "$H/run.sh" 02-reinit "/polaris:gdd-init (also remember the word $word for later)"
+sid=$(field 02-reinit session_id)
+echo "asked ($sid): $(field 02-reinit result)"
+field 02-reinit result | grep -Eqi 'overwrit|replac' || fail "gdd-init did not ask before overwriting gdd/"
+bash "$H/run.sh" 03-answer "No, do not overwrite; keep gdd/ as it is. Then reply with the word I asked you to remember." "$sid"
+echo "after the answer ($(field 03-answer session_id)): $(field 03-answer result)"
+[ "$(field 03-answer session_id)" = "$sid" ] || fail "03 did not continue the 02 session"
 [ "$(shasum "$W/sim/gdd/goal.md")" = "$sum" ] || fail "gdd/goal.md was overwritten"
-field 03-answer result | grep -q '# Goal' || fail "the resumed session did not continue with the answer"
+field 03-answer result | grep -q "$word" || fail "the resumed session did not continue with the answer"
 
 cost=$(for l in 01-init 02-reinit 03-answer; do field $l total_cost_usd; done | paste -sd+ - | bc)
 echo "smoke: ok in $((SECONDS - s))s, \$$cost (logs in $W/logs)"
