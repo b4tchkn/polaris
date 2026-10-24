@@ -12,7 +12,7 @@ touches: sim/parallel/, sim/run.sh
 1. [scenario] 直近の実行結果が parallel の条件を満たす
    - Check: `bash sim/verify.sh parallel`
 2. [concurrent] worker が本当に同時に動いている
-   - Check: `jq -s '[.[] | select(.type=="assistant") | {id: .message.id, n: [.message.content[]? | select(.type=="tool_use" and .name=="Agent")] | length}] | group_by(.id) | map(map(.n) | add) | max >= 2' sim/work/parallel/logs/*.jsonl | grep -qx true`（1つの assistant のメッセージが worker を2つ以上起動している）
+   - Check: `jq -s '[.[] | select(.type=="assistant") | {id: .message.id, n: [.message.content[]? | select(.type=="tool_use" and .name=="Agent" and .input.subagent_type=="polaris:worker")] | length}] | group_by(.id) | map(map(.n) | add) | max >= 2' sim/work/parallel/logs/*.jsonl | grep -qx true`（1つの assistant のメッセージが worker を2つ以上起動している）
 
 ## What to show
 
