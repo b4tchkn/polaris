@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 type: build
 advances: parallel
 depends_on: none
