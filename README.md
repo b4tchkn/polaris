@@ -38,6 +38,8 @@ In the repository where you want to get something done (new or existing):
 
 ## How it works
 
+![Polaris concept: sub-goals climb toward the goal, one loop each, with a human called in for specific conditions](docs/concept.svg)
+
 ```mermaid
 flowchart TD
     G[You decide the goal and its checks] --> O[goal-owner reviews the draft]
