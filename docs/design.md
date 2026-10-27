@@ -48,6 +48,8 @@ plugins/polaris/
 gdd/                         使う側のリポジトリの状態
   goal.md                    北極星、成果と Check、前提
   subgoals/<slug>.md         サブゴール1件1ファイル（並列でも衝突しない）
+tests/check.sh               このリポジトリの gate
+sim/                         Docker の headless Claude Code で polaris を回すシミュレーション
 ```
 
 導入は `/plugin marketplace add b4tchkn/polaris` → `/plugin install polaris@polaris` → `/polaris:gdd-init` → `/polaris:gdd-loop`。このリポジトリ自身も `claude --plugin-dir plugins/polaris` で同じように進める。
@@ -66,3 +68,4 @@ gdd/                         使う側のリポジトリの状態
 - **2026-10-14**：PR 待ちで止まるのを嫌い、PR を使わず手元の main に取り込む形にした。作業が手元にしか無く、PC が壊れると失われる問題が残った。
 - **2026-10-15**：サブゴールごとに PR を作る形に戻す案を書いた（PR #12、マージせず閉じた）。
 - **2026-10-19（この版）**：実装が 700 行を超え、hook、状態や書式を出すスクリプト、細かい手順で、メインの流れが見えなくなっていた。eli5 にならい、メインの流れの最低限だけにした。hook の役は「main は PR でしか変わらない」と「テストや goal.md を変えた PR は人間がマージする」に置き換えた。
+- **2026-10-21〜25**：並列の流れを確かめるため、Docker の headless Claude Code、ローカルのリモート、偽の `gh` で回す `sim/` を足した（PR #18〜#21）。設計は変えていない。
