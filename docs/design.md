@@ -21,7 +21,7 @@
 
 1. ゴールが無ければ人間と決める：1文の北極星と、3〜5個の成果。それぞれに `Check:`。
 2. 残りを小さなサブゴールに分ける（`gdd/subgoals/<slug>.md`、それぞれ Done when と Check）。人間が一覧を承認する。
-3. `worker` が worktree で作る。独立したものは並列にする。終わったら自分のブランチを push して PR を出す。本文は、作ったもの、試し方、Check の結果。次に活かす学びは、同じ PR でテスト、lint、CI、`CLAUDE.md` などのガードレールにする。
+3. `worker` が worktree で作る。worker はそれぞれ別の headless セッション（`claude -p -w ... --agent polaris:worker "/goal ..."`）で、終わったかどうかは Claude Code の `/goal` の評価役が判断する。独立したものは並列にする。終わったら自分のブランチを push して PR を出す。本文は、作ったもの、試し方、Check の結果。次に活かす学びは、同じ PR でテスト、lint、CI、`CLAUDE.md` などのガードレールにする。
 4. CI が通ったら AI がマージする。ただし、`human:` の条件を含む PR、`goal.md` や既にあるテストを変えた PR は、人間がマージする。
 5. `goal.md` の Check がすべて通ったら、報告して止まる。
 
@@ -42,7 +42,7 @@
 plugins/polaris/
   skills/gdd-init/           goal.md の雛形を置き、ask ルールを足す
   skills/gdd-loop/           上の「流れ」を回す
-  agents/worker.md           サブゴール1つを worktree で作り、PR にして返す
+  agents/worker.md           サブゴール1つを worktree で作り、PR にして返す（/goal 付きの headless セッションで動く）
   agents/goal-owner.md       別のコンテキストで、ゴール案と次にやることを判断する
   agents/subgoal-verifier.md 別のコンテキストで、Check が本当に条件を試しているかを見る
 gdd/                         使う側のリポジトリの状態
@@ -69,3 +69,4 @@ sim/                         Docker の headless Claude Code で polaris を回�
 - **2026-10-15**：サブゴールごとに PR を作る形に戻す案を書いた（PR #12、マージせず閉じた）。
 - **2026-10-19（この版）**：実装が 700 行を超え、hook、状態や書式を出すスクリプト、細かい手順で、メインの流れが見えなくなっていた。eli5 にならい、メインの流れの最低限だけにした。hook の役は「main は PR でしか変わらない」と「テストや goal.md を変えた PR は人間がマージする」に置き換えた。
 - **2026-10-21〜25**：並列の流れを確かめるため、Docker の headless Claude Code、ローカルのリモート、偽の `gh` で回す `sim/` を足した（PR #18〜#21）。設計は変えていない。
+- **2026-10-27**：worker を subagent から `/goal` 付きの headless セッションに変えた。`/goal` は subagent からは使えないため。終わったかどうかを、作業した AI ではなく別のモデルが判断する。

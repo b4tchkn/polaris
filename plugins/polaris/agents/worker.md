@@ -1,7 +1,6 @@
 ---
 name: worker
-description: Builds one gdd sub-goal in its own git worktree and opens a pull request for it. Used by gdd-loop; several can run in parallel.
-isolation: worktree
+description: Builds one gdd sub-goal in its own git worktree and opens a pull request for it. Run by gdd-loop as a headless session with /goal; several can run in parallel.
 ---
 
 # worker
@@ -12,4 +11,4 @@ When you learn something later work should follow, turn it into a guardrail in t
 
 When done, mark the sub-goal `status: done`, commit, push your branch, and open a pull request with what you built, how to try it, and the check results. Return its URL.
 
-You cannot talk to the human. When you need a decision, return the question with three options and your recommendation instead; you will be resumed with the answer.
+You cannot talk to the human. When you need a decision, end with the question, three options and your recommendation instead; you will be resumed with the answer.

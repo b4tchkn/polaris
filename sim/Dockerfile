@@ -3,7 +3,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends git python3 ca-
   && rm -rf /var/lib/apt/lists/*
 RUN npm install -g @anthropic-ai/claude-code@2.1.295
 COPY gh sim-merge sim-close /usr/local/bin/
-RUN chmod +x /usr/local/bin/gh /usr/local/bin/sim-merge /usr/local/bin/sim-close
+COPY claude /usr/local/sbin/
+RUN chmod +x /usr/local/bin/gh /usr/local/bin/sim-merge /usr/local/bin/sim-close /usr/local/sbin/claude
 USER node
 ENV GH_DATA=/work/github CLAUDE_CONFIG_DIR=/work/claude-home \
   GIT_AUTHOR_NAME=sim GIT_AUTHOR_EMAIL=sim@example.com GIT_COMMITTER_NAME=sim GIT_COMMITTER_EMAIL=sim@example.com

@@ -1,0 +1,4 @@
+#!/bin/bash
+# Stands in for a logged-in claude: Claude Code strips the token variable from its Bash children,
+# so the worker sessions gdd-loop starts would not be logged in. Reads it from the mounted file instead.
+CLAUDE_CODE_OAUTH_TOKEN=$(cat /run/oauth-token) exec /usr/local/bin/claude "$@"
